@@ -1,7 +1,7 @@
 # cloud.google.com/go v0.123.0
 ## explicit; go 1.24.0
 cloud.google.com/go/civil
-# github.com/MarkRosemaker/cassette v0.0.0-20261023185554-6ef93f427dfd
+# github.com/MarkRosemaker/cassette v0.0.0-20261023192203-b9be50aadf57
 ## explicit; go 1.27
 github.com/MarkRosemaker/cassette
 # github.com/MarkRosemaker/errpath v0.0.0-20261022123114-077265568e41
@@ -10,7 +10,7 @@ github.com/MarkRosemaker/errpath
 # github.com/MarkRosemaker/json2yaml v0.0.0-20261022123116-6447be2c9430
 ## explicit; go 1.27
 github.com/MarkRosemaker/json2yaml
-# github.com/MarkRosemaker/jsonutil v0.0.0-20261023182945-bdc3cc16b47f
+# github.com/MarkRosemaker/jsonutil v0.0.0-20261023192140-497ece8b064f
 ## explicit; go 1.27
 github.com/MarkRosemaker/jsonutil
 # github.com/MarkRosemaker/openapi v0.0.0-20261023185603-7d0980c7e40a
