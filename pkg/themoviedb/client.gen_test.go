@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/MarkRosemaker/cassette"
 	"github.com/go-api-libs/api"
 )
 
@@ -14269,4 +14270,42 @@ func TestClient_Error(t *testing.T) {
 			}
 		})
 	})
+}
+
+func replay(t *testing.T) http.RoundTripper {
+	t.Helper()
+
+	interactions, err := cassette.InteractionsReadFile("../../api/interactions.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rec := cassette.Replay(interactions, cassette.InOrder(), cassette.WithMatcher(cassette.MatchRequest(
+		cassette.CompareHeaders("User-Agent"),
+	)))
+
+	t.Cleanup(func() {
+		if unused := rec.Unused(); len(unused) > 0 {
+			t.Errorf("%d recorded interactions were never replayed, the first: %s %s", len(unused), unused[0].Request.Method, &unused[0].Request.URL)
+		}
+	})
+
+	return rec
+}
+
+func TestClient_Interactions(t *testing.T) {
+	ctx := t.Context()
+	t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+	c, err := NewClient(WithHTTPClient(&http.Client{Transport: replay(t)}))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := c.SearchMovies(ctx, SearchMoviesParams{
+		Query: "The Return of the King",
+		Year:  2003,
+	}); err != nil {
+		t.Fatalf("SearchMovies: %v", err)
+	}
 }

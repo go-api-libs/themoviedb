@@ -7876,8 +7876,8 @@ func (c *Client) SearchMoviesWithResult[R any](ctx context.Context, params Searc
 		q["region"] = []string{params.Region}
 	}
 
-	if params.Year != "" {
-		q["year"] = []string{params.Year}
+	if params.Year != 0 {
+		q["year"] = []string{strconv.FormatInt(int64(params.Year), 10)}
 	}
 
 	u.RawQuery = q.Encode()

@@ -2106,7 +2106,7 @@
           "$ref": "#/components/parameters/region"
         },
         {
-          "$ref": "#/components/parameters/year2"
+          "$ref": "#/components/parameters/year"
         }
       ],
       "get": {
@@ -5713,7 +5713,10 @@
             "example": false
           },
           "backdrop_path": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "/hZkgoQYus5vegHoetLkCJzb17zJ.jpg"
           },
           "genre_ids": {
@@ -5743,6 +5746,7 @@
           },
           "popularity": {
             "type": "number",
+            "format": "double",
             "default": 0,
             "example": 73.433
           },
@@ -5766,6 +5770,7 @@
           },
           "vote_average": {
             "type": "number",
+            "format": "double",
             "default": 0,
             "example": 8.433
           },
@@ -5773,6 +5778,9 @@
             "type": "integer",
             "default": 0,
             "example": 26279
+          },
+          "softcore": {
+            "type": "boolean"
           }
         }
       },
@@ -17328,7 +17336,8 @@
         "in": "query",
         "required": true,
         "schema": {
-          "type": "string"
+          "type": "string",
+          "example": "The Return of the King"
         }
       },
       "region": {
@@ -17694,13 +17703,6 @@
         "schema": {
           "type": "integer",
           "format": "int32"
-        }
-      },
-      "year2": {
-        "name": "year",
-        "in": "query",
-        "schema": {
-          "type": "string"
         }
       },
       "year3": {

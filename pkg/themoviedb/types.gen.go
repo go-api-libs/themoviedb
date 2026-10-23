@@ -501,7 +501,7 @@ type SearchMoviesParams struct {
 	PrimaryReleaseYear string
 	Page               int32
 	Region             string
-	Year               string
+	Year               int32
 }
 
 // SearchMultiParams holds the query parameters for SearchMulti.
@@ -1586,6 +1586,7 @@ type Movie struct {
 	Video            *bool      `json:"video,omitzero"`
 	VoteAverage      float64    `json:"vote_average,omitzero"`
 	VoteCount        int        `json:"vote_count,omitzero"`
+	Softcore         *bool      `json:"softcore,omitzero"`
 }
 
 // MovieAccountStates defines a model

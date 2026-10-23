@@ -1,8 +1,86 @@
 [
 	{
 		"request": {
-			"method": "",
-			"url": ""
+			"method": "GET",
+			"url": "https://api.themoviedb.org/3/search/movie?query=The+Return+of+the+King&year=2003",
+			"header": {
+				"Authorization": "Bearer ***********************************************************************************************************************************************************************************************************************************************",
+				"User-Agent": "tmdb-api"
+			}
+		},
+		"response": {
+			"statusCode": 200,
+			"header": {
+				"Content-Type": "application/json;charset=utf-8"
+			},
+			"body": {
+				"page": 1,
+				"results": [
+					{
+						"adult": false,
+						"backdrop_path": "/ctiw6FZK4N36LmkjSklWEbuvlq9.jpg",
+						"genre_ids": [
+							12,
+							14,
+							28
+						],
+						"id": 122,
+						"title": "The Lord of the Rings: The Return of the King",
+						"original_language": "en",
+						"original_title": "The Lord of the Rings: The Return of the King",
+						"overview": "As armies mass for a final battle that will decide the fate of the world--and powerful, ancient forces of Light and Dark compete to determine the outcome--one member of the Fellowship of the Ring is revealed as the noble heir to the throne of the Kings of Men. Yet, the sole hope for triumph over evil lies with a brave hobbit, Frodo, who, accompanied by his loyal friend Sam and the hideous, wretched Gollum, ventures deep into the very dark heart of Mordor on his seemingly impossible quest to destroy the Ring of Power.​",
+						"popularity": 50.0832,
+						"poster_path": "/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg",
+						"release_date": "2003-12-17",
+						"softcore": false,
+						"video": false,
+						"vote_average": 8.505,
+						"vote_count": 27651
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/6So1F3UlHkvXwziKabnTLyeUrnA.jpg",
+						"genre_ids": [
+							99,
+							36,
+							10770
+						],
+						"id": 218166,
+						"title": "Beyond the Movie: The Return of the King",
+						"original_language": "en",
+						"original_title": "Beyond the Movie: The Return of the King",
+						"overview": "Documentary exploring the parallels between 'The Return of the King' and real events and people in history.",
+						"popularity": 1.5804,
+						"poster_path": "/mVIJapNx0MehdVWgIRlaY0in0XY.jpg",
+						"release_date": "2003-12-12",
+						"softcore": false,
+						"video": false,
+						"vote_average": 8.1,
+						"vote_count": 15
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [
+							99
+						],
+						"id": 774376,
+						"title": "Secrets of Middle-Earth: Inside Tolkien's The Return of the King",
+						"original_language": "en",
+						"original_title": "Secrets of Middle-Earth: Inside Tolkien's The Return of the King",
+						"overview": "Documentary about the writing of the final part of the Lord of the Rings",
+						"popularity": 1.2099,
+						"poster_path": "/zE8OlGJQtYVyClYiNjmjDgtpPFT.jpg",
+						"release_date": "2003-12-23",
+						"softcore": false,
+						"video": false,
+						"vote_average": 0.0,
+						"vote_count": 0
+					}
+				],
+				"total_pages": 1,
+				"total_results": 3
+			}
 		}
 	}
 ]
