@@ -2190,7 +2190,8 @@
           "$ref": "#/components/parameters/page"
         },
         {
-          "$ref": "#/components/parameters/year3"
+          "$ref": "#/components/parameters/year",
+          "description": "Search the first air date and all episode air dates. Valid values are: 1000..9999"
         }
       ],
       "get": {
@@ -17701,17 +17702,7 @@
         "name": "year",
         "in": "query",
         "schema": {
-          "type": "integer",
-          "format": "int32"
-        }
-      },
-      "year3": {
-        "name": "year",
-        "in": "query",
-        "description": "Search the first air date and all episode air dates. Valid values are: 1000..9999",
-        "schema": {
-          "type": "integer",
-          "format": "int32"
+          "type": "integer"
         }
       }
     },

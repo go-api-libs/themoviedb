@@ -3147,7 +3147,7 @@ func (c *Client) DiscoverMovieWithResult[R any](ctx context.Context, params *Dis
 		}
 
 		if params.Year != 0 {
-			q["year"] = []string{strconv.FormatInt(int64(params.Year), 10)}
+			q["year"] = []string{strconv.Itoa(params.Year)}
 		}
 
 		u.RawQuery = q.Encode()
@@ -7877,7 +7877,7 @@ func (c *Client) SearchMoviesWithResult[R any](ctx context.Context, params Searc
 	}
 
 	if params.Year != 0 {
-		q["year"] = []string{strconv.FormatInt(int64(params.Year), 10)}
+		q["year"] = []string{strconv.Itoa(params.Year)}
 	}
 
 	u.RawQuery = q.Encode()
@@ -8149,7 +8149,7 @@ func (c *Client) SearchTvWithResult[R any](ctx context.Context, params SearchTvP
 	}
 
 	if params.Year != 0 {
-		q["year"] = []string{strconv.FormatInt(int64(params.Year), 10)}
+		q["year"] = []string{strconv.Itoa(params.Year)}
 	}
 
 	u.RawQuery = q.Encode()

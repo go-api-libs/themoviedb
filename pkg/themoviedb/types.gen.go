@@ -191,7 +191,7 @@ type DiscoverMovieParams struct {
 	WithoutGenres         string
 	WithoutKeywords       string
 	WithoutWatchProviders string
-	Year                  int32
+	Year                  int
 }
 
 // DiscoverTvParams holds the query parameters for DiscoverTv.
@@ -501,7 +501,7 @@ type SearchMoviesParams struct {
 	PrimaryReleaseYear string
 	Page               int32
 	Region             string
-	Year               int32
+	Year               int
 }
 
 // SearchMultiParams holds the query parameters for SearchMulti.
@@ -529,7 +529,7 @@ type SearchTvParams struct {
 	Language         string
 	Page             int32
 	// Search the first air date and all episode air dates. Valid values are: 1000..9999
-	Year int32
+	Year int
 }
 
 // TrendingAllParams holds the query parameters for TrendingAll.
