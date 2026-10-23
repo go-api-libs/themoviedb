@@ -5015,7 +5015,7 @@ func TestClient_Error(t *testing.T) {
 		})
 	})
 
-	t.Run("MovieNowPlayingList", func(t *testing.T) {
+	t.Run("GetNowPlaying", func(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
@@ -5026,7 +5026,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieNowPlayingList(t.Context(), nil); err == nil {
+			if _, err := c.GetNowPlaying(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, io.EOF) {
 				t.Fatalf("want: %v, got: %v", io.EOF, err)
@@ -5046,7 +5046,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieNowPlayingList(t.Context(), nil); err == nil {
+			if _, err := c.GetNowPlaying(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
 				t.Fatalf("got: %T, want: *api.Error", err)
@@ -5074,7 +5074,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieNowPlayingList(t.Context(), nil); err == nil {
+			if _, err := c.GetNowPlaying(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
@@ -5099,7 +5099,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieNowPlayingList(t.Context(), nil); err == nil {
+			if _, err := c.GetNowPlaying(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if decErr, ok := errors.AsType[*api.DecodingError](err); !ok {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
@@ -5109,7 +5109,7 @@ func TestClient_Error(t *testing.T) {
 		})
 	})
 
-	t.Run("MoviePopularList", func(t *testing.T) {
+	t.Run("GetPopular", func(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
@@ -5120,7 +5120,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MoviePopularList(t.Context(), nil); err == nil {
+			if _, err := c.GetPopular(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, io.EOF) {
 				t.Fatalf("want: %v, got: %v", io.EOF, err)
@@ -5140,7 +5140,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MoviePopularList(t.Context(), nil); err == nil {
+			if _, err := c.GetPopular(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
 				t.Fatalf("got: %T, want: *api.Error", err)
@@ -5168,7 +5168,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MoviePopularList(t.Context(), nil); err == nil {
+			if _, err := c.GetPopular(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
@@ -5193,7 +5193,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MoviePopularList(t.Context(), nil); err == nil {
+			if _, err := c.GetPopular(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if decErr, ok := errors.AsType[*api.DecodingError](err); !ok {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
@@ -5203,7 +5203,7 @@ func TestClient_Error(t *testing.T) {
 		})
 	})
 
-	t.Run("MovieTopRatedList", func(t *testing.T) {
+	t.Run("GetTopRated", func(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
@@ -5214,7 +5214,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieTopRatedList(t.Context(), nil); err == nil {
+			if _, err := c.GetTopRated(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, io.EOF) {
 				t.Fatalf("want: %v, got: %v", io.EOF, err)
@@ -5234,7 +5234,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieTopRatedList(t.Context(), nil); err == nil {
+			if _, err := c.GetTopRated(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
 				t.Fatalf("got: %T, want: *api.Error", err)
@@ -5262,7 +5262,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieTopRatedList(t.Context(), nil); err == nil {
+			if _, err := c.GetTopRated(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
@@ -5287,7 +5287,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieTopRatedList(t.Context(), nil); err == nil {
+			if _, err := c.GetTopRated(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if decErr, ok := errors.AsType[*api.DecodingError](err); !ok {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
@@ -5297,7 +5297,7 @@ func TestClient_Error(t *testing.T) {
 		})
 	})
 
-	t.Run("MovieUpcomingList", func(t *testing.T) {
+	t.Run("GetUpcoming", func(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
@@ -5308,7 +5308,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieUpcomingList(t.Context(), nil); err == nil {
+			if _, err := c.GetUpcoming(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, io.EOF) {
 				t.Fatalf("want: %v, got: %v", io.EOF, err)
@@ -5328,7 +5328,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieUpcomingList(t.Context(), nil); err == nil {
+			if _, err := c.GetUpcoming(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
 				t.Fatalf("got: %T, want: *api.Error", err)
@@ -5356,7 +5356,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieUpcomingList(t.Context(), nil); err == nil {
+			if _, err := c.GetUpcoming(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
@@ -5381,7 +5381,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieUpcomingList(t.Context(), nil); err == nil {
+			if _, err := c.GetUpcoming(t.Context(), nil); err == nil {
 				t.Fatal("expected error")
 			} else if decErr, ok := errors.AsType[*api.DecodingError](err); !ok {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
@@ -5391,7 +5391,7 @@ func TestClient_Error(t *testing.T) {
 		})
 	})
 
-	t.Run("MovieDetails", func(t *testing.T) {
+	t.Run("GetMovie", func(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
@@ -5402,7 +5402,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieDetails(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetMovie(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, io.EOF) {
 				t.Fatalf("want: %v, got: %v", io.EOF, err)
@@ -5422,7 +5422,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieDetails(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetMovie(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
 				t.Fatalf("got: %T, want: *api.Error", err)
@@ -5450,7 +5450,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieDetails(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetMovie(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
@@ -5475,7 +5475,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieDetails(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetMovie(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if decErr, ok := errors.AsType[*api.DecodingError](err); !ok {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
@@ -5579,7 +5579,7 @@ func TestClient_Error(t *testing.T) {
 		})
 	})
 
-	t.Run("MovieAlternativeTitles", func(t *testing.T) {
+	t.Run("GetAlternativeTitles", func(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
@@ -5590,7 +5590,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieAlternativeTitles(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetAlternativeTitles(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, io.EOF) {
 				t.Fatalf("want: %v, got: %v", io.EOF, err)
@@ -5610,7 +5610,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieAlternativeTitles(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetAlternativeTitles(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
 				t.Fatalf("got: %T, want: *api.Error", err)
@@ -5638,7 +5638,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieAlternativeTitles(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetAlternativeTitles(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
@@ -5663,7 +5663,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieAlternativeTitles(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetAlternativeTitles(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if decErr, ok := errors.AsType[*api.DecodingError](err); !ok {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
@@ -5955,7 +5955,7 @@ func TestClient_Error(t *testing.T) {
 		})
 	})
 
-	t.Run("MovieImages", func(t *testing.T) {
+	t.Run("GetMovieImages", func(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
@@ -5966,7 +5966,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieImages(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetMovieImages(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, io.EOF) {
 				t.Fatalf("want: %v, got: %v", io.EOF, err)
@@ -5986,7 +5986,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieImages(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetMovieImages(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
 				t.Fatalf("got: %T, want: *api.Error", err)
@@ -6014,7 +6014,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieImages(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetMovieImages(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
@@ -6039,7 +6039,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.MovieImages(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetMovieImages(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if decErr, ok := errors.AsType[*api.DecodingError](err); !ok {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
@@ -8818,7 +8818,7 @@ func TestClient_Error(t *testing.T) {
 		})
 	})
 
-	t.Run("SearchMovie", func(t *testing.T) {
+	t.Run("SearchMovies", func(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
@@ -8829,7 +8829,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.SearchMovie(t.Context(), SearchMovieParams{}); err == nil {
+			if _, err := c.SearchMovies(t.Context(), SearchMoviesParams{}); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, io.EOF) {
 				t.Fatalf("want: %v, got: %v", io.EOF, err)
@@ -8849,7 +8849,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.SearchMovie(t.Context(), SearchMovieParams{}); err == nil {
+			if _, err := c.SearchMovies(t.Context(), SearchMoviesParams{}); err == nil {
 				t.Fatal("expected error")
 			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
 				t.Fatalf("got: %T, want: *api.Error", err)
@@ -8877,7 +8877,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.SearchMovie(t.Context(), SearchMovieParams{}); err == nil {
+			if _, err := c.SearchMovies(t.Context(), SearchMoviesParams{}); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
@@ -8902,7 +8902,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.SearchMovie(t.Context(), SearchMovieParams{}); err == nil {
+			if _, err := c.SearchMovies(t.Context(), SearchMoviesParams{}); err == nil {
 				t.Fatal("expected error")
 			} else if decErr, ok := errors.AsType[*api.DecodingError](err); !ok {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)

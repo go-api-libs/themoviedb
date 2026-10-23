@@ -321,40 +321,40 @@ type ListRemoveMovieParams struct {
 	SessionID string
 }
 
-// MovieNowPlayingListParams holds the query parameters for MovieNowPlayingList.
-type MovieNowPlayingListParams struct {
+// GetNowPlayingParams holds the query parameters for GetNowPlaying.
+type GetNowPlayingParams struct {
 	Language string
 	Page     int32
 	// ISO-3166-1 code
 	Region string
 }
 
-// MoviePopularListParams holds the query parameters for MoviePopularList.
-type MoviePopularListParams struct {
+// GetPopularParams holds the query parameters for GetPopular.
+type GetPopularParams struct {
 	Language string
 	Page     int32
 	// ISO-3166-1 code
 	Region string
 }
 
-// MovieTopRatedListParams holds the query parameters for MovieTopRatedList.
-type MovieTopRatedListParams struct {
+// GetTopRatedParams holds the query parameters for GetTopRated.
+type GetTopRatedParams struct {
 	Language string
 	Page     int32
 	// ISO-3166-1 code
 	Region string
 }
 
-// MovieUpcomingListParams holds the query parameters for MovieUpcomingList.
-type MovieUpcomingListParams struct {
+// GetUpcomingParams holds the query parameters for GetUpcoming.
+type GetUpcomingParams struct {
 	Language string
 	Page     int32
 	// ISO-3166-1 code
 	Region string
 }
 
-// MovieDetailsParams holds the query parameters for MovieDetails.
-type MovieDetailsParams struct {
+// GetMovieParams holds the query parameters for GetMovie.
+type GetMovieParams struct {
 	// comma separated list of endpoints within this namespace, 20 items max
 	AppendToResponse string
 	Language         string
@@ -366,8 +366,8 @@ type MovieAccountStatesParams struct {
 	GuestSessionID string
 }
 
-// MovieAlternativeTitlesParams holds the query parameters for MovieAlternativeTitles.
-type MovieAlternativeTitlesParams struct {
+// GetAlternativeTitlesParams holds the query parameters for GetAlternativeTitles.
+type GetAlternativeTitlesParams struct {
 	// specify a ISO-3166-1 value to filter the results
 	Country string
 }
@@ -384,8 +384,8 @@ type MovieCreditsParams struct {
 	Language string
 }
 
-// MovieImagesParams holds the query parameters for MovieImages.
-type MovieImagesParams struct {
+// GetMovieImagesParams holds the query parameters for GetMovieImages.
+type GetMovieImagesParams struct {
 	// specify a comma separated list of ISO-639-1 values to query, for example: `en-US,null`
 	IncludeImageLanguage string
 	Language             string
@@ -493,8 +493,8 @@ type SearchKeywordParams struct {
 	Page  int32
 }
 
-// SearchMovieParams holds the query parameters for SearchMovie.
-type SearchMovieParams struct {
+// SearchMoviesParams holds the query parameters for SearchMovies.
+type SearchMoviesParams struct {
 	Query              string
 	IncludeAdult       bool
 	Language           string

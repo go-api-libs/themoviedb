@@ -4643,15 +4643,15 @@ func (c *Client) ListRemoveMovieWithResult[R any](ctx context.Context, listID in
 // Get a list of movies that are currently in theatres.
 //
 //	GET /movie/now_playing
-func (c *Client) MovieNowPlayingList(ctx context.Context, params *MovieNowPlayingListParams) (*MovieNowPlayingListOk, error) {
-	return c.MovieNowPlayingListWithResult[MovieNowPlayingListOk](ctx, params)
+func (c *Client) GetNowPlaying(ctx context.Context, params *GetNowPlayingParams) (*MovieNowPlayingListOk, error) {
+	return c.GetNowPlayingWithResult[MovieNowPlayingListOk](ctx, params)
 }
 
 // Get a list of movies that are currently in theatres.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /movie/now_playing
-func (c *Client) MovieNowPlayingListWithResult[R any](ctx context.Context, params *MovieNowPlayingListParams) (*R, error) {
+func (c *Client) GetNowPlayingWithResult[R any](ctx context.Context, params *GetNowPlayingParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", "now_playing")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -4730,15 +4730,15 @@ func (c *Client) MovieNowPlayingListWithResult[R any](ctx context.Context, param
 // Get a list of movies ordered by popularity.
 //
 //	GET /movie/popular
-func (c *Client) MoviePopularList(ctx context.Context, params *MoviePopularListParams) (*MoviesResultPage, error) {
-	return c.MoviePopularListWithResult[MoviesResultPage](ctx, params)
+func (c *Client) GetPopular(ctx context.Context, params *GetPopularParams) (*MoviesResultPage, error) {
+	return c.GetPopularWithResult[MoviesResultPage](ctx, params)
 }
 
 // Get a list of movies ordered by popularity.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /movie/popular
-func (c *Client) MoviePopularListWithResult[R any](ctx context.Context, params *MoviePopularListParams) (*R, error) {
+func (c *Client) GetPopularWithResult[R any](ctx context.Context, params *GetPopularParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", "popular")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -4817,15 +4817,15 @@ func (c *Client) MoviePopularListWithResult[R any](ctx context.Context, params *
 // Get a list of movies ordered by rating.
 //
 //	GET /movie/top_rated
-func (c *Client) MovieTopRatedList(ctx context.Context, params *MovieTopRatedListParams) (*MoviesResultPage, error) {
-	return c.MovieTopRatedListWithResult[MoviesResultPage](ctx, params)
+func (c *Client) GetTopRated(ctx context.Context, params *GetTopRatedParams) (*MoviesResultPage, error) {
+	return c.GetTopRatedWithResult[MoviesResultPage](ctx, params)
 }
 
 // Get a list of movies ordered by rating.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /movie/top_rated
-func (c *Client) MovieTopRatedListWithResult[R any](ctx context.Context, params *MovieTopRatedListParams) (*R, error) {
+func (c *Client) GetTopRatedWithResult[R any](ctx context.Context, params *GetTopRatedParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", "top_rated")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -4904,15 +4904,15 @@ func (c *Client) MovieTopRatedListWithResult[R any](ctx context.Context, params 
 // Get a list of movies that are being released soon.
 //
 //	GET /movie/upcoming
-func (c *Client) MovieUpcomingList(ctx context.Context, params *MovieUpcomingListParams) (*MovieUpcomingListOk, error) {
-	return c.MovieUpcomingListWithResult[MovieUpcomingListOk](ctx, params)
+func (c *Client) GetUpcoming(ctx context.Context, params *GetUpcomingParams) (*MovieUpcomingListOk, error) {
+	return c.GetUpcomingWithResult[MovieUpcomingListOk](ctx, params)
 }
 
 // Get a list of movies that are being released soon.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /movie/upcoming
-func (c *Client) MovieUpcomingListWithResult[R any](ctx context.Context, params *MovieUpcomingListParams) (*R, error) {
+func (c *Client) GetUpcomingWithResult[R any](ctx context.Context, params *GetUpcomingParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", "upcoming")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -4991,15 +4991,15 @@ func (c *Client) MovieUpcomingListWithResult[R any](ctx context.Context, params 
 // Get the top level details of a movie by ID.
 //
 //	GET /movie/{movie_id}
-func (c *Client) MovieDetails(ctx context.Context, movieID int32, params *MovieDetailsParams) (*MovieDetailsOk, error) {
-	return c.MovieDetailsWithResult[MovieDetailsOk](ctx, movieID, params)
+func (c *Client) GetMovie(ctx context.Context, movieID int32, params *GetMovieParams) (*MovieDetailsOk, error) {
+	return c.GetMovieWithResult[MovieDetailsOk](ctx, movieID, params)
 }
 
 // Get the top level details of a movie by ID.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /movie/{movie_id}
-func (c *Client) MovieDetailsWithResult[R any](ctx context.Context, movieID int32, params *MovieDetailsParams) (*R, error) {
+func (c *Client) GetMovieWithResult[R any](ctx context.Context, movieID int32, params *GetMovieParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10))
 	if params != nil {
 		q := make(url.Values, 2)
@@ -5157,15 +5157,15 @@ func (c *Client) MovieAccountStatesWithResult[R any](ctx context.Context, movieI
 // Get the alternative titles for a movie.
 //
 //	GET /movie/{movie_id}/alternative_titles
-func (c *Client) MovieAlternativeTitles(ctx context.Context, movieID int32, params *MovieAlternativeTitlesParams) (*AlternativeTitlesOk, error) {
-	return c.MovieAlternativeTitlesWithResult[AlternativeTitlesOk](ctx, movieID, params)
+func (c *Client) GetAlternativeTitles(ctx context.Context, movieID int32, params *GetAlternativeTitlesParams) (*AlternativeTitlesOk, error) {
+	return c.GetAlternativeTitlesWithResult[AlternativeTitlesOk](ctx, movieID, params)
 }
 
 // Get the alternative titles for a movie.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /movie/{movie_id}/alternative_titles
-func (c *Client) MovieAlternativeTitlesWithResult[R any](ctx context.Context, movieID int32, params *MovieAlternativeTitlesParams) (*R, error) {
+func (c *Client) GetAlternativeTitlesWithResult[R any](ctx context.Context, movieID int32, params *GetAlternativeTitlesParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "alternative_titles")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -5471,15 +5471,15 @@ func (c *Client) MovieExternalIdsWithResult[R any](ctx context.Context, movieID 
 // Get the images that belong to a movie.
 //
 //	GET /movie/{movie_id}/images
-func (c *Client) MovieImages(ctx context.Context, movieID int32, params *MovieImagesParams) (*MovieImages, error) {
-	return c.MovieImagesWithResult[MovieImages](ctx, movieID, params)
+func (c *Client) GetMovieImages(ctx context.Context, movieID int32, params *GetMovieImagesParams) (*MovieImages, error) {
+	return c.GetMovieImagesWithResult[MovieImages](ctx, movieID, params)
 }
 
 // Get the images that belong to a movie.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /movie/{movie_id}/images
-func (c *Client) MovieImagesWithResult[R any](ctx context.Context, movieID int32, params *MovieImagesParams) (*R, error) {
+func (c *Client) GetMovieImagesWithResult[R any](ctx context.Context, movieID int32, params *GetMovieImagesParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "images")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -7841,15 +7841,15 @@ func (c *Client) SearchKeywordWithResult[R any](ctx context.Context, params Sear
 // Search for movies by their original, translated and alternative titles.
 //
 //	GET /search/movie
-func (c *Client) SearchMovie(ctx context.Context, params SearchMovieParams) (*MoviesResultPage, error) {
-	return c.SearchMovieWithResult[MoviesResultPage](ctx, params)
+func (c *Client) SearchMovies(ctx context.Context, params SearchMoviesParams) (*MoviesResultPage, error) {
+	return c.SearchMoviesWithResult[MoviesResultPage](ctx, params)
 }
 
 // Search for movies by their original, translated and alternative titles.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /search/movie
-func (c *Client) SearchMovieWithResult[R any](ctx context.Context, params SearchMovieParams) (*R, error) {
+func (c *Client) SearchMoviesWithResult[R any](ctx context.Context, params SearchMoviesParams) (*R, error) {
 	u := c.baseURL.JoinPath("search", "movie")
 
 	q := make(url.Values, 7)

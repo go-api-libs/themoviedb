@@ -1275,7 +1275,7 @@
       "get": {
         "summary": "Now Playing",
         "description": "Get a list of movies that are currently in theatres.",
-        "operationId": "movie-now-playing-list",
+        "operationId": "GetNowPlaying",
         "responses": {
           "200": {
             "$ref": "#/components/responses/MovieNowPlayingListOk"
@@ -1298,7 +1298,7 @@
       "get": {
         "summary": "Popular",
         "description": "Get a list of movies ordered by popularity.",
-        "operationId": "movie-popular-list",
+        "operationId": "GetPopular",
         "responses": {
           "200": {
             "$ref": "#/components/responses/MoviePopularListOk"
@@ -1321,7 +1321,7 @@
       "get": {
         "summary": "Top Rated",
         "description": "Get a list of movies ordered by rating.",
-        "operationId": "movie-top-rated-list",
+        "operationId": "GetTopRated",
         "responses": {
           "200": {
             "$ref": "#/components/responses/MovieTopRatedListOk"
@@ -1344,7 +1344,7 @@
       "get": {
         "summary": "Upcoming",
         "description": "Get a list of movies that are being released soon.",
-        "operationId": "movie-upcoming-list",
+        "operationId": "GetUpcoming",
         "responses": {
           "200": {
             "$ref": "#/components/responses/MovieUpcomingListOk"
@@ -1367,7 +1367,7 @@
       "get": {
         "summary": "Details",
         "description": "Get the top level details of a movie by ID.",
-        "operationId": "movie-details",
+        "operationId": "GetMovie",
         "responses": {
           "200": {
             "$ref": "#/components/responses/MovieDetailsOk"
@@ -1410,7 +1410,7 @@
       "get": {
         "summary": "Alternative Titles",
         "description": "Get the alternative titles for a movie.",
-        "operationId": "movie-alternative-titles",
+        "operationId": "GetAlternativeTitles",
         "responses": {
           "200": {
             "$ref": "#/components/responses/AlternativeTitlesOk"
@@ -1494,7 +1494,7 @@
       "get": {
         "summary": "Images",
         "description": "Get the images that belong to a movie.",
-        "operationId": "movie-images",
+        "operationId": "GetMovieImages",
         "responses": {
           "200": {
             "$ref": "#/components/responses/MovieImagesOk"
@@ -2112,7 +2112,7 @@
       "get": {
         "summary": "Movie",
         "description": "Search for movies by their original, translated and alternative titles.",
-        "operationId": "search-movie",
+        "operationId": "SearchMovies",
         "responses": {
           "200": {
             "$ref": "#/components/responses/MoviesResultPageOk"
