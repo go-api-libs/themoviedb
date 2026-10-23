@@ -901,6 +901,28 @@ type AccountRatedTvOkResultsItem struct {
 	Rating           int      `json:"rating,omitzero"`
 }
 
+// AlternativeTitle defines a model
+type AlternativeTitle struct {
+	Iso31661 string `json:"iso_3166_1,omitzero"`
+	Title    string `json:"title,omitzero"`
+	Type     string `json:"type,omitzero"`
+}
+
+// AlternativeTitles defines a model
+type AlternativeTitles []AlternativeTitle
+
+// AlternativeTitlesOk defines a model
+type AlternativeTitlesOk struct {
+	ID     int               `json:"id,omitzero"`
+	Titles AlternativeTitles `json:"titles,omitzero"`
+}
+
+// AlternativeTitlesWrapper defines a model
+type AlternativeTitlesWrapper struct {
+	ID      int               `json:"id,omitzero"`
+	Results AlternativeTitles `json:"results,omitzero"`
+}
+
 // AuthenticationCreateGuestSessionOk defines a model
 type AuthenticationCreateGuestSessionOk struct {
 	Success        *bool  `json:"success,omitzero"`
@@ -926,11 +948,11 @@ type AuthenticationDeleteSessionOk struct {
 	Success *bool `json:"success,omitzero"`
 }
 
-// AuthenticationValidateKey defines a model
-type AuthenticationValidateKey struct {
-	Success       *bool  `json:"success,omitzero"`
-	StatusCode    int    `json:"status_code,omitzero"`
-	StatusMessage string `json:"status_message,omitzero"`
+// Certification defines a model
+type Certification struct {
+	Certification string `json:"certification,omitzero"`
+	Meaning       string `json:"meaning,omitzero"`
+	Order         int    `json:"order,omitzero"`
 }
 
 // CertificationMovieListOk defines a model
@@ -940,110 +962,103 @@ type CertificationMovieListOk struct {
 
 // CertificationMovieListOkCertifications defines a model
 type CertificationMovieListOkCertifications struct {
-	Au   CertificationsTvListCertificationsAr `json:"AU,omitzero"`
-	Bg   CertificationsTvListCertificationsAr `json:"BG,omitzero"`
-	Br   CertificationsTvListCertificationsAr `json:"BR,omitzero"`
-	Ca   CertificationsTvListCertificationsAr `json:"CA,omitzero"`
-	CaQc CertificationsTvListCertificationsAr `json:"CA-QC,omitzero"`
-	De   CertificationsTvListCertificationsAr `json:"DE,omitzero"`
-	Dk   CertificationsTvListCertificationsAr `json:"DK,omitzero"`
-	Es   CertificationsTvListCertificationsAr `json:"ES,omitzero"`
-	Fi   CertificationsTvListCertificationsAr `json:"FI,omitzero"`
-	Fr   CertificationsTvListCertificationsAr `json:"FR,omitzero"`
-	Gb   CertificationsTvListCertificationsAr `json:"GB,omitzero"`
-	Hu   CertificationsTvListCertificationsAr `json:"HU,omitzero"`
-	In   CertificationsTvListCertificationsAr `json:"IN,omitzero"`
-	It   CertificationsTvListCertificationsAr `json:"IT,omitzero"`
-	Lt   CertificationsTvListCertificationsAr `json:"LT,omitzero"`
-	My   CertificationsTvListCertificationsAr `json:"MY,omitzero"`
-	Nl   CertificationsTvListCertificationsAr `json:"NL,omitzero"`
-	No   CertificationsTvListCertificationsAr `json:"NO,omitzero"`
-	Nz   CertificationsTvListCertificationsAr `json:"NZ,omitzero"`
-	Ph   CertificationsTvListCertificationsAr `json:"PH,omitzero"`
-	Pt   CertificationsTvListCertificationsAr `json:"PT,omitzero"`
-	Ru   CertificationsTvListCertificationsAr `json:"RU,omitzero"`
-	Se   CertificationsTvListCertificationsAr `json:"SE,omitzero"`
-	Us   CertificationsTvListCertificationsAr `json:"US,omitzero"`
-	Kr   CertificationsTvListCertificationsAr `json:"KR,omitzero"`
-	Sk   CertificationsTvListCertificationsAr `json:"SK,omitzero"`
-	Th   CertificationsTvListCertificationsAr `json:"TH,omitzero"`
-	Mx   CertificationsTvListCertificationsAr `json:"MX,omitzero"`
-	ID   CertificationsTvListCertificationsAr `json:"ID,omitzero"`
-	Tr   CertificationsTvListCertificationsAr `json:"TR,omitzero"`
-	Ar   CertificationsTvListCertificationsAr `json:"AR,omitzero"`
-	Gr   CertificationsTvListCertificationsAr `json:"GR,omitzero"`
-	Tw   CertificationsTvListCertificationsAr `json:"TW,omitzero"`
-	Za   CertificationsTvListCertificationsAr `json:"ZA,omitzero"`
-	Sg   CertificationsTvListCertificationsAr `json:"SG,omitzero"`
-	Ie   CertificationsTvListCertificationsAr `json:"IE,omitzero"`
-	Pr   CertificationsTvListCertificationsAr `json:"PR,omitzero"`
-	Jp   CertificationsTvListCertificationsAr `json:"JP,omitzero"`
-	Vi   CertificationsTvListCertificationsAr `json:"VI,omitzero"`
-	Ch   CertificationsTvListCertificationsAr `json:"CH,omitzero"`
-	Il   CertificationsTvListCertificationsAr `json:"IL,omitzero"`
-	Hk   CertificationsTvListCertificationsAr `json:"HK,omitzero"`
-	Mo   CertificationsTvListCertificationsAr `json:"MO,omitzero"`
-	Lv   CertificationsTvListCertificationsAr `json:"LV,omitzero"`
-	Lu   CertificationsTvListCertificationsAr `json:"LU,omitzero"`
+	Au   Certifications `json:"AU,omitzero"`
+	Bg   Certifications `json:"BG,omitzero"`
+	Br   Certifications `json:"BR,omitzero"`
+	Ca   Certifications `json:"CA,omitzero"`
+	CaQc Certifications `json:"CA-QC,omitzero"`
+	De   Certifications `json:"DE,omitzero"`
+	Dk   Certifications `json:"DK,omitzero"`
+	Es   Certifications `json:"ES,omitzero"`
+	Fi   Certifications `json:"FI,omitzero"`
+	Fr   Certifications `json:"FR,omitzero"`
+	Gb   Certifications `json:"GB,omitzero"`
+	Hu   Certifications `json:"HU,omitzero"`
+	In   Certifications `json:"IN,omitzero"`
+	It   Certifications `json:"IT,omitzero"`
+	Lt   Certifications `json:"LT,omitzero"`
+	My   Certifications `json:"MY,omitzero"`
+	Nl   Certifications `json:"NL,omitzero"`
+	No   Certifications `json:"NO,omitzero"`
+	Nz   Certifications `json:"NZ,omitzero"`
+	Ph   Certifications `json:"PH,omitzero"`
+	Pt   Certifications `json:"PT,omitzero"`
+	Ru   Certifications `json:"RU,omitzero"`
+	Se   Certifications `json:"SE,omitzero"`
+	Us   Certifications `json:"US,omitzero"`
+	Kr   Certifications `json:"KR,omitzero"`
+	Sk   Certifications `json:"SK,omitzero"`
+	Th   Certifications `json:"TH,omitzero"`
+	Mx   Certifications `json:"MX,omitzero"`
+	ID   Certifications `json:"ID,omitzero"`
+	Tr   Certifications `json:"TR,omitzero"`
+	Ar   Certifications `json:"AR,omitzero"`
+	Gr   Certifications `json:"GR,omitzero"`
+	Tw   Certifications `json:"TW,omitzero"`
+	Za   Certifications `json:"ZA,omitzero"`
+	Sg   Certifications `json:"SG,omitzero"`
+	Ie   Certifications `json:"IE,omitzero"`
+	Pr   Certifications `json:"PR,omitzero"`
+	Jp   Certifications `json:"JP,omitzero"`
+	Vi   Certifications `json:"VI,omitzero"`
+	Ch   Certifications `json:"CH,omitzero"`
+	Il   Certifications `json:"IL,omitzero"`
+	Hk   Certifications `json:"HK,omitzero"`
+	Mo   Certifications `json:"MO,omitzero"`
+	Lv   Certifications `json:"LV,omitzero"`
+	Lu   Certifications `json:"LU,omitzero"`
 }
 
-// CertificationsTvListCertificationsAr defines a model
-type CertificationsTvListCertificationsAr []CertificationsTvListCertificationsArItem
+// Certifications defines a model
+type Certifications []Certification
 
-// CertificationsTvListCertificationsArItem defines a model
-type CertificationsTvListCertificationsArItem struct {
-	Certification string `json:"certification,omitzero"`
-	Meaning       string `json:"meaning,omitzero"`
-	Order         int    `json:"order,omitzero"`
+// CertificationsByRegion defines a model
+type CertificationsByRegion struct {
+	Au   Certifications `json:"AU,omitzero"`
+	Br   Certifications `json:"BR,omitzero"`
+	Ca   Certifications `json:"CA,omitzero"`
+	CaQc Certifications `json:"CA-QC,omitzero"`
+	De   Certifications `json:"DE,omitzero"`
+	Es   Certifications `json:"ES,omitzero"`
+	Fr   Certifications `json:"FR,omitzero"`
+	Gb   Certifications `json:"GB,omitzero"`
+	Hu   Certifications `json:"HU,omitzero"`
+	Kr   Certifications `json:"KR,omitzero"`
+	Lt   Certifications `json:"LT,omitzero"`
+	Nl   Certifications `json:"NL,omitzero"`
+	Ph   Certifications `json:"PH,omitzero"`
+	Pt   Certifications `json:"PT,omitzero"`
+	Ru   Certifications `json:"RU,omitzero"`
+	Sk   Certifications `json:"SK,omitzero"`
+	Th   Certifications `json:"TH,omitzero"`
+	Us   Certifications `json:"US,omitzero"`
+	It   Certifications `json:"IT,omitzero"`
+	Fi   Certifications `json:"FI,omitzero"`
+	My   Certifications `json:"MY,omitzero"`
+	Nz   Certifications `json:"NZ,omitzero"`
+	No   Certifications `json:"NO,omitzero"`
+	Bg   Certifications `json:"BG,omitzero"`
+	Mx   Certifications `json:"MX,omitzero"`
+	In   Certifications `json:"IN,omitzero"`
+	Dk   Certifications `json:"DK,omitzero"`
+	Se   Certifications `json:"SE,omitzero"`
+	ID   Certifications `json:"ID,omitzero"`
+	Tr   Certifications `json:"TR,omitzero"`
+	Ar   Certifications `json:"AR,omitzero"`
+	Pl   Certifications `json:"PL,omitzero"`
+	Ma   Certifications `json:"MA,omitzero"`
+	Gr   Certifications `json:"GR,omitzero"`
+	Il   Certifications `json:"IL,omitzero"`
+	Tw   Certifications `json:"TW,omitzero"`
+	Za   Certifications `json:"ZA,omitzero"`
+	Sg   Certifications `json:"SG,omitzero"`
+	Pr   Certifications `json:"PR,omitzero"`
+	Vi   Certifications `json:"VI,omitzero"`
 }
 
-// CertificationsTvListOk defines a model
-type CertificationsTvListOk struct {
-	Certifications *CertificationsTvListOkCertifications `json:"certifications,omitzero"`
-}
-
-// CertificationsTvListOkCertifications defines a model
-type CertificationsTvListOkCertifications struct {
-	Au   CertificationsTvListCertificationsAr `json:"AU,omitzero"`
-	Br   CertificationsTvListCertificationsAr `json:"BR,omitzero"`
-	Ca   CertificationsTvListCertificationsAr `json:"CA,omitzero"`
-	CaQc CertificationsTvListCertificationsAr `json:"CA-QC,omitzero"`
-	De   CertificationsTvListCertificationsAr `json:"DE,omitzero"`
-	Es   CertificationsTvListCertificationsAr `json:"ES,omitzero"`
-	Fr   CertificationsTvListCertificationsAr `json:"FR,omitzero"`
-	Gb   CertificationsTvListCertificationsAr `json:"GB,omitzero"`
-	Hu   CertificationsTvListCertificationsAr `json:"HU,omitzero"`
-	Kr   CertificationsTvListCertificationsAr `json:"KR,omitzero"`
-	Lt   CertificationsTvListCertificationsAr `json:"LT,omitzero"`
-	Nl   CertificationsTvListCertificationsAr `json:"NL,omitzero"`
-	Ph   CertificationsTvListCertificationsAr `json:"PH,omitzero"`
-	Pt   CertificationsTvListCertificationsAr `json:"PT,omitzero"`
-	Ru   CertificationsTvListCertificationsAr `json:"RU,omitzero"`
-	Sk   CertificationsTvListCertificationsAr `json:"SK,omitzero"`
-	Th   CertificationsTvListCertificationsAr `json:"TH,omitzero"`
-	Us   CertificationsTvListCertificationsAr `json:"US,omitzero"`
-	It   CertificationsTvListCertificationsAr `json:"IT,omitzero"`
-	Fi   CertificationsTvListCertificationsAr `json:"FI,omitzero"`
-	My   CertificationsTvListCertificationsAr `json:"MY,omitzero"`
-	Nz   CertificationsTvListCertificationsAr `json:"NZ,omitzero"`
-	No   CertificationsTvListCertificationsAr `json:"NO,omitzero"`
-	Bg   CertificationsTvListCertificationsAr `json:"BG,omitzero"`
-	Mx   CertificationsTvListCertificationsAr `json:"MX,omitzero"`
-	In   CertificationsTvListCertificationsAr `json:"IN,omitzero"`
-	Dk   CertificationsTvListCertificationsAr `json:"DK,omitzero"`
-	Se   CertificationsTvListCertificationsAr `json:"SE,omitzero"`
-	ID   CertificationsTvListCertificationsAr `json:"ID,omitzero"`
-	Tr   CertificationsTvListCertificationsAr `json:"TR,omitzero"`
-	Ar   CertificationsTvListCertificationsAr `json:"AR,omitzero"`
-	Pl   CertificationsTvListCertificationsAr `json:"PL,omitzero"`
-	Ma   CertificationsTvListCertificationsAr `json:"MA,omitzero"`
-	Gr   CertificationsTvListCertificationsAr `json:"GR,omitzero"`
-	Il   CertificationsTvListCertificationsAr `json:"IL,omitzero"`
-	Tw   CertificationsTvListCertificationsAr `json:"TW,omitzero"`
-	Za   CertificationsTvListCertificationsAr `json:"ZA,omitzero"`
-	Sg   CertificationsTvListCertificationsAr `json:"SG,omitzero"`
-	Pr   CertificationsTvListCertificationsAr `json:"PR,omitzero"`
-	Vi   CertificationsTvListCertificationsAr `json:"VI,omitzero"`
+// CertificationsByRegionWrapper defines a model
+type CertificationsByRegionWrapper struct {
+	Certifications *CertificationsByRegion `json:"certifications,omitzero"`
 }
 
 // ChangesTvList defines a model
@@ -1321,6 +1336,13 @@ type DiscoverTvResultsItem struct {
 	VoteCount        int      `json:"vote_count,omitzero"`
 }
 
+// Error defines a model
+type Error struct {
+	StatusCode    *int   `json:"status_code,omitzero"`
+	StatusMessage string `json:"status_message,omitzero"`
+	Success       *bool  `json:"success,omitzero"`
+}
+
 // ExternalSource defines a model
 type ExternalSource string
 
@@ -1360,7 +1382,7 @@ type GenreTvList struct {
 }
 
 // GenreTvListGenres defines a model
-type GenreTvListGenres []KeywordDetails
+type GenreTvListGenres []Keyword
 
 // GuestSessionRatedMoviesOk defines a model
 type GuestSessionRatedMoviesOk struct {
@@ -1450,19 +1472,19 @@ type GuestSessionRatedTvOkResultsItem struct {
 	Rating           float64  `json:"rating,omitzero"`
 }
 
-// KeywordDetails defines a model
-type KeywordDetails struct {
+// Keyword defines a model
+type Keyword struct {
 	ID   int    `json:"id,omitzero"`
 	Name string `json:"name,omitzero"`
 }
 
 // KeywordMoviesOk defines a model
 type KeywordMoviesOk struct {
-	ID           int                `json:"id,omitzero"`
-	Page         int                `json:"page,omitzero"`
-	Results      SearchMovieResults `json:"results,omitzero"`
-	TotalPages   int                `json:"total_pages,omitzero"`
-	TotalResults int                `json:"total_results,omitzero"`
+	ID           int    `json:"id,omitzero"`
+	Page         int    `json:"page,omitzero"`
+	Results      Movies `json:"results,omitzero"`
+	TotalPages   int    `json:"total_pages,omitzero"`
+	TotalResults int    `json:"total_results,omitzero"`
 }
 
 // ListAddMovie defines a model
@@ -1554,33 +1576,30 @@ type ListsCopyOkResultsItem struct {
 	PosterPath    *struct{} `json:"poster_path,omitzero"`
 }
 
+// Movie defines a model
+type Movie struct {
+	Adult            *bool   `json:"adult,omitzero"`
+	BackdropPath     string  `json:"backdrop_path,omitzero"`
+	GenreIds         []int   `json:"genre_ids,omitzero"`
+	ID               int     `json:"id,omitzero"`
+	OriginalLanguage string  `json:"original_language,omitzero"`
+	OriginalTitle    string  `json:"original_title,omitzero"`
+	Overview         string  `json:"overview,omitzero"`
+	Popularity       float64 `json:"popularity,omitzero"`
+	PosterPath       string  `json:"poster_path,omitzero"`
+	ReleaseDate      string  `json:"release_date,omitzero"`
+	Title            string  `json:"title,omitzero"`
+	Video            *bool   `json:"video,omitzero"`
+	VoteAverage      float64 `json:"vote_average,omitzero"`
+	VoteCount        int     `json:"vote_count,omitzero"`
+}
+
 // MovieAccountStates defines a model
 type MovieAccountStates struct {
-	ID        int                      `json:"id,omitzero"`
-	Favorite  *bool                    `json:"favorite,omitzero"`
-	Rated     *MovieAccountStatesRated `json:"rated,omitzero"`
-	Watchlist *bool                    `json:"watchlist,omitzero"`
-}
-
-// MovieAccountStatesRated defines a model
-type MovieAccountStatesRated struct {
-	Value int `json:"value,omitzero"`
-}
-
-// MovieAlternativeTitles defines a model
-type MovieAlternativeTitles []MovieAlternativeTitlesItem
-
-// MovieAlternativeTitlesItem defines a model
-type MovieAlternativeTitlesItem struct {
-	Iso31661 string `json:"iso_3166_1,omitzero"`
-	Title    string `json:"title,omitzero"`
-	Type     string `json:"type,omitzero"`
-}
-
-// MovieAlternativeTitlesOk defines a model
-type MovieAlternativeTitlesOk struct {
-	ID     int                    `json:"id,omitzero"`
-	Titles MovieAlternativeTitles `json:"titles,omitzero"`
+	ID        int     `json:"id,omitzero"`
+	Favorite  *bool   `json:"favorite,omitzero"`
+	Rated     *Rating `json:"rated,omitzero"`
+	Watchlist *bool   `json:"watchlist,omitzero"`
 }
 
 // MovieChangesOk defines a model
@@ -1820,7 +1839,7 @@ type MovieListsResultsItem struct {
 type MovieNowPlayingListOk struct {
 	Dates        *MovieUpcomingListDates `json:"dates,omitzero"`
 	Page         int                     `json:"page,omitzero"`
-	Results      SearchMovieResults      `json:"results,omitzero"`
+	Results      Movies                  `json:"results,omitzero"`
 	TotalPages   int                     `json:"total_pages,omitzero"`
 	TotalResults int                     `json:"total_results,omitzero"`
 }
@@ -2135,6 +2154,17 @@ type MovieWatchProvidersResultsCv struct {
 	Link string                          `json:"link,omitzero"`
 	Buy  MovieWatchProvidersResultsAeBuy `json:"buy,omitzero"`
 	Rent MovieWatchProvidersResultsAeBuy `json:"rent,omitzero"`
+}
+
+// Movies defines a model
+type Movies []Movie
+
+// MoviesResultPage defines a model
+type MoviesResultPage struct {
+	Page         int    `json:"page,omitzero"`
+	Results      Movies `json:"results,omitzero"`
+	TotalPages   int    `json:"total_pages,omitzero"`
+	TotalResults int    `json:"total_results,omitzero"`
 }
 
 // NetworkDetailsOk defines a model
@@ -2470,6 +2500,11 @@ type PersonTvCreditsOkCrewItem struct {
 	Job              string   `json:"job,omitzero"`
 }
 
+// Rating defines a model
+type Rating struct {
+	Value int `json:"value,omitzero"`
+}
+
 // ReviewDetailsAuthorDetails defines a model
 type ReviewDetailsAuthorDetails struct {
 	Name       string `json:"name,omitzero"`
@@ -2543,35 +2578,6 @@ type SearchKeywordOk struct {
 	TotalResults int               `json:"total_results,omitzero"`
 }
 
-// SearchMovie defines a model
-type SearchMovie struct {
-	Page         int                `json:"page,omitzero"`
-	Results      SearchMovieResults `json:"results,omitzero"`
-	TotalPages   int                `json:"total_pages,omitzero"`
-	TotalResults int                `json:"total_results,omitzero"`
-}
-
-// SearchMovieResults defines a model
-type SearchMovieResults []SearchMovieResultsItem
-
-// SearchMovieResultsItem defines a model
-type SearchMovieResultsItem struct {
-	Adult            *bool   `json:"adult,omitzero"`
-	BackdropPath     string  `json:"backdrop_path,omitzero"`
-	GenreIds         []int   `json:"genre_ids,omitzero"`
-	ID               int     `json:"id,omitzero"`
-	OriginalLanguage string  `json:"original_language,omitzero"`
-	OriginalTitle    string  `json:"original_title,omitzero"`
-	Overview         string  `json:"overview,omitzero"`
-	Popularity       float64 `json:"popularity,omitzero"`
-	PosterPath       string  `json:"poster_path,omitzero"`
-	ReleaseDate      string  `json:"release_date,omitzero"`
-	Title            string  `json:"title,omitzero"`
-	Video            *bool   `json:"video,omitzero"`
-	VoteAverage      float64 `json:"vote_average,omitzero"`
-	VoteCount        int     `json:"vote_count,omitzero"`
-}
-
 // SearchMultiOk defines a model
 type SearchMultiOk struct {
 	Page         int                  `json:"page,omitzero"`
@@ -2626,35 +2632,6 @@ type SearchPersonOkResultsItem struct {
 	Popularity         float64            `json:"popularity,omitzero"`
 	ProfilePath        string             `json:"profile_path,omitzero"`
 	KnownFor           TrendingAllResults `json:"known_for,omitzero"`
-}
-
-// SearchTv defines a model
-type SearchTv struct {
-	Page         int             `json:"page,omitzero"`
-	Results      SearchTvResults `json:"results,omitzero"`
-	TotalPages   int             `json:"total_pages,omitzero"`
-	TotalResults int             `json:"total_results,omitzero"`
-}
-
-// SearchTvResults defines a model
-type SearchTvResults []SearchTvResultsItem
-
-// SearchTvResultsItem defines a model
-type SearchTvResultsItem struct {
-	Adult            *bool    `json:"adult,omitzero"`
-	BackdropPath     string   `json:"backdrop_path,omitzero"`
-	GenreIds         []int    `json:"genre_ids,omitzero"`
-	ID               int      `json:"id,omitzero"`
-	OriginCountry    []string `json:"origin_country,omitzero"`
-	OriginalLanguage string   `json:"original_language,omitzero"`
-	OriginalName     string   `json:"original_name,omitzero"`
-	Overview         string   `json:"overview,omitzero"`
-	Popularity       float64  `json:"popularity,omitzero"`
-	PosterPath       string   `json:"poster_path,omitzero"`
-	FirstAirDate     string   `json:"first_air_date,omitzero"`
-	Name             string   `json:"name,omitzero"`
-	VoteAverage      float64  `json:"vote_average,omitzero"`
-	VoteCount        int      `json:"vote_count,omitzero"`
 }
 
 // SortBy defines a model
@@ -2731,6 +2708,35 @@ func (e SortBy9) Valid() bool {
 	default:
 		return false
 	}
+}
+
+// TVShow defines a model
+type TVShow struct {
+	Adult            *bool    `json:"adult,omitzero"`
+	BackdropPath     string   `json:"backdrop_path,omitzero"`
+	GenreIds         []int    `json:"genre_ids,omitzero"`
+	ID               int      `json:"id,omitzero"`
+	OriginCountry    []string `json:"origin_country,omitzero"`
+	OriginalLanguage string   `json:"original_language,omitzero"`
+	OriginalName     string   `json:"original_name,omitzero"`
+	Overview         string   `json:"overview,omitzero"`
+	Popularity       float64  `json:"popularity,omitzero"`
+	PosterPath       string   `json:"poster_path,omitzero"`
+	FirstAirDate     string   `json:"first_air_date,omitzero"`
+	Name             string   `json:"name,omitzero"`
+	VoteAverage      float64  `json:"vote_average,omitzero"`
+	VoteCount        int      `json:"vote_count,omitzero"`
+}
+
+// TVShows defines a model
+type TVShows []TVShow
+
+// TVShowsResultPage defines a model
+type TVShowsResultPage struct {
+	Page         int     `json:"page,omitzero"`
+	Results      TVShows `json:"results,omitzero"`
+	TotalPages   int     `json:"total_pages,omitzero"`
+	TotalResults int     `json:"total_results,omitzero"`
 }
 
 // TimeWindow defines a model
@@ -2982,9 +2988,9 @@ type TvSeasonAccountStatesOkResults []TvSeasonAccountStatesOkResultsItem
 
 // TvSeasonAccountStatesOkResultsItem defines a model
 type TvSeasonAccountStatesOkResultsItem struct {
-	ID            int                      `json:"id,omitzero"`
-	EpisodeNumber int                      `json:"episode_number,omitzero"`
-	Rated         *MovieAccountStatesRated `json:"rated,omitzero"`
+	ID            int     `json:"id,omitzero"`
+	EpisodeNumber int     `json:"episode_number,omitzero"`
+	Rated         *Rating `json:"rated,omitzero"`
 }
 
 // TvSeasonAggregateCreditsCast defines a model
@@ -3331,12 +3337,6 @@ type TvSeriesAggregateCreditsOkCrewItem struct {
 	Jobs               TvSeasonAggregateCreditsCrewItemJobs `json:"jobs,omitzero"`
 	Department         string                               `json:"department,omitzero"`
 	TotalEpisodeCount  int                                  `json:"total_episode_count,omitzero"`
-}
-
-// TvSeriesAlternativeTitlesOk defines a model
-type TvSeriesAlternativeTitlesOk struct {
-	ID      int                    `json:"id,omitzero"`
-	Results MovieAlternativeTitles `json:"results,omitzero"`
 }
 
 // TvSeriesChangesItemItemsItemValue defines a model
@@ -3826,6 +3826,13 @@ type TvSeriesWatchProvidersOkResultsUs struct {
 	Free     MovieWatchProvidersResultsAeBuy `json:"free,omitzero"`
 	Buy      MovieWatchProvidersResultsAeBuy `json:"buy,omitzero"`
 	Flatrate MovieWatchProvidersResultsAeBuy `json:"flatrate,omitzero"`
+}
+
+// ValidKey defines a model
+type ValidKey struct {
+	Success       bool   `json:"success,omitzero"`
+	StatusCode    int    `json:"status_code,omitzero"`
+	StatusMessage string `json:"status_message,omitzero"`
 }
 
 // WatchProviderTvList defines a model

@@ -96,8 +96,8 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 // Test your API Key to see if it's valid.
 //
 //	GET /authentication
-func (c *Client) AuthenticationValidateKey(ctx context.Context) (*AuthenticationValidateKey, error) {
-	return c.AuthenticationValidateKeyWithResult[AuthenticationValidateKey](ctx)
+func (c *Client) AuthenticationValidateKey(ctx context.Context) (*ValidKey, error) {
+	return c.AuthenticationValidateKeyWithResult[ValidKey](ctx)
 }
 
 // Test your API Key to see if it's valid.
@@ -133,7 +133,7 @@ func (c *Client) AuthenticationValidateKeyWithResult[R any](ctx context.Context)
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*AuthenticationValidateKey); ok {
+			if _, ok := any(&out).(*ValidKey); ok {
 				opts = jsonOpts
 			}
 
@@ -160,7 +160,7 @@ func (c *Client) AuthenticationValidateKeyWithResult[R any](ctx context.Context)
 		// 401
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out AuthenticationValidateKey
+			var out Error
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
@@ -170,7 +170,7 @@ func (c *Client) AuthenticationValidateKeyWithResult[R any](ctx context.Context)
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(AuthenticationValidateKey)
+				out = *new(Error)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -436,8 +436,8 @@ func (c *Client) AccountAddToWatchlistWithResult[R any](ctx context.Context, acc
 // Get a users list of favourite movies.
 //
 //	GET /account/{account_id}/favorite/movies
-func (c *Client) AccountGetFavorites(ctx context.Context, accountID int32, params *AccountGetFavoritesParams) (*SearchMovie, error) {
-	return c.AccountGetFavoritesWithResult[SearchMovie](ctx, accountID, params)
+func (c *Client) AccountGetFavorites(ctx context.Context, accountID int32, params *AccountGetFavoritesParams) (*MoviesResultPage, error) {
+	return c.AccountGetFavoritesWithResult[MoviesResultPage](ctx, accountID, params)
 }
 
 // Get a users list of favourite movies.
@@ -495,7 +495,7 @@ func (c *Client) AccountGetFavoritesWithResult[R any](ctx context.Context, accou
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchMovie); ok {
+			if _, ok := any(&out).(*MoviesResultPage); ok {
 				opts = jsonOpts
 			}
 
@@ -526,8 +526,8 @@ func (c *Client) AccountGetFavoritesWithResult[R any](ctx context.Context, accou
 // Get a users list of favourite TV shows.
 //
 //	GET /account/{account_id}/favorite/tv
-func (c *Client) AccountFavoriteTv(ctx context.Context, accountID int32, params *AccountFavoriteTvParams) (*SearchTv, error) {
-	return c.AccountFavoriteTvWithResult[SearchTv](ctx, accountID, params)
+func (c *Client) AccountFavoriteTv(ctx context.Context, accountID int32, params *AccountFavoriteTvParams) (*TVShowsResultPage, error) {
+	return c.AccountFavoriteTvWithResult[TVShowsResultPage](ctx, accountID, params)
 }
 
 // Get a users list of favourite TV shows.
@@ -585,7 +585,7 @@ func (c *Client) AccountFavoriteTvWithResult[R any](ctx context.Context, account
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchTv); ok {
+			if _, ok := any(&out).(*TVShowsResultPage); ok {
 				opts = jsonOpts
 			}
 
@@ -968,8 +968,8 @@ func (c *Client) AccountRatedTvEpisodesWithResult[R any](ctx context.Context, ac
 // Get a list of movies added to a users watchlist.
 //
 //	GET /account/{account_id}/watchlist/movies
-func (c *Client) AccountWatchlistMovies(ctx context.Context, accountID int32, params *AccountWatchlistMoviesParams) (*SearchMovie, error) {
-	return c.AccountWatchlistMoviesWithResult[SearchMovie](ctx, accountID, params)
+func (c *Client) AccountWatchlistMovies(ctx context.Context, accountID int32, params *AccountWatchlistMoviesParams) (*MoviesResultPage, error) {
+	return c.AccountWatchlistMoviesWithResult[MoviesResultPage](ctx, accountID, params)
 }
 
 // Get a list of movies added to a users watchlist.
@@ -1027,7 +1027,7 @@ func (c *Client) AccountWatchlistMoviesWithResult[R any](ctx context.Context, ac
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchMovie); ok {
+			if _, ok := any(&out).(*MoviesResultPage); ok {
 				opts = jsonOpts
 			}
 
@@ -1058,8 +1058,8 @@ func (c *Client) AccountWatchlistMoviesWithResult[R any](ctx context.Context, ac
 // Get a list of TV shows added to a users watchlist.
 //
 //	GET /account/{account_id}/watchlist/tv
-func (c *Client) AccountWatchlistTv(ctx context.Context, accountID int32, params *AccountWatchlistTvParams) (*SearchTv, error) {
-	return c.AccountWatchlistTvWithResult[SearchTv](ctx, accountID, params)
+func (c *Client) AccountWatchlistTv(ctx context.Context, accountID int32, params *AccountWatchlistTvParams) (*TVShowsResultPage, error) {
+	return c.AccountWatchlistTvWithResult[TVShowsResultPage](ctx, accountID, params)
 }
 
 // Get a list of TV shows added to a users watchlist.
@@ -1117,7 +1117,7 @@ func (c *Client) AccountWatchlistTvWithResult[R any](ctx context.Context, accoun
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchTv); ok {
+			if _, ok := any(&out).(*TVShowsResultPage); ok {
 				opts = jsonOpts
 			}
 
@@ -1652,8 +1652,8 @@ func (c *Client) CertificationMovieListWithResult[R any](ctx context.Context) (*
 // TV Certifications
 //
 //	GET /certification/tv/list
-func (c *Client) CertificationsTvList(ctx context.Context) (*CertificationsTvListOk, error) {
-	return c.CertificationsTvListWithResult[CertificationsTvListOk](ctx)
+func (c *Client) CertificationsTvList(ctx context.Context) (*CertificationsByRegionWrapper, error) {
+	return c.CertificationsTvListWithResult[CertificationsByRegionWrapper](ctx)
 }
 
 // TV Certifications
@@ -1689,7 +1689,7 @@ func (c *Client) CertificationsTvListWithResult[R any](ctx context.Context) (*R,
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*CertificationsTvListOk); ok {
+			if _, ok := any(&out).(*CertificationsByRegionWrapper); ok {
 				opts = jsonOpts
 			}
 
@@ -2931,8 +2931,8 @@ func (c *Client) CreditDetailsWithResult[R any](ctx context.Context, creditID st
 // Find movies using over 30 filters and sort options.
 //
 //	GET /discover/movie
-func (c *Client) DiscoverMovie(ctx context.Context, params *DiscoverMovieParams) (*SearchMovie, error) {
-	return c.DiscoverMovieWithResult[SearchMovie](ctx, params)
+func (c *Client) DiscoverMovie(ctx context.Context, params *DiscoverMovieParams) (*MoviesResultPage, error) {
+	return c.DiscoverMovieWithResult[MoviesResultPage](ctx, params)
 }
 
 // Find movies using over 30 filters and sort options.
@@ -3126,7 +3126,7 @@ func (c *Client) DiscoverMovieWithResult[R any](ctx context.Context, params *Dis
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchMovie); ok {
+			if _, ok := any(&out).(*MoviesResultPage); ok {
 				opts = jsonOpts
 			}
 
@@ -3856,8 +3856,8 @@ func (c *Client) GuestSessionRatedTvEpisodesWithResult[R any](ctx context.Contex
 // Details
 //
 //	GET /keyword/{keyword_id}
-func (c *Client) KeywordDetails(ctx context.Context, keywordID int32) (*KeywordDetails, error) {
-	return c.KeywordDetailsWithResult[KeywordDetails](ctx, keywordID)
+func (c *Client) KeywordDetails(ctx context.Context, keywordID int32) (*Keyword, error) {
+	return c.KeywordDetailsWithResult[Keyword](ctx, keywordID)
 }
 
 // Details
@@ -3893,7 +3893,7 @@ func (c *Client) KeywordDetailsWithResult[R any](ctx context.Context, keywordID 
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*KeywordDetails); ok {
+			if _, ok := any(&out).(*Keyword); ok {
 				opts = jsonOpts
 			}
 
@@ -4658,8 +4658,8 @@ func (c *Client) MovieNowPlayingListWithResult[R any](ctx context.Context, param
 // Get a list of movies ordered by popularity.
 //
 //	GET /movie/popular
-func (c *Client) MoviePopularList(ctx context.Context, params *MoviePopularListParams) (*SearchMovie, error) {
-	return c.MoviePopularListWithResult[SearchMovie](ctx, params)
+func (c *Client) MoviePopularList(ctx context.Context, params *MoviePopularListParams) (*MoviesResultPage, error) {
+	return c.MoviePopularListWithResult[MoviesResultPage](ctx, params)
 }
 
 // Get a list of movies ordered by popularity.
@@ -4713,7 +4713,7 @@ func (c *Client) MoviePopularListWithResult[R any](ctx context.Context, params *
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchMovie); ok {
+			if _, ok := any(&out).(*MoviesResultPage); ok {
 				opts = jsonOpts
 			}
 
@@ -4744,8 +4744,8 @@ func (c *Client) MoviePopularListWithResult[R any](ctx context.Context, params *
 // Get a list of movies ordered by rating.
 //
 //	GET /movie/top_rated
-func (c *Client) MovieTopRatedList(ctx context.Context, params *MovieTopRatedListParams) (*SearchMovie, error) {
-	return c.MovieTopRatedListWithResult[SearchMovie](ctx, params)
+func (c *Client) MovieTopRatedList(ctx context.Context, params *MovieTopRatedListParams) (*MoviesResultPage, error) {
+	return c.MovieTopRatedListWithResult[MoviesResultPage](ctx, params)
 }
 
 // Get a list of movies ordered by rating.
@@ -4799,7 +4799,7 @@ func (c *Client) MovieTopRatedListWithResult[R any](ctx context.Context, params 
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchMovie); ok {
+			if _, ok := any(&out).(*MoviesResultPage); ok {
 				opts = jsonOpts
 			}
 
@@ -5080,8 +5080,8 @@ func (c *Client) MovieAccountStatesWithResult[R any](ctx context.Context, movieI
 // Get the alternative titles for a movie.
 //
 //	GET /movie/{movie_id}/alternative_titles
-func (c *Client) MovieAlternativeTitles(ctx context.Context, movieID int32, params *MovieAlternativeTitlesParams) (*MovieAlternativeTitlesOk, error) {
-	return c.MovieAlternativeTitlesWithResult[MovieAlternativeTitlesOk](ctx, movieID, params)
+func (c *Client) MovieAlternativeTitles(ctx context.Context, movieID int32, params *MovieAlternativeTitlesParams) (*AlternativeTitlesOk, error) {
+	return c.MovieAlternativeTitlesWithResult[AlternativeTitlesOk](ctx, movieID, params)
 }
 
 // Get the alternative titles for a movie.
@@ -5127,7 +5127,7 @@ func (c *Client) MovieAlternativeTitlesWithResult[R any](ctx context.Context, mo
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieAlternativeTitlesOk); ok {
+			if _, ok := any(&out).(*AlternativeTitlesOk); ok {
 				opts = jsonOpts
 			}
 
@@ -5907,8 +5907,8 @@ func (c *Client) MovieReviewsWithResult[R any](ctx context.Context, movieID int3
 // Get the similar movies based on genres and keywords.
 //
 //	GET /movie/{movie_id}/similar
-func (c *Client) MovieSimilar(ctx context.Context, movieID int32, params *MovieSimilarParams) (*SearchMovie, error) {
-	return c.MovieSimilarWithResult[SearchMovie](ctx, movieID, params)
+func (c *Client) MovieSimilar(ctx context.Context, movieID int32, params *MovieSimilarParams) (*MoviesResultPage, error) {
+	return c.MovieSimilarWithResult[MoviesResultPage](ctx, movieID, params)
 }
 
 // Get the similar movies based on genres and keywords.
@@ -5958,7 +5958,7 @@ func (c *Client) MovieSimilarWithResult[R any](ctx context.Context, movieID int3
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchMovie); ok {
+			if _, ok := any(&out).(*MoviesResultPage); ok {
 				opts = jsonOpts
 			}
 
@@ -7730,8 +7730,8 @@ func (c *Client) SearchKeywordWithResult[R any](ctx context.Context, params Sear
 // Search for movies by their original, translated and alternative titles.
 //
 //	GET /search/movie
-func (c *Client) SearchMovie(ctx context.Context, params SearchMovieParams) (*SearchMovie, error) {
-	return c.SearchMovieWithResult[SearchMovie](ctx, params)
+func (c *Client) SearchMovie(ctx context.Context, params SearchMovieParams) (*MoviesResultPage, error) {
+	return c.SearchMovieWithResult[MoviesResultPage](ctx, params)
 }
 
 // Search for movies by their original, translated and alternative titles.
@@ -7798,7 +7798,7 @@ func (c *Client) SearchMovieWithResult[R any](ctx context.Context, params Search
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchMovie); ok {
+			if _, ok := any(&out).(*MoviesResultPage); ok {
 				opts = jsonOpts
 			}
 
@@ -8003,8 +8003,8 @@ func (c *Client) SearchPersonWithResult[R any](ctx context.Context, params Searc
 // Search for TV shows by their original, translated and also known as names.
 //
 //	GET /search/tv
-func (c *Client) SearchTv(ctx context.Context, params SearchTvParams) (*SearchTv, error) {
-	return c.SearchTvWithResult[SearchTv](ctx, params)
+func (c *Client) SearchTv(ctx context.Context, params SearchTvParams) (*TVShowsResultPage, error) {
+	return c.SearchTvWithResult[TVShowsResultPage](ctx, params)
 }
 
 // Search for TV shows by their original, translated and also known as names.
@@ -8067,7 +8067,7 @@ func (c *Client) SearchTvWithResult[R any](ctx context.Context, params SearchTvP
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchTv); ok {
+			if _, ok := any(&out).(*TVShowsResultPage); ok {
 				opts = jsonOpts
 			}
 
@@ -8988,8 +8988,8 @@ func (c *Client) TvSeriesAggregateCreditsWithResult[R any](ctx context.Context, 
 // Get the alternative titles that have been added to a TV show.
 //
 //	GET /tv/{series_id}/alternative_titles
-func (c *Client) TvSeriesAlternativeTitles(ctx context.Context, seriesID int32) (*TvSeriesAlternativeTitlesOk, error) {
-	return c.TvSeriesAlternativeTitlesWithResult[TvSeriesAlternativeTitlesOk](ctx, seriesID)
+func (c *Client) TvSeriesAlternativeTitles(ctx context.Context, seriesID int32) (*AlternativeTitlesWrapper, error) {
+	return c.TvSeriesAlternativeTitlesWithResult[AlternativeTitlesWrapper](ctx, seriesID)
 }
 
 // Get the alternative titles that have been added to a TV show.
@@ -9025,7 +9025,7 @@ func (c *Client) TvSeriesAlternativeTitlesWithResult[R any](ctx context.Context,
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeriesAlternativeTitlesOk); ok {
+			if _, ok := any(&out).(*AlternativeTitlesWrapper); ok {
 				opts = jsonOpts
 			}
 

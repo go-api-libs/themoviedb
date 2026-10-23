@@ -4,6 +4,6 @@ import (
 	"fmt"
 )
 
-func (a *AuthenticationValidateKey) Error() string {
+func (a *Error) Error() string {
 	return fmt.Sprintf("%d %s", a.StatusCode, a.StatusMessage)
 }
