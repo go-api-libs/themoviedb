@@ -273,6 +273,9 @@ func getGlobalParams(paths openapi.Paths, apiTitle string) (paramMap, error) {
 	for _, pi := range paths {
 		for _, pRef := range pi.Parameters {
 			p := pRef.Value
+			if isIgnoredParam(p) {
+				continue
+			}
 
 			param, err := fromParam(p, apiTitle)
 			if err != nil {

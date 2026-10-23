@@ -43,7 +43,7 @@ func FromOperation(
 
 	for _, pRef := range merged {
 		p := pRef.Value
-		if _, ok := globalParams[p]; ok {
+		if _, ok := globalParams[p]; ok || isIgnoredParam(p) {
 			continue
 		}
 
@@ -125,6 +125,23 @@ func FromOperation(
 		StreamSuccess:   streamSuccess,
 		EmptySuccess:    emptySuccess,
 	}, nil
+}
+
+// isIgnoredParam reports whether p is a header the specification says to ignore: the request's Accept, Content-Type
+// and Authorization are the client's to set, from the responses, the request body and the security scheme.
+//
+// See https://spec.openapis.org/oas/v3.1.0#parameter-object
+func isIgnoredParam(p *openapi.Parameter) bool {
+	if p.In != openapi.ParameterLocationHeader {
+		return false
+	}
+
+	switch http.CanonicalHeaderKey(p.Name) {
+	case "Accept", "Content-Type", "Authorization":
+		return true
+	default:
+		return false
+	}
 }
 
 // mergeParams merges path-item params with operation params; operation wins on (name, in) collision.

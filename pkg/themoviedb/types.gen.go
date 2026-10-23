@@ -424,14 +424,12 @@ type MovieVideosParams struct {
 type MovieAddRatingParams struct {
 	GuestSessionID string
 	SessionID      string
-	ContentType    string
 }
 
 // MovieDeleteRatingParams holds the query parameters for MovieDeleteRating.
 type MovieDeleteRatingParams struct {
 	GuestSessionID string
 	SessionID      string
-	ContentType    string
 }
 
 // PersonPopularListParams holds the query parameters for PersonPopularList.
@@ -656,14 +654,12 @@ type TvSeriesVideosParams struct {
 type TvSeriesAddRatingParams struct {
 	GuestSessionID string
 	SessionID      string
-	ContentType    string
 }
 
 // TvSeriesDeleteRatingParams holds the query parameters for TvSeriesDeleteRating.
 type TvSeriesDeleteRatingParams struct {
 	GuestSessionID string
 	SessionID      string
-	ContentType    string
 }
 
 // TvSeasonDetailsParams holds the query parameters for TvSeasonDetails.
@@ -751,14 +747,12 @@ type TvEpisodeVideosParams struct {
 type TvEpisodeAddRatingParams struct {
 	GuestSessionID string
 	SessionID      string
-	ContentType    string
 }
 
 // TvEpisodeDeleteRatingParams holds the query parameters for TvEpisodeDeleteRating.
 type TvEpisodeDeleteRatingParams struct {
 	GuestSessionID string
 	SessionID      string
-	ContentType    string
 }
 
 // WatchProvidersAvailableRegionsParams holds the query parameters for WatchProvidersAvailableRegions.
@@ -1338,9 +1332,9 @@ type DiscoverTvResultsItem struct {
 
 // Error defines a model
 type Error struct {
-	StatusCode    *int   `json:"status_code,omitzero"`
-	StatusMessage string `json:"status_message,omitzero"`
-	Success       *bool  `json:"success,omitzero"`
+	StatusCode    int    `json:"status_code"`
+	StatusMessage string `json:"status_message"`
+	Success       bool   `json:"success"`
 }
 
 // ExternalSource defines a model

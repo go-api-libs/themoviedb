@@ -6203,7 +6203,7 @@ func (c *Client) MovieWatchProvidersWithResult[R any](ctx context.Context, movie
 // Rate a movie and save it to your rated list.
 //
 //	POST /movie/{movie_id}/rating
-func (c *Client) MovieAddRating(ctx context.Context, movieID int32, params MovieAddRatingParams, body *ListCreate) (*ListClear, error) {
+func (c *Client) MovieAddRating(ctx context.Context, movieID int32, params *MovieAddRatingParams, body *ListCreate) (*ListClear, error) {
 	return c.MovieAddRatingWithResult[ListClear](ctx, movieID, params, body)
 }
 
@@ -6211,25 +6211,25 @@ func (c *Client) MovieAddRating(ctx context.Context, movieID int32, params Movie
 // You can define a custom result to unmarshal the response into.
 //
 //	POST /movie/{movie_id}/rating
-func (c *Client) MovieAddRatingWithResult[R any](ctx context.Context, movieID int32, params MovieAddRatingParams, body *ListCreate) (*R, error) {
+func (c *Client) MovieAddRatingWithResult[R any](ctx context.Context, movieID int32, params *MovieAddRatingParams, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "rating")
+	if params != nil {
+		q := make(url.Values, 2)
 
-	q := make(url.Values, 2)
+		if params.GuestSessionID != "" {
+			q["guest_session_id"] = []string{params.GuestSessionID}
+		}
 
-	if params.GuestSessionID != "" {
-		q["guest_session_id"] = []string{params.GuestSessionID}
+		if params.SessionID != "" {
+			q["session_id"] = []string{params.SessionID}
+		}
+
+		u.RawQuery = q.Encode()
 	}
-
-	if params.SessionID != "" {
-		q["session_id"] = []string{params.SessionID}
-	}
-
-	u.RawQuery = q.Encode()
 
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"Content-Type": []string{params.ContentType},
 			"User-Agent":   []string{c.userAgent},
 			"Content-Type": []string{"application/json"},
 		},
@@ -6318,8 +6318,7 @@ func (c *Client) MovieDeleteRatingWithResult[R any](ctx context.Context, movieID
 
 	req := (&http.Request{
 		Header: http.Header{
-			"Content-Type": []string{params.ContentType},
-			"User-Agent":   []string{c.userAgent},
+			"User-Agent": []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodDelete,
@@ -10256,7 +10255,7 @@ func (c *Client) TvSeriesWatchProvidersWithResult[R any](ctx context.Context, se
 // Rate a TV show and save it to your rated list.
 //
 //	POST /tv/{series_id}/rating
-func (c *Client) TvSeriesAddRating(ctx context.Context, seriesID int32, params TvSeriesAddRatingParams, body *ListCreate) (*ListClear, error) {
+func (c *Client) TvSeriesAddRating(ctx context.Context, seriesID int32, params *TvSeriesAddRatingParams, body *ListCreate) (*ListClear, error) {
 	return c.TvSeriesAddRatingWithResult[ListClear](ctx, seriesID, params, body)
 }
 
@@ -10264,25 +10263,25 @@ func (c *Client) TvSeriesAddRating(ctx context.Context, seriesID int32, params T
 // You can define a custom result to unmarshal the response into.
 //
 //	POST /tv/{series_id}/rating
-func (c *Client) TvSeriesAddRatingWithResult[R any](ctx context.Context, seriesID int32, params TvSeriesAddRatingParams, body *ListCreate) (*R, error) {
+func (c *Client) TvSeriesAddRatingWithResult[R any](ctx context.Context, seriesID int32, params *TvSeriesAddRatingParams, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "rating")
+	if params != nil {
+		q := make(url.Values, 2)
 
-	q := make(url.Values, 2)
+		if params.GuestSessionID != "" {
+			q["guest_session_id"] = []string{params.GuestSessionID}
+		}
 
-	if params.GuestSessionID != "" {
-		q["guest_session_id"] = []string{params.GuestSessionID}
+		if params.SessionID != "" {
+			q["session_id"] = []string{params.SessionID}
+		}
+
+		u.RawQuery = q.Encode()
 	}
-
-	if params.SessionID != "" {
-		q["session_id"] = []string{params.SessionID}
-	}
-
-	u.RawQuery = q.Encode()
 
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"Content-Type": []string{params.ContentType},
 			"User-Agent":   []string{c.userAgent},
 			"Content-Type": []string{"application/json"},
 		},
@@ -10371,8 +10370,7 @@ func (c *Client) TvSeriesDeleteRatingWithResult[R any](ctx context.Context, seri
 
 	req := (&http.Request{
 		Header: http.Header{
-			"Content-Type": []string{params.ContentType},
-			"User-Agent":   []string{c.userAgent},
+			"User-Agent": []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodDelete,
@@ -11822,7 +11820,7 @@ func (c *Client) TvEpisodeVideosWithResult[R any](ctx context.Context, seriesID 
 // Rate a TV episode and save it to your rated list.
 //
 //	POST /tv/{series_id}/season/{season_number}/episode/{episode_number}/rating
-func (c *Client) TvEpisodeAddRating(ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params TvEpisodeAddRatingParams, body *ListCreate) (*ListClear, error) {
+func (c *Client) TvEpisodeAddRating(ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeAddRatingParams, body *ListCreate) (*ListClear, error) {
 	return c.TvEpisodeAddRatingWithResult[ListClear](ctx, seriesID, seasonNumber, episodeNumber, params, body)
 }
 
@@ -11830,25 +11828,25 @@ func (c *Client) TvEpisodeAddRating(ctx context.Context, seriesID int32, seasonN
 // You can define a custom result to unmarshal the response into.
 //
 //	POST /tv/{series_id}/season/{season_number}/episode/{episode_number}/rating
-func (c *Client) TvEpisodeAddRatingWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params TvEpisodeAddRatingParams, body *ListCreate) (*R, error) {
+func (c *Client) TvEpisodeAddRatingWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeAddRatingParams, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "rating")
+	if params != nil {
+		q := make(url.Values, 2)
 
-	q := make(url.Values, 2)
+		if params.GuestSessionID != "" {
+			q["guest_session_id"] = []string{params.GuestSessionID}
+		}
 
-	if params.GuestSessionID != "" {
-		q["guest_session_id"] = []string{params.GuestSessionID}
+		if params.SessionID != "" {
+			q["session_id"] = []string{params.SessionID}
+		}
+
+		u.RawQuery = q.Encode()
 	}
-
-	if params.SessionID != "" {
-		q["session_id"] = []string{params.SessionID}
-	}
-
-	u.RawQuery = q.Encode()
 
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"Content-Type": []string{params.ContentType},
 			"User-Agent":   []string{c.userAgent},
 			"Content-Type": []string{"application/json"},
 		},
@@ -11937,8 +11935,7 @@ func (c *Client) TvEpisodeDeleteRatingWithResult[R any](ctx context.Context, ser
 
 	req := (&http.Request{
 		Header: http.Header{
-			"Content-Type": []string{params.ContentType},
-			"User-Agent":   []string{c.userAgent},
+			"User-Agent": []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodDelete,

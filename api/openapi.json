@@ -5030,7 +5030,12 @@
             "type": "boolean",
             "const": false
           }
-        }
+        },
+        "required": [
+          "status_code",
+          "status_message",
+          "success"
+        ]
       },
       "ExternalSource": {
         "type": "string",
