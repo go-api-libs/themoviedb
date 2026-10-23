@@ -33,7 +33,9 @@ func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) {
 }
 
 func TestClient_Error(t *testing.T) {
-	t.Run("AuthenticationValidateKey", func(t *testing.T) {
+	t.Run("ValidateKey", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -42,7 +44,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.AuthenticationValidateKey(t.Context()); err == nil {
+			if _, err := c.ValidateKey(t.Context()); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, io.EOF) {
 				t.Fatalf("want: %v, got: %v", io.EOF, err)
@@ -62,7 +64,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.AuthenticationValidateKey(t.Context()); err == nil {
+			if _, err := c.ValidateKey(t.Context()); err == nil {
 				t.Fatal("expected error")
 			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
 				t.Fatalf("got: %T, want: *api.Error", err)
@@ -90,7 +92,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.AuthenticationValidateKey(t.Context()); err == nil {
+			if _, err := c.ValidateKey(t.Context()); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
@@ -115,7 +117,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.AuthenticationValidateKey(t.Context()); err == nil {
+			if _, err := c.ValidateKey(t.Context()); err == nil {
 				t.Fatal("expected error")
 			} else if decErr, ok := errors.AsType[*api.DecodingError](err); !ok {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
@@ -126,6 +128,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AccountDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -218,6 +222,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AccountAddFavorite", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -310,6 +316,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AccountAddToWatchlist", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -402,6 +410,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AccountGetFavorites", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -494,6 +504,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AccountFavoriteTv", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -586,6 +598,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AccountLists", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -678,6 +692,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AccountRatedMovies", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -770,6 +786,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AccountRatedTv", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -862,6 +880,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AccountRatedTvEpisodes", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -954,6 +974,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AccountWatchlistMovies", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -1046,6 +1068,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AccountWatchlistTv", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -1138,6 +1162,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AuthenticationCreateGuestSession", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -1230,6 +1256,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AuthenticationCreateRequestToken", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -1322,6 +1350,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AuthenticationCreateSession", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -1414,6 +1444,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AuthenticationCreateSessionFromV4Token", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -1506,6 +1538,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AuthenticationCreateSessionFromLogin", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -1598,6 +1632,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AuthenticationDeleteSession", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -1690,6 +1726,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("CertificationMovieList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -1782,6 +1820,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("CertificationsTvList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -1874,6 +1914,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ChangesMovieList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -1966,6 +2008,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ChangesPeopleList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -2058,6 +2102,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ChangesTvList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -2150,6 +2196,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("CollectionDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -2242,6 +2290,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("CollectionImages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -2334,6 +2384,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("CollectionTranslations", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -2426,6 +2478,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("CompanyDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -2518,6 +2572,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("CompanyAlternativeNames", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -2610,6 +2666,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("CompanyImages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -2702,6 +2760,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ConfigurationDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -2794,6 +2854,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ConfigurationCountries", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -2886,6 +2948,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ConfigurationJobs", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -2978,6 +3042,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ConfigurationLanguages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -3070,6 +3136,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ConfigurationPrimaryTranslations", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -3162,6 +3230,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ConfigurationTimezones", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -3254,6 +3324,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("CreditDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -3346,6 +3418,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("DiscoverMovie", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -3438,6 +3512,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("DiscoverTv", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -3530,6 +3606,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("FindByID", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -3622,6 +3700,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("GenreMovieList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -3714,6 +3794,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("GenreTvList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -3806,6 +3888,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("GuestSessionRatedMovies", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -3898,6 +3982,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("GuestSessionRatedTv", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -3990,6 +4076,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("GuestSessionRatedTvEpisodes", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -4082,6 +4170,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("KeywordDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -4174,6 +4264,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("KeywordMovies", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -4266,6 +4358,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ListAddMovie", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -4358,6 +4452,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ListCheckItemStatus", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -4450,6 +4546,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ListClear", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -4542,6 +4640,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ListCreate", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -4634,6 +4734,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ListDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -4726,6 +4828,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ListDelete", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -4818,6 +4922,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ListRemoveMovie", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -4910,6 +5016,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieNowPlayingList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -5002,6 +5110,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MoviePopularList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -5094,6 +5204,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieTopRatedList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -5186,6 +5298,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieUpcomingList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -5278,6 +5392,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -5370,6 +5486,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieAccountStates", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -5462,6 +5580,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieAlternativeTitles", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -5554,6 +5674,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieChanges", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -5646,6 +5768,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -5738,6 +5862,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieExternalIds", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -5830,6 +5956,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieImages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -5922,6 +6050,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieKeywords", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -6014,6 +6144,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieLatestID", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -6106,6 +6238,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieLists", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -6198,6 +6332,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieRecommendations", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -6239,6 +6375,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieReleaseDates", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -6331,6 +6469,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieReviews", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -6423,6 +6563,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieSimilar", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -6515,6 +6657,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieTranslations", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -6607,6 +6751,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieVideos", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -6699,6 +6845,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieWatchProviders", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -6791,6 +6939,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieAddRating", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -6883,6 +7033,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("MovieDeleteRating", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -6975,6 +7127,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("NetworkDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -7067,6 +7221,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("DetailsCopy", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -7159,6 +7315,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("AlternativeNamesCopy", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -7251,6 +7409,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("PersonPopularList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -7343,6 +7503,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("PersonDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -7435,6 +7597,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("PersonChanges", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -7527,6 +7691,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("PersonCombinedCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -7619,6 +7785,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("PersonExternalIds", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -7711,6 +7879,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("PersonImages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -7803,6 +7973,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("PersonLatestID", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -7895,6 +8067,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("PersonMovieCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -7987,6 +8161,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("PersonTvCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -8079,6 +8255,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("PersonTaggedImages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -8171,6 +8349,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("Translations", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -8263,6 +8443,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ReviewDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -8355,6 +8537,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("SearchCollection", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -8447,6 +8631,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("SearchCompany", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -8539,6 +8725,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("SearchKeyword", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -8631,6 +8819,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("SearchMovie", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -8723,6 +8913,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("SearchMulti", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -8815,6 +9007,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("SearchPerson", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -8907,6 +9101,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("SearchTv", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -8999,6 +9195,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TrendingAll", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -9091,6 +9289,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TrendingMovies", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -9183,6 +9383,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TrendingPeople", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -9275,6 +9477,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TrendingTv", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -9367,6 +9571,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesAiringTodayList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -9459,6 +9665,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesOnTheAirList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -9551,6 +9759,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesPopularList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -9643,6 +9853,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesTopRatedList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -9735,6 +9947,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -9827,6 +10041,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesAccountStates", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -9919,6 +10135,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesAggregateCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -10011,6 +10229,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesAlternativeTitles", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -10103,6 +10323,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesChanges", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -10195,6 +10417,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesContentRatings", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -10287,6 +10511,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -10379,6 +10605,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesEpisodeGroups", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -10471,6 +10699,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesExternalIds", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -10563,6 +10793,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesImages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -10655,6 +10887,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesKeywords", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -10747,6 +10981,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesLatestID", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -10839,6 +11075,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("ListsCopy", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -10931,6 +11169,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesRecommendations", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -11023,6 +11263,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesReviews", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -11115,6 +11357,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesScreenedTheatrically", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -11207,6 +11451,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesSimilar", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -11299,6 +11545,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesTranslations", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -11391,6 +11639,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesVideos", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -11483,6 +11733,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesWatchProviders", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -11575,6 +11827,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesAddRating", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -11667,6 +11921,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeriesDeleteRating", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -11759,6 +12015,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeasonDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -11851,6 +12109,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeasonAccountStates", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -11943,6 +12203,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeasonAggregateCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -12035,6 +12297,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeasonChangesByID", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -12127,6 +12391,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeasonCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -12219,6 +12485,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeasonExternalIds", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -12311,6 +12579,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeasonImages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -12403,6 +12673,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeasonTranslations", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -12495,6 +12767,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeasonVideos", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -12587,6 +12861,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvSeasonWatchProviders", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -12679,6 +12955,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvEpisodeDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -12771,6 +13049,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvEpisodeAccountStates", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -12863,6 +13143,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvEpisodeChangesByID", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -12955,6 +13237,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvEpisodeCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -13047,6 +13331,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvEpisodeExternalIds", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -13139,6 +13425,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvEpisodeImages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -13231,6 +13519,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvEpisodeTranslations", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -13323,6 +13613,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvEpisodeVideos", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -13415,6 +13707,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvEpisodeAddRating", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -13507,6 +13801,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvEpisodeDeleteRating", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -13599,6 +13895,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("TvEpisodeGroupDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -13691,6 +13989,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("WatchProvidersAvailableRegions", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -13783,6 +14083,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("WatchProvidersMovieList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -13875,6 +14177,8 @@ func TestClient_Error(t *testing.T) {
 	})
 
 	t.Run("WatchProviderTvList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },

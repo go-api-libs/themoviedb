@@ -14,7 +14,7 @@
       "get": {
         "summary": "Validate Key",
         "description": "Test your API Key to see if it's valid.",
-        "operationId": "authentication-validate-key",
+        "operationId": "ValidateKey",
         "responses": {
           "200": {
             "$ref": "#/components/responses/ValidKey"
@@ -17900,17 +17900,15 @@
       }
     },
     "securitySchemes": {
-      "sec0": {
-        "type": "apiKey",
-        "name": "Authorization",
-        "in": "header",
-        "x-bearer-format": "bearer"
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   },
   "security": [
     {
-      "sec0": []
+      "bearerAuth": []
     }
   ],
   "x-readme": {

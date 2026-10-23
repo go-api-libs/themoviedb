@@ -13,6 +13,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -33,6 +34,8 @@ var defaultBaseURL = &url.URL{
 type Client struct {
 	// The HTTP client to use for requests.
 	cli *http.Client
+	// The bearer token
+	bearer string
 	// The base URL
 	baseURL *url.URL
 	// The user agent
@@ -65,6 +68,15 @@ func WithHTTPClient(cli *http.Client) ClientOption {
 	return func(c *Client) { c.cli = cli }
 }
 
+// WithBearer returns a [ClientOption] that sets a custom bearer.
+func WithBearer(bearer string) ClientOption {
+	return func(c *Client) {
+		if bearer != "" {
+			c.bearer = "Bearer " + strings.TrimPrefix(bearer, "Bearer ")
+		}
+	}
+}
+
 // defaultDebugFile is where debug mode adds the calls it cannot decode, unless [WithDebugFile] says otherwise.
 const defaultDebugFile = "api/interactions.json"
 
@@ -78,7 +90,7 @@ func WithDebugFile(path string) ClientOption {
 	return func(c *Client) { c.debug, c.debugFile = true, path }
 }
 
-// NewClient creates a new Client.
+// NewClient creates a new Client, reading the bearer token from [os.Getenv]("TMDB_API_TOKEN").
 func NewClient(opts ...ClientOption) (*Client, error) {
 	c := &Client{
 		cli:       http.DefaultClient,
@@ -86,8 +98,14 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 		userAgent: defaultUserAgent,
 	}
 
+	WithBearer(os.Getenv("TMDB_API_TOKEN"))(c)
+
 	for _, opt := range opts {
 		opt(c)
+	}
+
+	if c.bearer == "" {
+		return nil, errors.New("bearer token TMDB_API_TOKEN not provided")
 	}
 
 	return c, nil
@@ -96,19 +114,20 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 // Test your API Key to see if it's valid.
 //
 //	GET /authentication
-func (c *Client) AuthenticationValidateKey(ctx context.Context) (*ValidKey, error) {
-	return c.AuthenticationValidateKeyWithResult[ValidKey](ctx)
+func (c *Client) ValidateKey(ctx context.Context) (*ValidKey, error) {
+	return c.ValidateKeyWithResult[ValidKey](ctx)
 }
 
 // Test your API Key to see if it's valid.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /authentication
-func (c *Client) AuthenticationValidateKeyWithResult[R any](ctx context.Context) (*R, error) {
+func (c *Client) ValidateKeyWithResult[R any](ctx context.Context) (*R, error) {
 	u := c.baseURL.JoinPath("authentication")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -210,7 +229,8 @@ func (c *Client) AccountDetailsWithResult[R any](ctx context.Context, accountID 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -289,8 +309,9 @@ func (c *Client) AccountAddFavoriteWithResult[R any](ctx context.Context, accoun
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent":   []string{c.userAgent},
-			"Content-Type": []string{"application/json"},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
+			"Content-Type":  []string{"application/json"},
 		},
 		Host:          u.Host,
 		Method:        http.MethodPost,
@@ -374,8 +395,9 @@ func (c *Client) AccountAddToWatchlistWithResult[R any](ctx context.Context, acc
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent":   []string{c.userAgent},
-			"Content-Type": []string{"application/json"},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
+			"Content-Type":  []string{"application/json"},
 		},
 		Host:          u.Host,
 		Method:        http.MethodPost,
@@ -470,7 +492,8 @@ func (c *Client) AccountGetFavoritesWithResult[R any](ctx context.Context, accou
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -560,7 +583,8 @@ func (c *Client) AccountFavoriteTvWithResult[R any](ctx context.Context, account
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -642,7 +666,8 @@ func (c *Client) AccountListsWithResult[R any](ctx context.Context, accountID in
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -732,7 +757,8 @@ func (c *Client) AccountRatedMoviesWithResult[R any](ctx context.Context, accoun
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -822,7 +848,8 @@ func (c *Client) AccountRatedTvWithResult[R any](ctx context.Context, accountID 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -912,7 +939,8 @@ func (c *Client) AccountRatedTvEpisodesWithResult[R any](ctx context.Context, ac
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -1002,7 +1030,8 @@ func (c *Client) AccountWatchlistMoviesWithResult[R any](ctx context.Context, ac
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -1092,7 +1121,8 @@ func (c *Client) AccountWatchlistTvWithResult[R any](ctx context.Context, accoun
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -1160,7 +1190,8 @@ func (c *Client) AuthenticationCreateGuestSessionWithResult[R any](ctx context.C
 	u := c.baseURL.JoinPath("authentication", "guest_session", "new")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -1228,7 +1259,8 @@ func (c *Client) AuthenticationCreateRequestTokenWithResult[R any](ctx context.C
 	u := c.baseURL.JoinPath("authentication", "token", "new")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -1297,8 +1329,9 @@ func (c *Client) AuthenticationCreateSessionWithResult[R any](ctx context.Contex
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent":   []string{c.userAgent},
-			"Content-Type": []string{"application/json"},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
+			"Content-Type":  []string{"application/json"},
 		},
 		Host:          u.Host,
 		Method:        http.MethodPost,
@@ -1372,8 +1405,9 @@ func (c *Client) AuthenticationCreateSessionFromV4TokenWithResult[R any](ctx con
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent":   []string{c.userAgent},
-			"Content-Type": []string{"application/json"},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
+			"Content-Type":  []string{"application/json"},
 		},
 		Host:          u.Host,
 		Method:        http.MethodPost,
@@ -1447,8 +1481,9 @@ func (c *Client) AuthenticationCreateSessionFromLoginWithResult[R any](ctx conte
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent":   []string{c.userAgent},
-			"Content-Type": []string{"application/json"},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
+			"Content-Type":  []string{"application/json"},
 		},
 		Host:          u.Host,
 		Method:        http.MethodPost,
@@ -1522,8 +1557,9 @@ func (c *Client) AuthenticationDeleteSessionWithResult[R any](ctx context.Contex
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent":   []string{c.userAgent},
-			"Content-Type": []string{"application/json"},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
+			"Content-Type":  []string{"application/json"},
 		},
 		Host:          u.Host,
 		Method:        http.MethodDelete,
@@ -1596,7 +1632,8 @@ func (c *Client) CertificationMovieListWithResult[R any](ctx context.Context) (*
 	u := c.baseURL.JoinPath("certification", "movie", "list")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -1664,7 +1701,8 @@ func (c *Client) CertificationsTvListWithResult[R any](ctx context.Context) (*R,
 	u := c.baseURL.JoinPath("certification", "tv", "list")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -1750,7 +1788,8 @@ func (c *Client) ChangesMovieListWithResult[R any](ctx context.Context, params *
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -1836,7 +1875,8 @@ func (c *Client) ChangesPeopleListWithResult[R any](ctx context.Context, params 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -1922,7 +1962,8 @@ func (c *Client) ChangesTvListWithResult[R any](ctx context.Context, params *Cha
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -2000,7 +2041,8 @@ func (c *Client) CollectionDetailsWithResult[R any](ctx context.Context, collect
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -2082,7 +2124,8 @@ func (c *Client) CollectionImagesWithResult[R any](ctx context.Context, collecti
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -2150,7 +2193,8 @@ func (c *Client) CollectionTranslationsWithResult[R any](ctx context.Context, co
 	u := c.baseURL.JoinPath("collection", strconv.FormatInt(int64(collectionID), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -2218,7 +2262,8 @@ func (c *Client) CompanyDetailsWithResult[R any](ctx context.Context, companyID 
 	u := c.baseURL.JoinPath("company", strconv.FormatInt(int64(companyID), 10))
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -2286,7 +2331,8 @@ func (c *Client) CompanyAlternativeNamesWithResult[R any](ctx context.Context, c
 	u := c.baseURL.JoinPath("company", strconv.FormatInt(int64(companyID), 10), "alternative_names")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -2354,7 +2400,8 @@ func (c *Client) CompanyImagesWithResult[R any](ctx context.Context, companyID i
 	u := c.baseURL.JoinPath("company", strconv.FormatInt(int64(companyID), 10), "images")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -2422,7 +2469,8 @@ func (c *Client) ConfigurationDetailsWithResult[R any](ctx context.Context) (*R,
 	u := c.baseURL.JoinPath("configuration")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -2505,7 +2553,8 @@ func (c *Client) ConfigurationCountriesWithResult[R any](ctx context.Context, pa
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -2578,7 +2627,8 @@ func (c *Client) ConfigurationJobsWithResult[R any](ctx context.Context) (*R, er
 	u := c.baseURL.JoinPath("configuration", "jobs")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -2651,7 +2701,8 @@ func (c *Client) ConfigurationLanguagesWithResult[R any](ctx context.Context) (*
 	u := c.baseURL.JoinPath("configuration", "languages")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -2724,7 +2775,8 @@ func (c *Client) ConfigurationPrimaryTranslationsWithResult[R any](ctx context.C
 	u := c.baseURL.JoinPath("configuration", "primary_translations")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -2797,7 +2849,8 @@ func (c *Client) ConfigurationTimezonesWithResult[R any](ctx context.Context) (*
 	u := c.baseURL.JoinPath("configuration", "timezones")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -2875,7 +2928,8 @@ func (c *Client) CreditDetailsWithResult[R any](ctx context.Context, creditID st
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -3101,7 +3155,8 @@ func (c *Client) DiscoverMovieWithResult[R any](ctx context.Context, params *Dis
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -3307,7 +3362,8 @@ func (c *Client) DiscoverTvWithResult[R any](ctx context.Context, params *Discov
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -3386,7 +3442,8 @@ func (c *Client) FindByIDWithResult[R any](ctx context.Context, externalID strin
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -3464,7 +3521,8 @@ func (c *Client) GenreMovieListWithResult[R any](ctx context.Context, params *Ge
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -3542,7 +3600,8 @@ func (c *Client) GenreTvListWithResult[R any](ctx context.Context, params *Genre
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -3628,7 +3687,8 @@ func (c *Client) GuestSessionRatedMoviesWithResult[R any](ctx context.Context, g
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -3714,7 +3774,8 @@ func (c *Client) GuestSessionRatedTvWithResult[R any](ctx context.Context, guest
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -3800,7 +3861,8 @@ func (c *Client) GuestSessionRatedTvEpisodesWithResult[R any](ctx context.Contex
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -3868,7 +3930,8 @@ func (c *Client) KeywordDetailsWithResult[R any](ctx context.Context, keywordID 
 	u := c.baseURL.JoinPath("keyword", strconv.FormatInt(int64(keywordID), 10))
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -3954,7 +4017,8 @@ func (c *Client) KeywordMoviesWithResult[R any](ctx context.Context, keywordID s
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -4030,8 +4094,9 @@ func (c *Client) ListAddMovieWithResult[R any](ctx context.Context, listID int32
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent":   []string{c.userAgent},
-			"Content-Type": []string{"application/json"},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
+			"Content-Type":  []string{"application/json"},
 		},
 		Host:          u.Host,
 		Method:        http.MethodPost,
@@ -4118,7 +4183,8 @@ func (c *Client) ListCheckItemStatusWithResult[R any](ctx context.Context, listI
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -4195,7 +4261,8 @@ func (c *Client) ListClearWithResult[R any](ctx context.Context, listID int32, p
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodPost,
@@ -4271,8 +4338,9 @@ func (c *Client) ListCreateWithResult[R any](ctx context.Context, params ListCre
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent":   []string{c.userAgent},
-			"Content-Type": []string{"application/json"},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
+			"Content-Type":  []string{"application/json"},
 		},
 		Host:          u.Host,
 		Method:        http.MethodPost,
@@ -4359,7 +4427,8 @@ func (c *Client) ListDetailsWithResult[R any](ctx context.Context, listID int32,
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -4434,7 +4503,8 @@ func (c *Client) ListDeleteWithResult[R any](ctx context.Context, listID int32, 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodDelete,
@@ -4510,8 +4580,9 @@ func (c *Client) ListRemoveMovieWithResult[R any](ctx context.Context, listID in
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent":   []string{c.userAgent},
-			"Content-Type": []string{"application/json"},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
+			"Content-Type":  []string{"application/json"},
 		},
 		Host:          u.Host,
 		Method:        http.MethodPost,
@@ -4602,7 +4673,8 @@ func (c *Client) MovieNowPlayingListWithResult[R any](ctx context.Context, param
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -4688,7 +4760,8 @@ func (c *Client) MoviePopularListWithResult[R any](ctx context.Context, params *
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -4774,7 +4847,8 @@ func (c *Client) MovieTopRatedListWithResult[R any](ctx context.Context, params 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -4860,7 +4934,8 @@ func (c *Client) MovieUpcomingListWithResult[R any](ctx context.Context, params 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -4942,7 +5017,8 @@ func (c *Client) MovieDetailsWithResult[R any](ctx context.Context, movieID int3
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -5024,7 +5100,8 @@ func (c *Client) MovieAccountStatesWithResult[R any](ctx context.Context, movieI
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -5102,7 +5179,8 @@ func (c *Client) MovieAlternativeTitlesWithResult[R any](ctx context.Context, mo
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -5188,7 +5266,8 @@ func (c *Client) MovieChangesWithResult[R any](ctx context.Context, movieID int3
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -5266,7 +5345,8 @@ func (c *Client) MovieCreditsWithResult[R any](ctx context.Context, movieID int3
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -5334,7 +5414,8 @@ func (c *Client) MovieExternalIdsWithResult[R any](ctx context.Context, movieID 
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "external_ids")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -5416,7 +5497,8 @@ func (c *Client) MovieImagesWithResult[R any](ctx context.Context, movieID int32
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -5484,7 +5566,8 @@ func (c *Client) MovieKeywordsWithResult[R any](ctx context.Context, movieID str
 	u := c.baseURL.JoinPath("movie", movieID, "keywords")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -5552,7 +5635,8 @@ func (c *Client) MovieLatestIDWithResult[R any](ctx context.Context) (*R, error)
 	u := c.baseURL.JoinPath("movie", "latest")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -5634,7 +5718,8 @@ func (c *Client) MovieListsWithResult[R any](ctx context.Context, movieID int32,
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -5708,7 +5793,8 @@ func (c *Client) MovieRecommendations(ctx context.Context, movieID int32, params
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -5769,7 +5855,8 @@ func (c *Client) MovieReleaseDatesWithResult[R any](ctx context.Context, movieID
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "release_dates")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -5851,7 +5938,8 @@ func (c *Client) MovieReviewsWithResult[R any](ctx context.Context, movieID int3
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -5933,7 +6021,8 @@ func (c *Client) MovieSimilarWithResult[R any](ctx context.Context, movieID int3
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -6001,7 +6090,8 @@ func (c *Client) MovieTranslationsWithResult[R any](ctx context.Context, movieID
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -6079,7 +6169,8 @@ func (c *Client) MovieVideosWithResult[R any](ctx context.Context, movieID int32
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -6147,7 +6238,8 @@ func (c *Client) MovieWatchProvidersWithResult[R any](ctx context.Context, movie
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "watch", "providers")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -6230,8 +6322,9 @@ func (c *Client) MovieAddRatingWithResult[R any](ctx context.Context, movieID in
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent":   []string{c.userAgent},
-			"Content-Type": []string{"application/json"},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
+			"Content-Type":  []string{"application/json"},
 		},
 		Host:          u.Host,
 		Method:        http.MethodPost,
@@ -6318,7 +6411,8 @@ func (c *Client) MovieDeleteRatingWithResult[R any](ctx context.Context, movieID
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodDelete,
@@ -6386,7 +6480,8 @@ func (c *Client) NetworkDetailsWithResult[R any](ctx context.Context, networkID 
 	u := c.baseURL.JoinPath("network", strconv.FormatInt(int64(networkID), 10))
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -6454,7 +6549,8 @@ func (c *Client) DetailsCopyWithResult[R any](ctx context.Context, networkID int
 	u := c.baseURL.JoinPath("network", strconv.FormatInt(int64(networkID), 10), "alternative_names")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -6522,7 +6618,8 @@ func (c *Client) AlternativeNamesCopyWithResult[R any](ctx context.Context, netw
 	u := c.baseURL.JoinPath("network", strconv.FormatInt(int64(networkID), 10), "images")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -6604,7 +6701,8 @@ func (c *Client) PersonPopularListWithResult[R any](ctx context.Context, params 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -6686,7 +6784,8 @@ func (c *Client) PersonDetailsWithResult[R any](ctx context.Context, personID in
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -6772,7 +6871,8 @@ func (c *Client) PersonChangesWithResult[R any](ctx context.Context, personID in
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -6850,7 +6950,8 @@ func (c *Client) PersonCombinedCreditsWithResult[R any](ctx context.Context, per
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -6918,7 +7019,8 @@ func (c *Client) PersonExternalIdsWithResult[R any](ctx context.Context, personI
 	u := c.baseURL.JoinPath("person", strconv.FormatInt(int64(personID), 10), "external_ids")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -6986,7 +7088,8 @@ func (c *Client) PersonImagesWithResult[R any](ctx context.Context, personID int
 	u := c.baseURL.JoinPath("person", strconv.FormatInt(int64(personID), 10), "images")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -7054,7 +7157,8 @@ func (c *Client) PersonLatestIDWithResult[R any](ctx context.Context) (*R, error
 	u := c.baseURL.JoinPath("person", "latest")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -7132,7 +7236,8 @@ func (c *Client) PersonMovieCreditsWithResult[R any](ctx context.Context, person
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -7210,7 +7315,8 @@ func (c *Client) PersonTvCreditsWithResult[R any](ctx context.Context, personID 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -7288,7 +7394,8 @@ func (c *Client) PersonTaggedImagesWithResult[R any](ctx context.Context, person
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -7356,7 +7463,8 @@ func (c *Client) TranslationsWithResult[R any](ctx context.Context, personID int
 	u := c.baseURL.JoinPath("person", strconv.FormatInt(int64(personID), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -7424,7 +7532,8 @@ func (c *Client) ReviewDetailsWithResult[R any](ctx context.Context, reviewID st
 	u := c.baseURL.JoinPath("review", reviewID)
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -7515,7 +7624,8 @@ func (c *Client) SearchCollectionWithResult[R any](ctx context.Context, params S
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -7594,7 +7704,8 @@ func (c *Client) SearchCompanyWithResult[R any](ctx context.Context, params Sear
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -7673,7 +7784,8 @@ func (c *Client) SearchKeywordWithResult[R any](ctx context.Context, params Sear
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -7772,7 +7884,8 @@ func (c *Client) SearchMovieWithResult[R any](ctx context.Context, params Search
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -7859,7 +7972,8 @@ func (c *Client) SearchMultiWithResult[R any](ctx context.Context, params Search
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -7946,7 +8060,8 @@ func (c *Client) SearchPersonWithResult[R any](ctx context.Context, params Searc
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -8041,7 +8156,8 @@ func (c *Client) SearchTvWithResult[R any](ctx context.Context, params SearchTvP
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -8119,7 +8235,8 @@ func (c *Client) TrendingAllWithResult[R any](ctx context.Context, timeWindow Ti
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -8197,7 +8314,8 @@ func (c *Client) TrendingMoviesWithResult[R any](ctx context.Context, timeWindow
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -8275,7 +8393,8 @@ func (c *Client) TrendingPeopleWithResult[R any](ctx context.Context, timeWindow
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -8353,7 +8472,8 @@ func (c *Client) TrendingTvWithResult[R any](ctx context.Context, timeWindow Tim
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -8439,7 +8559,8 @@ func (c *Client) TvSeriesAiringTodayListWithResult[R any](ctx context.Context, p
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -8525,7 +8646,8 @@ func (c *Client) TvSeriesOnTheAirListWithResult[R any](ctx context.Context, para
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -8607,7 +8729,8 @@ func (c *Client) TvSeriesPopularListWithResult[R any](ctx context.Context, param
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -8689,7 +8812,8 @@ func (c *Client) TvSeriesTopRatedListWithResult[R any](ctx context.Context, para
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -8771,7 +8895,8 @@ func (c *Client) TvSeriesDetailsWithResult[R any](ctx context.Context, seriesID 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -8853,7 +8978,8 @@ func (c *Client) TvSeriesAccountStatesWithResult[R any](ctx context.Context, ser
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -8931,7 +9057,8 @@ func (c *Client) TvSeriesAggregateCreditsWithResult[R any](ctx context.Context, 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -8999,7 +9126,8 @@ func (c *Client) TvSeriesAlternativeTitlesWithResult[R any](ctx context.Context,
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "alternative_titles")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -9085,7 +9213,8 @@ func (c *Client) TvSeriesChangesWithResult[R any](ctx context.Context, seriesID 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -9153,7 +9282,8 @@ func (c *Client) TvSeriesContentRatingsWithResult[R any](ctx context.Context, se
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "content_ratings")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -9231,7 +9361,8 @@ func (c *Client) TvSeriesCreditsWithResult[R any](ctx context.Context, seriesID 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -9299,7 +9430,8 @@ func (c *Client) TvSeriesEpisodeGroupsWithResult[R any](ctx context.Context, ser
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "episode_groups")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -9367,7 +9499,8 @@ func (c *Client) TvSeriesExternalIdsWithResult[R any](ctx context.Context, serie
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "external_ids")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -9449,7 +9582,8 @@ func (c *Client) TvSeriesImagesWithResult[R any](ctx context.Context, seriesID i
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -9517,7 +9651,8 @@ func (c *Client) TvSeriesKeywordsWithResult[R any](ctx context.Context, seriesID
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "keywords")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -9585,7 +9720,8 @@ func (c *Client) TvSeriesLatestIDWithResult[R any](ctx context.Context) (*R, err
 	u := c.baseURL.JoinPath("tv", "latest")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -9667,7 +9803,8 @@ func (c *Client) ListsCopyWithResult[R any](ctx context.Context, seriesID int32,
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -9749,7 +9886,8 @@ func (c *Client) TvSeriesRecommendationsWithResult[R any](ctx context.Context, s
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -9831,7 +9969,8 @@ func (c *Client) TvSeriesReviewsWithResult[R any](ctx context.Context, seriesID 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -9899,7 +10038,8 @@ func (c *Client) TvSeriesScreenedTheatricallyWithResult[R any](ctx context.Conte
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "screened_theatrically")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -9981,7 +10121,8 @@ func (c *Client) TvSeriesSimilarWithResult[R any](ctx context.Context, seriesID 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -10049,7 +10190,8 @@ func (c *Client) TvSeriesTranslationsWithResult[R any](ctx context.Context, seri
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -10131,7 +10273,8 @@ func (c *Client) TvSeriesVideosWithResult[R any](ctx context.Context, seriesID i
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -10199,7 +10342,8 @@ func (c *Client) TvSeriesWatchProvidersWithResult[R any](ctx context.Context, se
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "watch", "providers")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -10282,8 +10426,9 @@ func (c *Client) TvSeriesAddRatingWithResult[R any](ctx context.Context, seriesI
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent":   []string{c.userAgent},
-			"Content-Type": []string{"application/json"},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
+			"Content-Type":  []string{"application/json"},
 		},
 		Host:          u.Host,
 		Method:        http.MethodPost,
@@ -10370,7 +10515,8 @@ func (c *Client) TvSeriesDeleteRatingWithResult[R any](ctx context.Context, seri
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodDelete,
@@ -10452,7 +10598,8 @@ func (c *Client) TvSeasonDetailsWithResult[R any](ctx context.Context, seriesID 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -10534,7 +10681,8 @@ func (c *Client) TvSeasonAccountStatesWithResult[R any](ctx context.Context, ser
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -10612,7 +10760,8 @@ func (c *Client) TvSeasonAggregateCreditsWithResult[R any](ctx context.Context, 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -10698,7 +10847,8 @@ func (c *Client) TvSeasonChangesByIDWithResult[R any](ctx context.Context, seaso
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -10776,7 +10926,8 @@ func (c *Client) TvSeasonCreditsWithResult[R any](ctx context.Context, seriesID 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -10844,7 +10995,8 @@ func (c *Client) TvSeasonExternalIdsWithResult[R any](ctx context.Context, serie
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "external_ids")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -10926,7 +11078,8 @@ func (c *Client) TvSeasonImagesWithResult[R any](ctx context.Context, seriesID i
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -10994,7 +11147,8 @@ func (c *Client) TvSeasonTranslationsWithResult[R any](ctx context.Context, seri
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -11076,7 +11230,8 @@ func (c *Client) TvSeasonVideosWithResult[R any](ctx context.Context, seriesID i
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -11154,7 +11309,8 @@ func (c *Client) TvSeasonWatchProvidersWithResult[R any](ctx context.Context, se
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -11236,7 +11392,8 @@ func (c *Client) TvEpisodeDetailsWithResult[R any](ctx context.Context, seriesID
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -11318,7 +11475,8 @@ func (c *Client) TvEpisodeAccountStatesWithResult[R any](ctx context.Context, se
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -11386,7 +11544,8 @@ func (c *Client) TvEpisodeChangesByIDWithResult[R any](ctx context.Context, epis
 	u := c.baseURL.JoinPath("tv", "episode", strconv.FormatInt(int64(episodeID), 10), "changes")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -11464,7 +11623,8 @@ func (c *Client) TvEpisodeCreditsWithResult[R any](ctx context.Context, seriesID
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -11532,7 +11692,8 @@ func (c *Client) TvEpisodeExternalIdsWithResult[R any](ctx context.Context, seri
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", episodeNumber, "external_ids")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -11614,7 +11775,8 @@ func (c *Client) TvEpisodeImagesWithResult[R any](ctx context.Context, seriesID 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -11682,7 +11844,8 @@ func (c *Client) TvEpisodeTranslationsWithResult[R any](ctx context.Context, ser
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -11764,7 +11927,8 @@ func (c *Client) TvEpisodeVideosWithResult[R any](ctx context.Context, seriesID 
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -11847,8 +12011,9 @@ func (c *Client) TvEpisodeAddRatingWithResult[R any](ctx context.Context, series
 	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent":   []string{c.userAgent},
-			"Content-Type": []string{"application/json"},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
+			"Content-Type":  []string{"application/json"},
 		},
 		Host:          u.Host,
 		Method:        http.MethodPost,
@@ -11935,7 +12100,8 @@ func (c *Client) TvEpisodeDeleteRatingWithResult[R any](ctx context.Context, ser
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodDelete,
@@ -12003,7 +12169,8 @@ func (c *Client) TvEpisodeGroupDetailsWithResult[R any](ctx context.Context, tvE
 	u := c.baseURL.JoinPath("tv", "episode_group", tvEpisodeGroupID)
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -12081,7 +12248,8 @@ func (c *Client) WatchProvidersAvailableRegionsWithResult[R any](ctx context.Con
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -12163,7 +12331,8 @@ func (c *Client) WatchProvidersMovieListWithResult[R any](ctx context.Context, p
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
@@ -12245,7 +12414,8 @@ func (c *Client) WatchProviderTvListWithResult[R any](ctx context.Context, param
 
 	req := (&http.Request{
 		Header: http.Header{
-			"User-Agent": []string{c.userAgent},
+			"Authorization": []string{c.bearer},
+			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
 		Method:     http.MethodGet,
