@@ -82,5 +82,408 @@
 				"total_results": 3
 			}
 		}
+	},
+	{
+		"request": {
+			"method": "GET",
+			"url": "https://api.themoviedb.org/3/search/movie?query=The+Return+of+the+King",
+			"header": {
+				"Authorization": "Bearer ***********************************************************************************************************************************************************************************************************************************************",
+				"User-Agent": "tmdb-api"
+			}
+		},
+		"response": {
+			"statusCode": 200,
+			"header": {
+				"Content-Type": "application/json;charset=utf-8"
+			},
+			"body": {
+				"page": 1,
+				"results": [
+					{
+						"adult": false,
+						"backdrop_path": "/ctiw6FZK4N36LmkjSklWEbuvlq9.jpg",
+						"genre_ids": [
+							12,
+							14,
+							28
+						],
+						"id": 122,
+						"title": "The Lord of the Rings: The Return of the King",
+						"original_language": "en",
+						"original_title": "The Lord of the Rings: The Return of the King",
+						"overview": "As armies mass for a final battle that will decide the fate of the world--and powerful, ancient forces of Light and Dark compete to determine the outcome--one member of the Fellowship of the Ring is revealed as the noble heir to the throne of the Kings of Men. Yet, the sole hope for triumph over evil lies with a brave hobbit, Frodo, who, accompanied by his loyal friend Sam and the hideous, wretched Gollum, ventures deep into the very dark heart of Mordor on his seemingly impossible quest to destroy the Ring of Power.​",
+						"popularity": 50.0832,
+						"poster_path": "/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg",
+						"release_date": "2003-12-17",
+						"softcore": false,
+						"video": false,
+						"vote_average": 8.505,
+						"vote_count": 27650
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/fBzwSM5zl4xp9L3rFu1PihmY0vh.jpg",
+						"genre_ids": [
+							16,
+							14,
+							12
+						],
+						"id": 1361,
+						"title": "The Return of the King",
+						"original_language": "en",
+						"original_title": "The Return of the King",
+						"overview": "Two Hobbits struggle to destroy the Ring in Mount Doom while their friends desperately fight evil Lord Sauron's forces in a final battle.",
+						"popularity": 3.1456,
+						"poster_path": "/lTwUT4NsSyUQlHV20Mx3C96JHq4.jpg",
+						"release_date": "1980-05-11",
+						"softcore": false,
+						"video": false,
+						"vote_average": 6.4,
+						"vote_count": 229
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/dKWwm5zaxj63OgEh3pWcok0VVyB.jpg",
+						"genre_ids": [
+							99
+						],
+						"id": 517834,
+						"title": "The Making of 'The Return of the King'",
+						"original_language": "en",
+						"original_title": "The Making of 'The Return of the King'",
+						"overview": "A behind-the-scenes documentary on the making of  2003's \"The Lord of the Rings: The Return of the King.\" Created by filmmaker Costa Botes, personally selected by director Peter Jackson, this documentary uses raw footage to reveal the inside story on how the greatest adventure film franchise was born.",
+						"popularity": 1.6105,
+						"poster_path": "/lEYlQi3MIW5OYybTAoGLCzyGuN7.jpg",
+						"release_date": "2006-08-29",
+						"softcore": false,
+						"video": false,
+						"vote_average": 8.8,
+						"vote_count": 12
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [
+							35
+						],
+						"id": 72179,
+						"title": "The Return of the King?",
+						"original_language": "en",
+						"original_title": "The Return of the King?",
+						"overview": "",
+						"popularity": 0.7167,
+						"poster_path": "/oBmiOlyEx8KoXYdbYp3HDrGMir5.jpg",
+						"release_date": "1993-01-01",
+						"softcore": false,
+						"video": false,
+						"vote_average": 4.8,
+						"vote_count": 2
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [],
+						"id": 74507,
+						"title": "EliteXC: Return of The King",
+						"original_language": "sv",
+						"original_title": "EliteXC: Return of The King",
+						"overview": "EliteXC: Return of The King was a mixed martial arts event promoted by EliteXC that took place on Saturday, June 14, 2008 at the Neal S. Blaisdell Arena in Oahu, Hawaii. The main card aired live on Showtime. The Welterweight title bout of Jake Shields vs. Drew Fickett was removed from the original card when Fickett sustained an injury. The event drew an estimated 350,000 viewers on Showtime. Nick Diaz showed up for his 160 pound lightweight fight at 169 pounds which lead to it becoming a catchweight bout.",
+						"popularity": 1.0839,
+						"poster_path": "/g1GUAP1LicvtRXo4mgmtuSqlJMq.jpg",
+						"release_date": "2008-06-13",
+						"softcore": false,
+						"video": true,
+						"vote_average": 0.0,
+						"vote_count": 0
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/6So1F3UlHkvXwziKabnTLyeUrnA.jpg",
+						"genre_ids": [
+							99,
+							36,
+							10770
+						],
+						"id": 218166,
+						"title": "Beyond the Movie: The Return of the King",
+						"original_language": "en",
+						"original_title": "Beyond the Movie: The Return of the King",
+						"overview": "Documentary exploring the parallels between 'The Return of the King' and real events and people in history.",
+						"popularity": 1.5804,
+						"poster_path": "/mVIJapNx0MehdVWgIRlaY0in0XY.jpg",
+						"release_date": "2003-12-12",
+						"softcore": false,
+						"video": false,
+						"vote_average": 8.1,
+						"vote_count": 15
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [],
+						"id": 1788372,
+						"title": "The Return of the King",
+						"original_language": "en",
+						"original_title": "The Return of the King",
+						"overview": "The 3' Tolkien's book of lord of the ring become a animate movie (1980)",
+						"popularity": 0.4874,
+						"poster_path": null,
+						"release_date": "",
+						"softcore": false,
+						"video": false,
+						"vote_average": 0.0,
+						"vote_count": 0
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [],
+						"id": 1658506,
+						"title": "The Return of the King: The Passing of an Age",
+						"original_language": "en",
+						"original_title": "The Return of the King: The Passing of an Age",
+						"overview": "BTS documentary of The Lord of the Rings: The Return of the King",
+						"popularity": 1.446,
+						"poster_path": "/o4QztWGZopkGn9Jzzg1m1Rb0IPY.jpg",
+						"release_date": "2004-12-14",
+						"softcore": false,
+						"video": false,
+						"vote_average": 10.0,
+						"vote_count": 1
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/q0mwIUgV36Udc74VdFkpSuhHwqD.jpg",
+						"genre_ids": [
+							99
+						],
+						"id": 510172,
+						"title": "Lionsrock: Return Of The King",
+						"original_language": "en",
+						"original_title": "Lionsrock: Return Of The King",
+						"overview": "This documentary touches on a very special relationship between animals and humans in a little piece of Africa transplanted from Europe. These transplanted lions will live out their lives in a happier, more natural environment than they knew in Europe - but they will never become truly wild again…",
+						"popularity": 0.4602,
+						"poster_path": "/je6ca4RmMeTYU5Heyumj2Hx0B6A.jpg",
+						"release_date": "2014-01-01",
+						"softcore": false,
+						"video": false,
+						"vote_average": 0.0,
+						"vote_count": 0
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [
+							18,
+							36
+						],
+						"id": 460154,
+						"title": "The Return of King Lapusneanu",
+						"original_language": "ro",
+						"original_title": "Întoarcerea lui Vodă Lăpușneanu",
+						"overview": "Alexandru Lapusneanu is one of important Moldavian rulers. A Macbeth figure, who obtains his throne in fight, who reeves any possible danger out of his way, a good \"hospodar\", husband and father. His reign is result of relation with the Great Powers of the XVIth century. The strain relation with the boyars (noblemen), the economic and spiritual contribution in the country's development, tensions of his own family, the loss of reign and the revenge, the second reign are elements for define the man and the prince like touching character",
+						"popularity": 1.8487,
+						"poster_path": "/ah0CFHN2GXz3nA2xq7epPn49dCk.jpg",
+						"release_date": "1980-03-17",
+						"softcore": false,
+						"video": false,
+						"vote_average": 6.9,
+						"vote_count": 10
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [],
+						"id": 1786294,
+						"title": "The Return of the King: Costume Design",
+						"original_language": "en",
+						"original_title": "The Return of the King: Costume Design",
+						"overview": "BTS documentary of The Lord of the Rings: The Return of the King",
+						"popularity": 0.6706,
+						"poster_path": "/rM9s9hp1aoTlySgebzoB7Z4xTut.jpg",
+						"release_date": "",
+						"softcore": false,
+						"video": false,
+						"vote_average": 0.0,
+						"vote_count": 0
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [],
+						"id": 1786292,
+						"title": "The Return of the King: Weta Workshop",
+						"original_language": "en",
+						"original_title": "The Return of the King: Weta Workshop",
+						"overview": "BTS documentary of The Lord of the Rings: The Return of the King",
+						"popularity": 0.637,
+						"poster_path": "/rM9s9hp1aoTlySgebzoB7Z4xTut.jpg",
+						"release_date": "",
+						"softcore": false,
+						"video": false,
+						"vote_average": 0.0,
+						"vote_count": 0
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [],
+						"id": 1786304,
+						"title": "The Return of the King: Weta Digital",
+						"original_language": "en",
+						"original_title": "The Return of the King: Weta Digital",
+						"overview": "BTS documentary of The Lord of the Rings: The Return of the King",
+						"popularity": 0.6407,
+						"poster_path": "/rM9s9hp1aoTlySgebzoB7Z4xTut.jpg",
+						"release_date": "",
+						"softcore": false,
+						"video": false,
+						"vote_average": 0.0,
+						"vote_count": 0
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/vqHJ0zmNMd1mL27Pc3ISlBkm3lj.jpg",
+						"genre_ids": [
+							12,
+							28,
+							18
+						],
+						"id": 1250797,
+						"title": "The Return of the King",
+						"original_language": "zh",
+						"original_title": "虎王·王者归来",
+						"overview": "During the period of the Five-Hu Rebellion, there was an old forest where the legend of the \"Mountain God\" was spread. The White Head Village, which had always believed in the White Tiger, was suddenly slaughtered by the White Tiger after a blessing ceremony. In response, the people invited Chu Jiang, the legendary hunter of White Head Village, to come out to the mountain",
+						"popularity": 0.867,
+						"poster_path": "/lsNoT6vjro9P0TbzB8WmnPULh0u.jpg",
+						"release_date": "2024-02-20",
+						"softcore": false,
+						"video": false,
+						"vote_average": 7.0,
+						"vote_count": 3
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/9o29QNQh1TT0zkZfcciFFA5sUNP.jpg",
+						"genre_ids": [
+							99,
+							10402
+						],
+						"id": 1372795,
+						"title": "Return of the King: The Fall and Rise of Elvis Presley",
+						"original_language": "en",
+						"original_title": "Return of the King: The Fall and Rise of Elvis Presley",
+						"overview": "He had one chance to show the world he was still the King of Rock 'n' Roll. Discover the story behind Elvis Presley's triumphant '68 comeback special.",
+						"popularity": 2.6289,
+						"poster_path": "/eijfr4QiMu1ZK2XfBNd9KjoRmau.jpg",
+						"release_date": "2024-11-12",
+						"softcore": false,
+						"video": false,
+						"vote_average": 7.5,
+						"vote_count": 68
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [
+							99,
+							36
+						],
+						"id": 1322812,
+						"title": "Richard III: The Return of the King",
+						"original_language": "en",
+						"original_title": "Richard III: The Return of the King",
+						"overview": "This programme captures the climax of the procession taking Richard III’s remains to Leicester Cathedral, and asks leading historians and other experts what his place in British history should now be.",
+						"popularity": 0.4115,
+						"poster_path": null,
+						"release_date": "2015-03-21",
+						"softcore": false,
+						"video": false,
+						"vote_average": 0.0,
+						"vote_count": 0
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [
+							16,
+							10751,
+							14
+						],
+						"id": 55285,
+						"title": "Kingdom Under The Sea: Return of the King",
+						"original_language": "en",
+						"original_title": "Kingdom Under The Sea: Return of the King",
+						"overview": "In a story similar to C.S. Lewis' The Lion, the Witch and the Wardrobe, Splash and his sister Coral have long-awaited the return of the great whale King, but when young Splash lets a secret slip, the evil squid Krakken sets a trap! Using state of the art computer animation, Kingdom Under the Sea is a drama of great beauty and a message of great depth that your family will want to watch over and over again!",
+						"popularity": 0.5354,
+						"poster_path": "/sc8oufMw11KuZPTJ1VONv7j5b0p.jpg",
+						"release_date": "2001-01-01",
+						"softcore": false,
+						"video": false,
+						"vote_average": 6.0,
+						"vote_count": 1
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/n0WzZwHxcFtWTK2PyGAHbqN5VHQ.jpg",
+						"genre_ids": [
+							12,
+							35
+						],
+						"id": 357073,
+						"title": "The Hobbit: The Return of the King of Cantal",
+						"original_language": "fr",
+						"original_title": "Le Hobbit : Le Retour du Roi du Cantal",
+						"overview": "Cantal is attacked by Puy-de-Dôme. King Thorin cannot face them alone. Accompanied by Bilbon the Hobbit and Gandalf the Wizard, he must roam Cantal in search of allies. Will the villagers of Boisset come to their aid? Will the Lord of Marcolès rally behind their cause? And on which side does the Lord of Aurillac truly stand?",
+						"popularity": 1.7335,
+						"poster_path": "/AhnmcQXN2nrA6VfQlRJwgssMwyM.jpg",
+						"release_date": "2015-07-08",
+						"softcore": false,
+						"video": false,
+						"vote_average": 7.6,
+						"vote_count": 12
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [
+							99
+						],
+						"id": 1570584,
+						"title": "Return of the King",
+						"original_language": "en",
+						"original_title": "Завръщането на Царя",
+						"overview": "Through Sofia, Vienna and Coburg, the film follows the exciting saga surrounding the return of the remains of Tsar Ferdinand I to Bulgaria.",
+						"popularity": 0.6676,
+						"poster_path": null,
+						"release_date": "2025-10-28",
+						"softcore": false,
+						"video": false,
+						"vote_average": 0.0,
+						"vote_count": 0
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [],
+						"id": 1786290,
+						"title": "The Return of the King: Big-atures",
+						"original_language": "en",
+						"original_title": "The Return of the King: Big-atures",
+						"overview": "BTS documentary of The Lord of the Rings: The Return of the King",
+						"popularity": 0.6701,
+						"poster_path": "/rM9s9hp1aoTlySgebzoB7Z4xTut.jpg",
+						"release_date": "",
+						"softcore": false,
+						"video": false,
+						"vote_average": 0.0,
+						"vote_count": 0
+					}
+				],
+				"total_pages": 3,
+				"total_results": 54
+			}
+		}
 	}
 ]

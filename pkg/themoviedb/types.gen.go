@@ -8,10 +8,14 @@ import (
 	"encoding/json/v2"
 
 	"cloud.google.com/go/civil"
+	"github.com/MarkRosemaker/jsonutil"
 )
 
 var jsonOpts = json.JoinOptions(
 	json.RejectUnknownMembers(true),
+	json.WithUnmarshalers(json.JoinUnmarshalers(
+		json.UnmarshalFromFunc(jsonutil.DateUnmarshalEmptyAsZero),
+	)),
 )
 
 // jsonOptsLenient is jsonOpts accepting members the specification does not know, as debug mode decodes once a strict
@@ -1108,9 +1112,9 @@ type CollectionDetailsOkPartsItem struct {
 
 // CollectionImagesOk defines a model
 type CollectionImagesOk struct {
-	ID        int                  `json:"id,omitzero"`
-	Backdrops MovieImagesBackdrops `json:"backdrops,omitzero"`
-	Posters   MovieImagesLogos     `json:"posters,omitzero"`
+	ID        int              `json:"id,omitzero"`
+	Backdrops Images           `json:"backdrops,omitzero"`
+	Posters   MovieImagesLogos `json:"posters,omitzero"`
 }
 
 // CollectionTranslationsOk defines a model
@@ -1466,6 +1470,20 @@ type GuestSessionRatedTvOkResultsItem struct {
 	Rating           float64  `json:"rating,omitzero"`
 }
 
+// Image defines a model
+type Image struct {
+	AspectRatio float64   `json:"aspect_ratio,omitzero"`
+	Height      int       `json:"height,omitzero"`
+	Iso6391     *struct{} `json:"iso_639_1,omitzero"`
+	FilePath    string    `json:"file_path,omitzero"`
+	VoteAverage float64   `json:"vote_average,omitzero"`
+	VoteCount   int       `json:"vote_count,omitzero"`
+	Width       int       `json:"width,omitzero"`
+}
+
+// Images defines a model
+type Images []Image
+
 // Keyword defines a model
 type Keyword struct {
 	ID   int    `json:"id,omitzero"`
@@ -1737,24 +1755,10 @@ type MovieExternalIdsOk struct {
 
 // MovieImages defines a model
 type MovieImages struct {
-	Backdrops MovieImagesBackdrops `json:"backdrops,omitzero"`
-	ID        int                  `json:"id,omitzero"`
-	Logos     MovieImagesLogos     `json:"logos,omitzero"`
-	Posters   MovieImagesLogos     `json:"posters,omitzero"`
-}
-
-// MovieImagesBackdrops defines a model
-type MovieImagesBackdrops []MovieImagesBackdropsItem
-
-// MovieImagesBackdropsItem defines a model
-type MovieImagesBackdropsItem struct {
-	AspectRatio float64   `json:"aspect_ratio,omitzero"`
-	Height      int       `json:"height,omitzero"`
-	Iso6391     *struct{} `json:"iso_639_1,omitzero"`
-	FilePath    string    `json:"file_path,omitzero"`
-	VoteAverage float64   `json:"vote_average,omitzero"`
-	VoteCount   int       `json:"vote_count,omitzero"`
-	Width       int       `json:"width,omitzero"`
+	Backdrops Images           `json:"backdrops,omitzero"`
+	ID        int              `json:"id,omitzero"`
+	Logos     MovieImagesLogos `json:"logos,omitzero"`
+	Posters   MovieImagesLogos `json:"posters,omitzero"`
 }
 
 // MovieImagesLogos defines a model
@@ -2291,8 +2295,8 @@ type PersonExternalIdsOk struct {
 
 // PersonImagesOk defines a model
 type PersonImagesOk struct {
-	ID       int                  `json:"id,omitzero"`
-	Profiles MovieImagesBackdrops `json:"profiles,omitzero"`
+	ID       int    `json:"id,omitzero"`
+	Profiles Images `json:"profiles,omitzero"`
 }
 
 // PersonLatestIDOk defines a model
@@ -2968,8 +2972,8 @@ type TvEpisodeGroupDetailsOkGroupsItemEpisodesItem struct {
 
 // TvEpisodeImagesOk defines a model
 type TvEpisodeImagesOk struct {
-	ID     int                  `json:"id,omitzero"`
-	Stills MovieImagesBackdrops `json:"stills,omitzero"`
+	ID     int    `json:"id,omitzero"`
+	Stills Images `json:"stills,omitzero"`
 }
 
 // TvSeasonAccountStatesOk defines a model

@@ -14308,4 +14308,10 @@ func TestClient_Interactions(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("SearchMovies: %v", err)
 	}
+
+	if _, err := c.SearchMovies(ctx, SearchMoviesParams{
+		Query: "The Return of the King",
+	}); err != nil {
+		t.Fatalf("SearchMovies: %v", err)
+	}
 }

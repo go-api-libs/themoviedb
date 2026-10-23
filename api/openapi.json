@@ -4363,7 +4363,7 @@
             "example": 10
           },
           "backdrops": {
-            "$ref": "#/components/schemas/MovieImagesBackdrops"
+            "$ref": "#/components/schemas/Images"
           },
           "posters": {
             "$ref": "#/components/schemas/MovieImagesLogos"
@@ -5394,6 +5394,47 @@
           }
         }
       },
+      "Image": {
+        "type": "object",
+        "properties": {
+          "aspect_ratio": {
+            "type": "number",
+            "default": 0,
+            "example": 1.778
+          },
+          "height": {
+            "type": "integer",
+            "default": 0,
+            "example": 800
+          },
+          "iso_639_1": {},
+          "file_path": {
+            "type": "string",
+            "example": "/hZkgoQYus5vegHoetLkCJzb17zJ.jpg"
+          },
+          "vote_average": {
+            "type": "number",
+            "default": 0,
+            "example": 5.622
+          },
+          "vote_count": {
+            "type": "integer",
+            "default": 0,
+            "example": 20
+          },
+          "width": {
+            "type": "integer",
+            "default": 0,
+            "example": 1422
+          }
+        }
+      },
+      "Images": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Image"
+        }
+      },
       "Keyword": {
         "type": "object",
         "properties": {
@@ -5752,7 +5793,10 @@
             "example": 73.433
           },
           "poster_path": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg"
           },
           "release_date": {
@@ -6208,7 +6252,7 @@
         "type": "object",
         "properties": {
           "backdrops": {
-            "$ref": "#/components/schemas/MovieImagesBackdrops"
+            "$ref": "#/components/schemas/Images"
           },
           "id": {
             "type": "integer",
@@ -6220,47 +6264,6 @@
           },
           "posters": {
             "$ref": "#/components/schemas/MovieImagesLogos"
-          }
-        }
-      },
-      "MovieImagesBackdrops": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/MovieImagesBackdropsItem"
-        }
-      },
-      "MovieImagesBackdropsItem": {
-        "type": "object",
-        "properties": {
-          "aspect_ratio": {
-            "type": "number",
-            "default": 0,
-            "example": 1.778
-          },
-          "height": {
-            "type": "integer",
-            "default": 0,
-            "example": 800
-          },
-          "iso_639_1": {},
-          "file_path": {
-            "type": "string",
-            "example": "/hZkgoQYus5vegHoetLkCJzb17zJ.jpg"
-          },
-          "vote_average": {
-            "type": "number",
-            "default": 0,
-            "example": 5.622
-          },
-          "vote_count": {
-            "type": "integer",
-            "default": 0,
-            "example": 20
-          },
-          "width": {
-            "type": "integer",
-            "default": 0,
-            "example": 1422
           }
         }
       },
@@ -7807,7 +7810,7 @@
             "example": 287
           },
           "profiles": {
-            "$ref": "#/components/schemas/MovieImagesBackdrops"
+            "$ref": "#/components/schemas/Images"
           }
         }
       },
@@ -9710,7 +9713,7 @@
             "example": 63056
           },
           "stills": {
-            "$ref": "#/components/schemas/MovieImagesBackdrops"
+            "$ref": "#/components/schemas/Images"
           }
         }
       },
