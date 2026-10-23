@@ -1,0 +1,111 @@
+package openapi
+
+import (
+	"bytes"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
+	"fmt"
+	"strings"
+
+	"github.com/MarkRosemaker/errpath"
+)
+
+// Reference is a simple object to allow referencing other components in the OpenAPI document, internally and externally.
+//
+// The `$ref` string value contains a URI RFC3986, which identifies the location of the value being referenced.
+//
+// See the rules for resolving Relative References.
+//
+// ([Specification])
+//
+// [Specification]: https://spec.openapis.org/oas/v3.1.0#reference-object
+type Reference struct {
+	// REQUIRED. The reference identifier. This MUST be in the form of a URI.
+	Identifier string `json:"$ref,omitempty" yaml:"$ref,omitempty"`
+	// A short summary which by default SHOULD override that of the referenced component. If the referenced object-type does not allow a `summary` field, then this field has no effect.
+	Summary string `json:"summary,omitempty" yaml:"summary,omitempty"`
+	// A description which by default SHOULD override that of the referenced component. CommonMark syntax MAY be used for rich text representation. If the referenced object-type does not allow a `description` field, then this field has no effect.
+	Description string `json:"description,omitempty" yaml:"description,omitempty"`
+}
+
+// Validate returns an error if the Reference breaks the specification.
+func (r *Reference) Validate() error {
+	if r.Identifier == "" {
+		return &errpath.ErrField{Field: "$ref", Err: &errpath.ErrRequired{}}
+	}
+
+	r.Description = strings.TrimSpace(r.Description)
+
+	return nil
+}
+
+type referencable[T any] interface {
+	Validate() error
+	*T
+}
+
+// refOrValue is a reference to a component or the component itself.
+type refOrValue[T any, O referencable[T]] struct {
+	// The referenced object.
+	Value O `json:",embed" yaml:",embed"`
+	// The reference.
+	Ref *Reference `json:",embed" yaml:",embed"`
+
+	// an index to the original location of this object
+	idx int
+}
+
+func (r *refOrValue[T, O]) Validate() error {
+	if r.Ref != nil {
+		if r.Value == nil {
+			return fmt.Errorf("%s (%T) was not resolved", r.Ref.Identifier, r.Value)
+		}
+
+		return r.Ref.Validate()
+	}
+
+	return r.Value.Validate()
+}
+
+var _ json.UnmarshalerFrom = (*refOrValue[Example, *Example])(nil)
+
+func (r *refOrValue[T, O]) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
+	// we don't know if this is a reference or not, so we read the value first
+	val, err := dec.ReadValue()
+	if err != nil {
+		return err
+	}
+
+	// try to unmarshal as a reference
+	ref := &Reference{}
+	if err := json.UnmarshalDecode(
+		jsontext.NewDecoder(bytes.NewBuffer(val), dec.Options()), ref,
+	); err == nil && ref.Identifier != "" {
+		// we successfully unmarshalled as a reference
+		r.Ref = ref // set the reference
+		return nil
+	}
+
+	// it is not a reference, unmarshal as object
+	var v O
+	if err := json.UnmarshalDecode(
+		jsontext.NewDecoder(bytes.NewBuffer(val), dec.Options()), &v,
+	); err != nil {
+		var t T
+		return fmt.Errorf("value of %T: %w", t, err)
+	}
+
+	r.Value = v // set the value
+
+	return nil
+}
+
+var _ json.MarshalerTo = (*refOrValue[Example, *Example])(nil)
+
+func (r *refOrValue[_, _]) MarshalJSONTo(enc *jsontext.Encoder) error {
+	if r.Ref == nil {
+		return json.MarshalEncode(enc, r.Value)
+	}
+
+	return json.MarshalEncode(enc, r.Ref)
+}

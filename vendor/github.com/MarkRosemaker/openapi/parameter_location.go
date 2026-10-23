@@ -1,0 +1,45 @@
+package openapi
+
+import (
+	"slices"
+
+	"github.com/MarkRosemaker/errpath"
+)
+
+// ParameterLocation defines the location of the parameter.
+// There are four possible parameter locations specified by the `in` field of a Parameter.
+type ParameterLocation string
+
+const (
+	// ParameterLocationPath is used together with Path Templating, where the parameter value is actually part of the operation's URL. This does not include the host or base path of the API. For example, in `/items/{itemId}`, the path parameter is `itemId`.
+	ParameterLocationPath ParameterLocation = "path"
+	// ParameterLocationQuery is for parameters that are appended to the URL. For example, in `/items?id=###`, the query parameter is `id`.
+	ParameterLocationQuery ParameterLocation = "query"
+	// ParameterLocationHeader is for custom headers that are expected as part of the request. Note that RFC7230 states header names are case insensitive.
+	ParameterLocationHeader ParameterLocation = "header"
+	// ParameterLocationCookie is used to pass a specific cookie value to the API.
+	ParameterLocationCookie ParameterLocation = "cookie"
+)
+
+var allParameterLocations = []ParameterLocation{
+	ParameterLocationPath,
+	ParameterLocationQuery,
+	ParameterLocationHeader,
+	ParameterLocationCookie,
+}
+
+// Validate returns an error if the ParameterLocation breaks the specification.
+func (p ParameterLocation) Validate() error {
+	if p == "" {
+		return &errpath.ErrRequired{}
+	}
+
+	if slices.Contains(allParameterLocations, p) {
+		return nil
+	}
+
+	return &errpath.ErrInvalid[ParameterLocation]{
+		Value: p,
+		Enum:  allParameterLocations,
+	}
+}

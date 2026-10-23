@@ -67,6 +67,17 @@ Edit the directory, never the file:
 - `README.md` → `README/`
 - `Makefile` → `mk/`
 
+`api/openapi.json` is partly generated: `openapi-enrich` fills in types,
+formats and examples from `api/interactions.json` and writes them into
+the spec. What it writes is kept: a later run does not remove it, even
+once the interaction that caused it has changed. When an interaction
+contradicts your edit, it can also overwrite that edit.
+
+So change a type in both files, in the same commit. After `make ready`,
+read the diff of `api/openapi.json`. Put back any edit enrich reverted,
+and delete any example it inferred from an interaction that no longer
+exists.
+
 `.gitignore` is the exception: only the marked block at its head is
 generated. Your own rules go below that block, where they win — in a
 `.gitignore` the last matching pattern decides.

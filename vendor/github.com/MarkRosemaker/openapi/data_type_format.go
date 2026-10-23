@@ -1,0 +1,84 @@
+package openapi
+
+import (
+	"slices"
+
+	"github.com/MarkRosemaker/errpath"
+)
+
+// Format defines additional formats to provide fine detail for primitive data types. It is an open string
+// ([Specification]): the constants below are the formats the library knows, and Validate checks a schema's format
+// against them only in [Document.ValidateStrict].
+//
+// [Specification]: https://spec.openapis.org/oas/v3.1.0#data-types
+type Format string
+
+const (
+	// FormatInt32 represents a signed 32 bits integer.
+	FormatInt32 Format = "int32"
+	// FormatInt64 represents a signed 64 bits integer.
+	FormatInt64 Format = "int64"
+	// FormatUint represents an unsigned integer.
+	FormatUint Format = "uint"
+	// FormatUint32 represents an unsigned 32 bits integer.
+	FormatUint32 Format = "uint32"
+	// FormatUint64 represents an unsigned 64 bits integer.
+	FormatUint64 Format = "uint64"
+	// FormatFloat represents a float number.
+	FormatFloat Format = "float"
+	// FormatDouble represents a double number.
+	FormatDouble Format = "double"
+	// FormatByte represents a byte.
+	FormatByte Format = "byte"
+	// FormatBinary represents a binary.
+	FormatBinary Format = "binary"
+	// FormatDate represents a date.
+	FormatDate Format = "date"
+	// FormatDateBasic represents a date in ISO 8601's basic form, without separators, such as "20260320". It is not
+	// one of JSON Schema's formats, whose date is "2026-03-20", but some APIs write a date this way.
+	FormatDateBasic Format = "date-basic"
+	// FormatDateTime represents a date-time.
+	FormatDateTime Format = "date-time"
+	// FormatDuration represents a duration.
+	FormatDuration Format = "duration"
+	// FormatEmail represents an email.
+	FormatEmail Format = "email"
+	// FormatPassword represents a password. It's a hint to UIs to obscure input.
+	FormatPassword Format = "password"
+	// FormatUUID represents a UUID.
+	FormatUUID Format = "uuid"
+	// FormatURI represents a URI.
+	FormatURI Format = "uri"
+	// FormatURIRef represents a URI reference.
+	FormatURIRef Format = "uriref"
+	// FormatZipCode represents a zip code.
+	FormatZipCode Format = "zip-code"
+	// FormatIPv4 represents an IPv4 address.
+	FormatIPv4 Format = "ipv4"
+	// FormatIPv6 represents an IPv6 address.
+	FormatIPv6 Format = "ipv6"
+)
+
+var allFormats = []Format{
+	FormatInt32, FormatInt64,
+	FormatUint, FormatUint32, FormatUint64,
+	FormatFloat, FormatDouble,
+	FormatByte, FormatBinary,
+	FormatDate, FormatDateBasic, FormatDateTime, FormatDuration,
+	FormatEmail, FormatPassword,
+	FormatUUID,
+	FormatURI, FormatURIRef, FormatZipCode,
+	FormatIPv4, FormatIPv6,
+}
+
+// Validate reports a format the library does not know.
+func (f Format) Validate() error {
+	if slices.Contains(allFormats, f) {
+		return nil
+	}
+
+	return &errpath.ErrInvalid[Format]{
+		Value: f,
+		Enum:  allFormats,
+	}
+}

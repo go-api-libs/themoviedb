@@ -1,0 +1,23 @@
+{
+	"description": "Build up an OpenAPI specification in Go from observed HTTP traffic, inferring paths, operations, parameters, request bodies, response schemas, and string formats from real requests and responses.",
+	"topics": [
+		"api",
+		"api-discovery",
+		"api-tools",
+		"go",
+		"http",
+		"json",
+		"openapi",
+		"reverse-engineering",
+		"schema-inference",
+		"swagger"
+	],
+	"coverage": 82.1,
+	"devtoolVersion": "v0.0.0-20261022122323-875628a18236",
+	"kind": "cli",
+	"tools": {
+		"golangci-lint": "v2.15.0",
+		"govulncheck": "v1.9.0",
+		"pkgsite": "v0.6.0"
+	}
+}
