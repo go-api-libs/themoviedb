@@ -120,12 +120,15 @@ func FromDocument(doc *openapi.Document, packageName, userAgent string, producti
 		HasStringOrNumberFields: slices.ContainsFunc(schemas, func(s Schema) bool {
 			return slices.ContainsFunc(s.Fields, func(f Field) bool { return f.IsStringOrNumber })
 		}),
-		HasUnixTimeFields:  encodings["time.Time"][encodingUnix].all,
-		HasUnixDateFields:  encodings["civil.Date"][encodingUnix].all,
-		UnixTimeMembers:    encodings["time.Time"][encodingUnix].members,
-		UnixDateMembers:    encodings["civil.Date"][encodingUnix].members,
-		HasBasicDateFields: encodings["civil.Date"][encodingBasic].all,
-		BasicDateMembers:   encodings["civil.Date"][encodingBasic].members,
+		HasUnixTimeFields:   encodings["time.Time"][encodingUnix].all,
+		HasUnixDateFields:   encodings["civil.Date"][encodingUnix].all,
+		UnixTimeMembers:     encodings["time.Time"][encodingUnix].members,
+		UnixDateMembers:     encodings["civil.Date"][encodingUnix].members,
+		HasBasicDateFields:  encodings["civil.Date"][encodingBasic].all,
+		BasicDateMembers:    encodings["civil.Date"][encodingBasic].members,
+		HasStringDateFields: hasEncoding(encodings, "civil.Date", ""),
+		// a date-time that may be an integer is read by an unmarshaler of every time.Time, which comes first
+		HasStringTimeFields: hasEncoding(encodings, "time.Time", "") && !hasDateTimeOrInt,
 		HasServerOverrides: slices.ContainsFunc(operations, func(op Operation) bool {
 			return op.BaseURL != nil
 		}),

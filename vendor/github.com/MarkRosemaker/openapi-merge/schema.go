@@ -328,6 +328,18 @@ func fitsDateBasic(v jsontext.Value) bool {
 	return err == nil
 }
 
+// isEmptyString reports whether v is the empty string.
+func isEmptyString(v jsontext.Value) bool { return string(v) == `""` }
+
+// withoutFormat is whichever of a and b has no format.
+func withoutFormat(a, b *openapi.Schema) *openapi.Schema {
+	if a.Format == "" {
+		return a
+	}
+
+	return b
+}
+
 // reconcileFormats resolves a and b's formats when either is unset, and
 // reports a mismatch it could not resolve.
 func reconcileFormats(a, b *openapi.Schema) error {
@@ -352,6 +364,13 @@ func reconcileFormats(a, b *openapi.Schema) error {
 			// date-basic, which no sample is recorded with, stays where the value without a format fits it
 			switch f := cmp.Or(a.Format, b.Format); {
 			case f == openapi.FormatDateBasic && fitsDateBasic(a.Example) && fitsDateBasic(b.Example):
+				a.Format, b.Format = f, f
+			case (f == openapi.FormatDate || f == openapi.FormatDateTime) && isEmptyString(withoutFormat(a, b).Example):
+				// an empty string is a date or date-time left out, which a client reads as the zero value
+				if isEmptyString(a.Example) {
+					a.Example = b.Example
+				}
+
 				a.Format, b.Format = f, f
 			default:
 				a.Format, b.Format = "", ""

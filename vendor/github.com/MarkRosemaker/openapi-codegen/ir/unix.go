@@ -34,9 +34,16 @@ func fieldEncoding(f Field) string {
 	}
 }
 
+// hasEncoding reports whether some value of the Go type is in the encoding, "" for the type's own.
+func hasEncoding(modes map[string]map[string]encodingMode, goType, enc string) bool {
+	_, ok := modes[goType][enc]
+	return ok
+}
+
 // markEncodings decides, for time.Time and civil.Date, how the values written other than as their type does it are
 // written and read: all of them by one marshaler, where they are the only ones, or else by the names of the members
-// holding them. It returns, by Go type, the mode of each encoding there is.
+// holding them. It returns, by Go type, the mode of each encoding there is, "" for the type's own where any value is in
+// it.
 func markEncodings(schemas []Schema) (map[string]map[string]encodingMode, error) {
 	modes := map[string]map[string]encodingMode{}
 
@@ -76,11 +83,15 @@ func markEncodings(schemas []Schema) (map[string]map[string]encodingMode, error)
 			}
 		}
 
+		modes[goType] = map[string]encodingMode{}
+
+		if len(names[""]) > 0 {
+			modes[goType][""] = encodingMode{}
+		}
+
 		if len(encs) == 0 {
 			continue
 		}
-
-		modes[goType] = map[string]encodingMode{}
 
 		if len(encs) == 1 && len(names[""]) == 0 {
 			modes[goType][encs[0]] = encodingMode{all: true}

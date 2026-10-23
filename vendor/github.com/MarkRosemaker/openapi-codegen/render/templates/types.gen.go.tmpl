@@ -22,7 +22,7 @@ var jsonOpts = json.JoinOptions(
 			{{- template "marshalers" . }}
 		)),
 		{{- end }}
-		{{- if or .HasURLFields .HasDateTimeOrIntFields .HasStringOrNumberFields .HasDurationFields .HasUnixTimeFields .HasUnixDateFields .UnixTimeMembers .UnixDateMembers .HasBasicDateFields .BasicDateMembers }}
+		{{- if or .HasURLFields .HasDateTimeOrIntFields .HasStringOrNumberFields .HasDurationFields .HasUnixTimeFields .HasUnixDateFields .UnixTimeMembers .UnixDateMembers .HasBasicDateFields .BasicDateMembers .HasStringDateFields .HasStringTimeFields }}
 		json.WithUnmarshalers(json.JoinUnmarshalers(
 			{{- with .UnixTimeMembers }}
 			json.UnmarshalFromFunc(jsonutil.TimeUnmarshalIntUnixFor({{ range $i, $m := . }}{{ if $i }}, {{ end }}{{ printf "%q" $m }}{{ end }})),
@@ -53,6 +53,12 @@ var jsonOpts = json.JoinOptions(
 			{{- end }}
 			{{- if .HasBasicDateFields }}
 			json.UnmarshalFromFunc(jsonutil.DateUnmarshalBasic),
+			{{- end }}
+			{{- if .HasStringDateFields }}
+			json.UnmarshalFromFunc(jsonutil.DateUnmarshalEmptyAsZero),
+			{{- end }}
+			{{- if .HasStringTimeFields }}
+			json.UnmarshalFromFunc(jsonutil.TimeUnmarshalEmptyAsZero),
 			{{- end }}
 		)),
 		{{- end }}

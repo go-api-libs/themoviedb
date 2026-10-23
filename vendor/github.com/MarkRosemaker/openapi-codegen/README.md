@@ -182,6 +182,9 @@ How the specification maps onto Go:
   sends the request body's media type and the credential of the security scheme.
 - **Unknown formats** — a format the generator does not know, which OpenAPI 3.1
   allows, gives the plain type: an `int`, a `float64` or a `string`.
+- **Empty dates** — an empty string, which an API may send for a date or
+  date-time it leaves out, reads as the zero `civil.Date` or `time.Time`,
+  through jsonutil's `DateUnmarshalEmptyAsZero` and the like.
 - **Numbers sent as strings** — a oneOf of a string and a number, as an API that
   sends `"9.5"` and now and then `0.0` has, is a `float64`: read from either with
   jsonutil's `Float64UnmarshalStringOrNumber`, and written as the string, through

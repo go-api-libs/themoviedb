@@ -38,6 +38,10 @@ type Document struct {
 	// HasBasicDateFields and BasicDateMembers are the same for dates in ISO 8601's basic form, such as "20260320".
 	HasBasicDateFields bool     `json:"hasBasicDateFields,omitzero"`
 	BasicDateMembers   []string `json:"basicDateMembers,omitempty"`
+	// HasStringDateFields and HasStringTimeFields are set when a JSON body holds a civil.Date, or a time.Time, as the
+	// type writes it, so that an empty string, which an API may send for one it leaves out, reads as the zero value.
+	HasStringDateFields bool `json:"hasStringDateFields,omitzero"`
+	HasStringTimeFields bool `json:"hasStringTimeFields,omitzero"`
 
 	// HasServerOverrides is true when any path item names a server of its own,
 	// which is what the generated serverURL helper is for.

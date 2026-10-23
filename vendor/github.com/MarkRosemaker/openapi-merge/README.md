@@ -69,6 +69,8 @@ particular ways that sample-derived schemas disagree:
 - **Dates in ISO 8601's basic form** — a string declared `date-basic`, such as
   `"20260320"`, keeps the format when a sample, which is recorded without one,
   holds such a date too, and loses it when the sample holds something else.
+- **Empty dates** — a `date` or `date-time` keeps its format when a sample holds
+  an empty string, a value left out, and takes the other's example over it.
 - **Numbers sent as strings** — a value seen as a numeric string, such as
   `"9.5"`, in one sample and as a number, such as `0.0`, in another becomes a
   `oneOf` of a string and a number; an integer's alternative is a number, as the
