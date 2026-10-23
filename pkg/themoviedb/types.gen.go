@@ -1590,21 +1590,21 @@ type ListsCopyOkResultsItem struct {
 
 // Movie defines a model
 type Movie struct {
-	Adult            *bool      `json:"adult,omitzero"`
+	Adult            bool       `json:"adult"`
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
-	ID               int        `json:"id,omitzero"`
-	OriginalLanguage string     `json:"original_language,omitzero"`
-	OriginalTitle    string     `json:"original_title,omitzero"`
-	Overview         string     `json:"overview,omitzero"`
-	Popularity       float64    `json:"popularity,omitzero"`
+	GenreIds         []int      `json:"genre_ids"`
+	ID               int        `json:"id"`
+	OriginalLanguage string     `json:"original_language"`
+	OriginalTitle    string     `json:"original_title"`
+	Overview         string     `json:"overview"`
+	Popularity       float64    `json:"popularity"`
 	PosterPath       string     `json:"poster_path,omitzero"`
 	ReleaseDate      civil.Date `json:"release_date,omitzero"`
-	Title            string     `json:"title,omitzero"`
-	Video            *bool      `json:"video,omitzero"`
-	VoteAverage      float64    `json:"vote_average,omitzero"`
-	VoteCount        int        `json:"vote_count,omitzero"`
-	Softcore         *bool      `json:"softcore,omitzero"`
+	Title            string     `json:"title"`
+	Video            bool       `json:"video"`
+	VoteAverage      float64    `json:"vote_average"`
+	VoteCount        int        `json:"vote_count"`
+	Softcore         bool       `json:"softcore"`
 }
 
 // MovieAccountStates defines a model

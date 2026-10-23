@@ -5827,7 +5827,21 @@
           "softcore": {
             "type": "boolean"
           }
-        }
+        },
+        "required": [
+          "adult",
+          "genre_ids",
+          "id",
+          "title",
+          "original_language",
+          "original_title",
+          "overview",
+          "popularity",
+          "softcore",
+          "video",
+          "vote_average",
+          "vote_count"
+        ]
       },
       "MovieAccountStates": {
         "type": "object",
