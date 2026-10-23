@@ -14314,4 +14314,8 @@ func TestClient_Interactions(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("SearchMovies: %v", err)
 	}
+
+	if _, err := c.GetMovie(ctx, 55931, &GetMovieParams{}); err != nil {
+		t.Fatalf("GetMovie: %v", err)
+	}
 }

@@ -6140,6 +6140,7 @@
           },
           "popularity": {
             "type": "number",
+            "format": "double",
             "default": 0,
             "example": 20.6912
           },
@@ -6190,6 +6191,7 @@
           },
           "vote_average": {
             "type": "number",
+            "format": "double",
             "default": 0,
             "example": 8.2
           },
@@ -6197,11 +6199,17 @@
             "type": "integer",
             "default": 0,
             "example": 22061
+          },
+          "softcore": {
+            "type": "boolean"
           }
         }
       },
       "MovieDetailsOkBelongsToCollection": {
-        "type": "object",
+        "type": [
+          "object",
+          "null"
+        ],
         "properties": {
           "id": {
             "type": "integer",
@@ -8692,7 +8700,10 @@
             "example": 3268
           },
           "logo_path": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "/tuomPhY2UtuPTqqFnKMVHvSb724.png"
           },
           "name": {

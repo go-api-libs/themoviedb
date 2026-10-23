@@ -1724,6 +1724,7 @@ type MovieDetailsOk struct {
 	Video               bool                               `json:"video,omitzero"`
 	VoteAverage         float64                            `json:"vote_average,omitzero"`
 	VoteCount           int                                `json:"vote_count,omitzero"`
+	Softcore            *bool                              `json:"softcore,omitzero"`
 }
 
 // MovieDetailsOkBelongsToCollection defines a model

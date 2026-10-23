@@ -485,5 +485,128 @@
 				"total_results": 54
 			}
 		}
+	},
+	{
+		"request": {
+			"method": "GET",
+			"url": "https://api.themoviedb.org/3/movie/55931",
+			"header": {
+				"Authorization": "Bearer ***********************************************************************************************************************************************************************************************************************************************",
+				"User-Agent": "tmdb-api"
+			}
+		},
+		"response": {
+			"statusCode": 200,
+			"header": {
+				"Content-Type": "application/json;charset=utf-8"
+			},
+			"body": {
+				"adult": false,
+				"backdrop_path": "/7a4WHNllmX5ZGR0MfYJDPhV69eM.jpg",
+				"belongs_to_collection": null,
+				"budget": 5000000,
+				"genres": [
+					{
+						"id": 16,
+						"name": "Animation"
+					},
+					{
+						"id": 878,
+						"name": "Science Fiction"
+					}
+				],
+				"homepage": "https://www.warnerbros.com/movies/animatrix/",
+				"id": 55931,
+				"imdb_id": "tt0328832",
+				"origin_country": [
+					"US"
+				],
+				"original_language": "en",
+				"original_title": "The Animatrix",
+				"overview": "Straight from the creators of the groundbreaking Matrix trilogy, this collection of short animated films from the world's leading anime directors fuses computer graphics and Japanese anime to provide the background of the Matrix universe and the conflict between man and machines. The shorts include Final Flight of the Osiris, The Second Renaissance, Kid's Story, Program, World Record, Beyond, A Detective Story and Matriculated.",
+				"popularity": 10.8739,
+				"poster_path": "/eDjIG2hAeMU5cxLrd6oiQqdqoZt.jpg",
+				"production_companies": [
+					{
+						"id": 174,
+						"logo_path": "/zhD3hhtKB5qyv7ZeL4uLpNxgMVU.png",
+						"name": "Warner Bros. Pictures",
+						"origin_country": "US"
+					},
+					{
+						"id": 79,
+						"logo_path": "/at4uYdwAAgNRKhZuuFX8ShKSybw.png",
+						"name": "Village Roadshow Pictures",
+						"origin_country": "US"
+					},
+					{
+						"id": 1885,
+						"logo_path": "/xlvoOZr4s1PygosrwZyolIFe5xs.png",
+						"name": "Silver Pictures",
+						"origin_country": "US"
+					},
+					{
+						"id": 4164,
+						"logo_path": null,
+						"name": "Square USA",
+						"origin_country": ""
+					},
+					{
+						"id": 10868,
+						"logo_path": "/9779IFPDaVxYmmWOHHfRyH17qnx.png",
+						"name": "STUDIO4℃",
+						"origin_country": "JP"
+					},
+					{
+						"id": 3464,
+						"logo_path": "/9k0nr75nwnNeT2MHerf1OXJN0hj.png",
+						"name": "Madhouse",
+						"origin_country": "JP"
+					},
+					{
+						"id": 245388,
+						"logo_path": null,
+						"name": "D N A",
+						"origin_country": "KR"
+					}
+				],
+				"production_countries": [
+					{
+						"iso_3166_1": "JP",
+						"name": "Japan"
+					},
+					{
+						"iso_3166_1": "US",
+						"name": "United States of America"
+					},
+					{
+						"iso_3166_1": "KR",
+						"name": "South Korea"
+					}
+				],
+				"release_date": "2003-05-09",
+				"revenue": 68000000,
+				"runtime": 102,
+				"softcore": false,
+				"spoken_languages": [
+					{
+						"english_name": "English",
+						"iso_639_1": "en",
+						"name": "English"
+					},
+					{
+						"english_name": "Japanese",
+						"iso_639_1": "ja",
+						"name": "日本語"
+					}
+				],
+				"status": "Released",
+				"tagline": "Free your mind.",
+				"title": "The Animatrix",
+				"video": false,
+				"vote_average": 7.2,
+				"vote_count": 1867
+			}
+		}
 	}
 ]
