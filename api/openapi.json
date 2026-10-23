@@ -3546,6 +3546,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "2001-12-18"
           },
           "title": {
@@ -4332,6 +4333,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "1977-05-25"
           },
           "video": {
@@ -5161,6 +5163,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "2000-06-30"
           },
           "title": {
@@ -5606,6 +5609,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "2021-12-15"
           },
           "title": {
@@ -5748,6 +5752,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "1999-10-15"
           },
           "title": {
@@ -6083,6 +6088,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "1977-05-25"
           },
           "revenue": {
@@ -6360,6 +6366,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": ""
           },
           "revenue": {
@@ -6558,6 +6565,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "2012-08-28T00:00:00.000Z"
           },
           "type": {
@@ -6813,6 +6821,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "2023-04-12"
           },
           "title": {
@@ -7535,6 +7544,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "1994-06-23"
           },
           "title": {
@@ -7629,6 +7639,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "2011-12-08"
           },
           "title": {
@@ -7904,6 +7915,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "1994-06-23"
           },
           "title": {
@@ -7994,6 +8006,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "2011-12-08"
           },
           "title": {
@@ -8151,6 +8164,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "2017-10-04"
           },
           "title": {
@@ -8773,6 +8787,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "1977-05-25"
           },
           "video": {
@@ -9168,6 +9183,7 @@
           },
           "release_date": {
             "type": "string",
+            "format": "date",
             "example": "2023-03-08"
           },
           "video": {

@@ -820,21 +820,21 @@ type AccountRatedMoviesOkResults []AccountRatedMoviesOkResultsItem
 
 // AccountRatedMoviesOkResultsItem defines a model
 type AccountRatedMoviesOkResultsItem struct {
-	Adult            *bool   `json:"adult,omitzero"`
-	BackdropPath     string  `json:"backdrop_path,omitzero"`
-	GenreIds         []int   `json:"genre_ids,omitzero"`
-	ID               int     `json:"id,omitzero"`
-	OriginalLanguage string  `json:"original_language,omitzero"`
-	OriginalTitle    string  `json:"original_title,omitzero"`
-	Overview         string  `json:"overview,omitzero"`
-	Popularity       float64 `json:"popularity,omitzero"`
-	PosterPath       string  `json:"poster_path,omitzero"`
-	ReleaseDate      string  `json:"release_date,omitzero"`
-	Title            string  `json:"title,omitzero"`
-	Video            *bool   `json:"video,omitzero"`
-	VoteAverage      float64 `json:"vote_average,omitzero"`
-	VoteCount        int     `json:"vote_count,omitzero"`
-	Rating           int     `json:"rating,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalTitle    string     `json:"original_title,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	ReleaseDate      civil.Date `json:"release_date,omitzero"`
+	Title            string     `json:"title,omitzero"`
+	Video            *bool      `json:"video,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
+	Rating           int        `json:"rating,omitzero"`
 }
 
 // AccountRatedTvEpisodesOk defines a model
@@ -1089,21 +1089,21 @@ type CollectionDetailsOkParts []CollectionDetailsOkPartsItem
 
 // CollectionDetailsOkPartsItem defines a model
 type CollectionDetailsOkPartsItem struct {
-	Adult            *bool   `json:"adult,omitzero"`
-	BackdropPath     string  `json:"backdrop_path,omitzero"`
-	ID               int     `json:"id,omitzero"`
-	Name             string  `json:"name,omitzero"`
-	OriginalName     string  `json:"original_name,omitzero"`
-	Overview         string  `json:"overview,omitzero"`
-	PosterPath       string  `json:"poster_path,omitzero"`
-	MediaType        string  `json:"media_type,omitzero"`
-	OriginalLanguage string  `json:"original_language,omitzero"`
-	GenreIds         []int   `json:"genre_ids,omitzero"`
-	Popularity       float64 `json:"popularity,omitzero"`
-	ReleaseDate      string  `json:"release_date,omitzero"`
-	Video            *bool   `json:"video,omitzero"`
-	VoteAverage      float64 `json:"vote_average,omitzero"`
-	VoteCount        int     `json:"vote_count,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	Name             string     `json:"name,omitzero"`
+	OriginalName     string     `json:"original_name,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	MediaType        string     `json:"media_type,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	ReleaseDate      civil.Date `json:"release_date,omitzero"`
+	Video            *bool      `json:"video,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
 }
 
 // CollectionImagesOk defines a model
@@ -1391,21 +1391,21 @@ type GuestSessionRatedMoviesOkResults []GuestSessionRatedMoviesOkResultsItem
 
 // GuestSessionRatedMoviesOkResultsItem defines a model
 type GuestSessionRatedMoviesOkResultsItem struct {
-	Adult            *bool   `json:"adult,omitzero"`
-	BackdropPath     string  `json:"backdrop_path,omitzero"`
-	GenreIds         []int   `json:"genre_ids,omitzero"`
-	ID               int     `json:"id,omitzero"`
-	OriginalLanguage string  `json:"original_language,omitzero"`
-	OriginalTitle    string  `json:"original_title,omitzero"`
-	Overview         string  `json:"overview,omitzero"`
-	Popularity       float64 `json:"popularity,omitzero"`
-	PosterPath       string  `json:"poster_path,omitzero"`
-	ReleaseDate      string  `json:"release_date,omitzero"`
-	Title            string  `json:"title,omitzero"`
-	Video            *bool   `json:"video,omitzero"`
-	VoteAverage      float64 `json:"vote_average,omitzero"`
-	VoteCount        int     `json:"vote_count,omitzero"`
-	Rating           float64 `json:"rating,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalTitle    string     `json:"original_title,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	ReleaseDate      civil.Date `json:"release_date,omitzero"`
+	Title            string     `json:"title,omitzero"`
+	Video            *bool      `json:"video,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
+	Rating           float64    `json:"rating,omitzero"`
 }
 
 // GuestSessionRatedTvEpisodesOk defines a model
@@ -1529,21 +1529,21 @@ type ListDetailsOkItems []ListDetailsOkItemsItem
 
 // ListDetailsOkItemsItem defines a model
 type ListDetailsOkItemsItem struct {
-	Adult            *bool   `json:"adult,omitzero"`
-	BackdropPath     string  `json:"backdrop_path,omitzero"`
-	GenreIds         []int   `json:"genre_ids,omitzero"`
-	ID               int     `json:"id,omitzero"`
-	MediaType        string  `json:"media_type,omitzero"`
-	OriginalLanguage string  `json:"original_language,omitzero"`
-	OriginalTitle    string  `json:"original_title,omitzero"`
-	Overview         string  `json:"overview,omitzero"`
-	Popularity       float64 `json:"popularity,omitzero"`
-	PosterPath       string  `json:"poster_path,omitzero"`
-	ReleaseDate      string  `json:"release_date,omitzero"`
-	Title            string  `json:"title,omitzero"`
-	Video            *bool   `json:"video,omitzero"`
-	VoteAverage      int     `json:"vote_average,omitzero"`
-	VoteCount        int     `json:"vote_count,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	MediaType        string     `json:"media_type,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalTitle    string     `json:"original_title,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	ReleaseDate      civil.Date `json:"release_date,omitzero"`
+	Title            string     `json:"title,omitzero"`
+	Video            *bool      `json:"video,omitzero"`
+	VoteAverage      int        `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
 }
 
 // ListsCopyOk defines a model
@@ -1572,20 +1572,20 @@ type ListsCopyOkResultsItem struct {
 
 // Movie defines a model
 type Movie struct {
-	Adult            *bool   `json:"adult,omitzero"`
-	BackdropPath     string  `json:"backdrop_path,omitzero"`
-	GenreIds         []int   `json:"genre_ids,omitzero"`
-	ID               int     `json:"id,omitzero"`
-	OriginalLanguage string  `json:"original_language,omitzero"`
-	OriginalTitle    string  `json:"original_title,omitzero"`
-	Overview         string  `json:"overview,omitzero"`
-	Popularity       float64 `json:"popularity,omitzero"`
-	PosterPath       string  `json:"poster_path,omitzero"`
-	ReleaseDate      string  `json:"release_date,omitzero"`
-	Title            string  `json:"title,omitzero"`
-	Video            *bool   `json:"video,omitzero"`
-	VoteAverage      float64 `json:"vote_average,omitzero"`
-	VoteCount        int     `json:"vote_count,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalTitle    string     `json:"original_title,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	ReleaseDate      civil.Date `json:"release_date,omitzero"`
+	Title            string     `json:"title,omitzero"`
+	Video            *bool      `json:"video,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
 }
 
 // MovieAccountStates defines a model
@@ -1695,7 +1695,7 @@ type MovieDetailsOk struct {
 	PosterPath          string                             `json:"poster_path,omitzero"`
 	ProductionCompanies SearchCompanyResults               `json:"production_companies,omitzero"`
 	ProductionCountries MovieDetailsProductionCountries    `json:"production_countries,omitzero"`
-	ReleaseDate         string                             `json:"release_date,omitzero"`
+	ReleaseDate         civil.Date                         `json:"release_date,omitzero"`
 	Revenue             int                                `json:"revenue,omitzero"`
 	Runtime             int                                `json:"runtime,omitzero"`
 	SpokenLanguages     ConfigurationLanguages             `json:"spoken_languages,omitzero"`
@@ -1793,7 +1793,7 @@ type MovieLatestIDOk struct {
 	PosterPath          *struct{}  `json:"poster_path,omitzero"`
 	ProductionCompanies []struct{} `json:"production_companies,omitzero"`
 	ProductionCountries []struct{} `json:"production_countries,omitzero"`
-	ReleaseDate         string     `json:"release_date,omitzero"`
+	ReleaseDate         civil.Date `json:"release_date,omitzero"`
 	Revenue             int        `json:"revenue,omitzero"`
 	Runtime             int        `json:"runtime,omitzero"`
 	SpokenLanguages     []struct{} `json:"spoken_languages,omitzero"`
@@ -1862,7 +1862,7 @@ type MovieReleaseDatesOkResultsItemReleaseDatesItem struct {
 	Descriptors   []struct{} `json:"descriptors,omitzero"`
 	Iso6391       string     `json:"iso_639_1,omitzero"`
 	Note          string     `json:"note,omitzero"`
-	ReleaseDate   string     `json:"release_date,omitzero"`
+	ReleaseDate   civil.Date `json:"release_date,omitzero"`
 	Type          int        `json:"type,omitzero"`
 }
 
@@ -1944,20 +1944,20 @@ type MovieUpcomingListOkResults []MovieUpcomingListOkResultsItem
 
 // MovieUpcomingListOkResultsItem defines a model
 type MovieUpcomingListOkResultsItem struct {
-	Adult            *bool   `json:"adult,omitzero"`
-	BackdropPath     string  `json:"backdrop_path,omitzero"`
-	GenreIds         []int   `json:"genre_ids,omitzero"`
-	ID               int     `json:"id,omitzero"`
-	OriginalLanguage string  `json:"original_language,omitzero"`
-	OriginalTitle    string  `json:"original_title,omitzero"`
-	Overview         string  `json:"overview,omitzero"`
-	Popularity       float64 `json:"popularity,omitzero"`
-	PosterPath       string  `json:"poster_path,omitzero"`
-	ReleaseDate      string  `json:"release_date,omitzero"`
-	Title            string  `json:"title,omitzero"`
-	Video            *bool   `json:"video,omitzero"`
-	VoteAverage      int     `json:"vote_average,omitzero"`
-	VoteCount        int     `json:"vote_count,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalTitle    string     `json:"original_title,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	ReleaseDate      civil.Date `json:"release_date,omitzero"`
+	Title            string     `json:"title,omitzero"`
+	Video            *bool      `json:"video,omitzero"`
+	VoteAverage      int        `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
 }
 
 // MovieVideos defines a model
@@ -2210,24 +2210,24 @@ type PersonCombinedCreditsOkCast []PersonCombinedCreditsOkCastItem
 
 // PersonCombinedCreditsOkCastItem defines a model
 type PersonCombinedCreditsOkCastItem struct {
-	Adult            *bool   `json:"adult,omitzero"`
-	BackdropPath     string  `json:"backdrop_path,omitzero"`
-	GenreIds         []int   `json:"genre_ids,omitzero"`
-	ID               int     `json:"id,omitzero"`
-	OriginalLanguage string  `json:"original_language,omitzero"`
-	OriginalTitle    string  `json:"original_title,omitzero"`
-	Overview         string  `json:"overview,omitzero"`
-	Popularity       float64 `json:"popularity,omitzero"`
-	PosterPath       string  `json:"poster_path,omitzero"`
-	ReleaseDate      string  `json:"release_date,omitzero"`
-	Title            string  `json:"title,omitzero"`
-	Video            *bool   `json:"video,omitzero"`
-	VoteAverage      float64 `json:"vote_average,omitzero"`
-	VoteCount        int     `json:"vote_count,omitzero"`
-	Character        string  `json:"character,omitzero"`
-	CreditID         string  `json:"credit_id,omitzero"`
-	Order            int     `json:"order,omitzero"`
-	MediaType        string  `json:"media_type,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalTitle    string     `json:"original_title,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	ReleaseDate      civil.Date `json:"release_date,omitzero"`
+	Title            string     `json:"title,omitzero"`
+	Video            *bool      `json:"video,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
+	Character        string     `json:"character,omitzero"`
+	CreditID         string     `json:"credit_id,omitzero"`
+	Order            int        `json:"order,omitzero"`
+	MediaType        string     `json:"media_type,omitzero"`
 }
 
 // PersonCombinedCreditsOkCrew defines a model
@@ -2235,24 +2235,24 @@ type PersonCombinedCreditsOkCrew []PersonCombinedCreditsOkCrewItem
 
 // PersonCombinedCreditsOkCrewItem defines a model
 type PersonCombinedCreditsOkCrewItem struct {
-	Adult            *bool   `json:"adult,omitzero"`
-	BackdropPath     string  `json:"backdrop_path,omitzero"`
-	GenreIds         []int   `json:"genre_ids,omitzero"`
-	ID               int     `json:"id,omitzero"`
-	OriginalLanguage string  `json:"original_language,omitzero"`
-	OriginalTitle    string  `json:"original_title,omitzero"`
-	Overview         string  `json:"overview,omitzero"`
-	Popularity       float64 `json:"popularity,omitzero"`
-	PosterPath       string  `json:"poster_path,omitzero"`
-	ReleaseDate      string  `json:"release_date,omitzero"`
-	Title            string  `json:"title,omitzero"`
-	Video            *bool   `json:"video,omitzero"`
-	VoteAverage      float64 `json:"vote_average,omitzero"`
-	VoteCount        int     `json:"vote_count,omitzero"`
-	CreditID         string  `json:"credit_id,omitzero"`
-	Department       string  `json:"department,omitzero"`
-	Job              string  `json:"job,omitzero"`
-	MediaType        string  `json:"media_type,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalTitle    string     `json:"original_title,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	ReleaseDate      civil.Date `json:"release_date,omitzero"`
+	Title            string     `json:"title,omitzero"`
+	Video            *bool      `json:"video,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
+	CreditID         string     `json:"credit_id,omitzero"`
+	Department       string     `json:"department,omitzero"`
+	Job              string     `json:"job,omitzero"`
+	MediaType        string     `json:"media_type,omitzero"`
 }
 
 // PersonDetailsOk defines a model
@@ -2324,23 +2324,23 @@ type PersonMovieCreditsOkCast []PersonMovieCreditsOkCastItem
 
 // PersonMovieCreditsOkCastItem defines a model
 type PersonMovieCreditsOkCastItem struct {
-	Adult            *bool   `json:"adult,omitzero"`
-	BackdropPath     string  `json:"backdrop_path,omitzero"`
-	GenreIds         []int   `json:"genre_ids,omitzero"`
-	ID               int     `json:"id,omitzero"`
-	OriginalLanguage string  `json:"original_language,omitzero"`
-	OriginalTitle    string  `json:"original_title,omitzero"`
-	Overview         string  `json:"overview,omitzero"`
-	Popularity       float64 `json:"popularity,omitzero"`
-	PosterPath       string  `json:"poster_path,omitzero"`
-	ReleaseDate      string  `json:"release_date,omitzero"`
-	Title            string  `json:"title,omitzero"`
-	Video            *bool   `json:"video,omitzero"`
-	VoteAverage      float64 `json:"vote_average,omitzero"`
-	VoteCount        int     `json:"vote_count,omitzero"`
-	Character        string  `json:"character,omitzero"`
-	CreditID         string  `json:"credit_id,omitzero"`
-	Order            int     `json:"order,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalTitle    string     `json:"original_title,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	ReleaseDate      civil.Date `json:"release_date,omitzero"`
+	Title            string     `json:"title,omitzero"`
+	Video            *bool      `json:"video,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
+	Character        string     `json:"character,omitzero"`
+	CreditID         string     `json:"credit_id,omitzero"`
+	Order            int        `json:"order,omitzero"`
 }
 
 // PersonMovieCreditsOkCrew defines a model
@@ -2348,23 +2348,23 @@ type PersonMovieCreditsOkCrew []PersonMovieCreditsOkCrewItem
 
 // PersonMovieCreditsOkCrewItem defines a model
 type PersonMovieCreditsOkCrewItem struct {
-	Adult            *bool   `json:"adult,omitzero"`
-	BackdropPath     string  `json:"backdrop_path,omitzero"`
-	GenreIds         []int   `json:"genre_ids,omitzero"`
-	ID               int     `json:"id,omitzero"`
-	OriginalLanguage string  `json:"original_language,omitzero"`
-	OriginalTitle    string  `json:"original_title,omitzero"`
-	Overview         string  `json:"overview,omitzero"`
-	Popularity       float64 `json:"popularity,omitzero"`
-	PosterPath       string  `json:"poster_path,omitzero"`
-	ReleaseDate      string  `json:"release_date,omitzero"`
-	Title            string  `json:"title,omitzero"`
-	Video            *bool   `json:"video,omitzero"`
-	VoteAverage      float64 `json:"vote_average,omitzero"`
-	VoteCount        int     `json:"vote_count,omitzero"`
-	CreditID         string  `json:"credit_id,omitzero"`
-	Department       string  `json:"department,omitzero"`
-	Job              string  `json:"job,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalTitle    string     `json:"original_title,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	ReleaseDate      civil.Date `json:"release_date,omitzero"`
+	Title            string     `json:"title,omitzero"`
+	Video            *bool      `json:"video,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
+	CreditID         string     `json:"credit_id,omitzero"`
+	Department       string     `json:"department,omitzero"`
+	Job              string     `json:"job,omitzero"`
 }
 
 // PersonPopularListOk defines a model
@@ -2395,20 +2395,20 @@ type PersonPopularListOkResultsItemKnownFor []PersonPopularListOkResultsItemKnow
 
 // PersonPopularListOkResultsItemKnownForItem defines a model
 type PersonPopularListOkResultsItemKnownForItem struct {
-	Adult            *bool   `json:"adult,omitzero"`
-	BackdropPath     string  `json:"backdrop_path,omitzero"`
-	GenreIds         []int   `json:"genre_ids,omitzero"`
-	ID               int     `json:"id,omitzero"`
-	MediaType        string  `json:"media_type,omitzero"`
-	OriginalLanguage string  `json:"original_language,omitzero"`
-	OriginalTitle    string  `json:"original_title,omitzero"`
-	Overview         string  `json:"overview,omitzero"`
-	PosterPath       string  `json:"poster_path,omitzero"`
-	ReleaseDate      string  `json:"release_date,omitzero"`
-	Title            string  `json:"title,omitzero"`
-	Video            *bool   `json:"video,omitzero"`
-	VoteAverage      float64 `json:"vote_average,omitzero"`
-	VoteCount        int     `json:"vote_count,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	MediaType        string     `json:"media_type,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalTitle    string     `json:"original_title,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	ReleaseDate      civil.Date `json:"release_date,omitzero"`
+	Title            string     `json:"title,omitzero"`
+	Video            *bool      `json:"video,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
 }
 
 // PersonTaggedImagesOk defines a model
@@ -2585,23 +2585,23 @@ type SearchMultiOkResults []SearchMultiOkResultsItem
 
 // SearchMultiOkResultsItem defines a model
 type SearchMultiOkResultsItem struct {
-	Adult            *bool   `json:"adult,omitzero"`
-	BackdropPath     string  `json:"backdrop_path,omitzero"`
-	ID               int     `json:"id,omitzero"`
-	Title            string  `json:"title,omitzero"`
-	OriginalLanguage string  `json:"original_language,omitzero"`
-	OriginalTitle    string  `json:"original_title,omitzero"`
-	Overview         string  `json:"overview,omitzero"`
-	PosterPath       string  `json:"poster_path,omitzero"`
-	MediaType        string  `json:"media_type,omitzero"`
-	GenreIds         []int   `json:"genre_ids,omitzero"`
-	Popularity       float64 `json:"popularity,omitzero"`
-	ReleaseDate      string  `json:"release_date,omitzero"`
-	Video            *bool   `json:"video,omitzero"`
-	VoteAverage      float64 `json:"vote_average,omitzero"`
-	VoteCount        int     `json:"vote_count,omitzero"`
-	Name             string  `json:"name,omitzero"`
-	OriginalName     string  `json:"original_name,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	Title            string     `json:"title,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalTitle    string     `json:"original_title,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	MediaType        string     `json:"media_type,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	ReleaseDate      civil.Date `json:"release_date,omitzero"`
+	Video            *bool      `json:"video,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
+	Name             string     `json:"name,omitzero"`
+	OriginalName     string     `json:"original_name,omitzero"`
 }
 
 // SearchPersonOk defines a model
@@ -2788,21 +2788,21 @@ type TrendingAllResults []TrendingAllResultsItem
 
 // TrendingAllResultsItem defines a model
 type TrendingAllResultsItem struct {
-	Adult            *bool   `json:"adult,omitzero"`
-	BackdropPath     string  `json:"backdrop_path,omitzero"`
-	ID               int     `json:"id,omitzero"`
-	Title            string  `json:"title,omitzero"`
-	OriginalLanguage string  `json:"original_language,omitzero"`
-	OriginalTitle    string  `json:"original_title,omitzero"`
-	Overview         string  `json:"overview,omitzero"`
-	PosterPath       string  `json:"poster_path,omitzero"`
-	MediaType        string  `json:"media_type,omitzero"`
-	GenreIds         []int   `json:"genre_ids,omitzero"`
-	Popularity       float64 `json:"popularity,omitzero"`
-	ReleaseDate      string  `json:"release_date,omitzero"`
-	Video            *bool   `json:"video,omitzero"`
-	VoteAverage      float64 `json:"vote_average,omitzero"`
-	VoteCount        int     `json:"vote_count,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	Title            string     `json:"title,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalTitle    string     `json:"original_title,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	MediaType        string     `json:"media_type,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	ReleaseDate      civil.Date `json:"release_date,omitzero"`
+	Video            *bool      `json:"video,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
 }
 
 // TrendingPeopleOk defines a model
