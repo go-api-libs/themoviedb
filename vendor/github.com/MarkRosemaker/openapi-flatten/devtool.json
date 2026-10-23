@@ -1,0 +1,23 @@
+{
+	"description": "Eliminate nesting in an OpenAPI specification in Go by promoting inline schemas, responses, request bodies, and parameters into named entries under components, replacing each with a $ref reference.",
+	"topics": [
+		"api",
+		"api-tools",
+		"components",
+		"flatten",
+		"go",
+		"json",
+		"json-schema",
+		"openapi",
+		"schema",
+		"swagger"
+	],
+	"coverage": 79.8,
+	"devtoolVersion": "v0.0.0-20261022122323-875628a18236",
+	"kind": "cli",
+	"tools": {
+		"golangci-lint": "v2.15.0",
+		"govulncheck": "v1.9.0",
+		"pkgsite": "v0.6.0"
+	}
+}

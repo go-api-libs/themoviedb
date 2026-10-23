@@ -1,0 +1,23 @@
+{
+	"description": "Generate idiomatic Go code from an OpenAPI specification: types, a typed HTTP client, an http.Handler server scaffold, and tests. Flattens and compresses the spec first, so that generated types are named and free of duplicates.",
+	"topics": [
+		"api",
+		"api-client",
+		"api-tools",
+		"client-generator",
+		"code-generation",
+		"codegen",
+		"go",
+		"openapi",
+		"rest-api",
+		"swagger"
+	],
+	"coverage": 75.9,
+	"devtoolVersion": "v0.0.0-20261022220443-14513c3d317b",
+	"kind": "cli",
+	"tools": {
+		"golangci-lint": "v2.15.0",
+		"govulncheck": "v1.9.0",
+		"pkgsite": "v0.6.0"
+	}
+}

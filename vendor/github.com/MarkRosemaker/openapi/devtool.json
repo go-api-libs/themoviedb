@@ -1,0 +1,24 @@
+{
+	"description": "Parse, validate, format, and write OpenAPI specifications in Go. The foundation of a family of composable tools for comparing, editing, flattening, deduplicating, enriching, and generating code from specs.",
+	"topics": [
+		"api",
+		"api-documentation",
+		"api-management",
+		"api-specification",
+		"api-tools",
+		"go",
+		"json",
+		"openapi",
+		"swagger",
+		"validation",
+		"yaml"
+	],
+	"coverage": 96.4,
+	"devtoolVersion": "v0.0.0-20261022122323-875628a18236",
+	"kind": "library",
+	"tools": {
+		"golangci-lint": "v2.15.0",
+		"govulncheck": "v1.9.0",
+		"pkgsite": "v0.6.0"
+	}
+}

@@ -1,0 +1,73 @@
+package openapi
+
+import (
+	"encoding/json/jsontext"
+	"encoding/json/v2"
+	"iter"
+
+	"github.com/MarkRosemaker/errpath"
+	"github.com/MarkRosemaker/ordmap"
+)
+
+// RequestBodies maps names to reusable request bodies or references to them, in the order they were read.
+type RequestBodies map[string]*RequestBodyRef
+
+// Validate returns an error if the RequestBodies breaks the specification.
+func (rs RequestBodies) Validate() error {
+	for k, r := range rs.ByIndex() {
+		if err := validateKey(k); err != nil {
+			return err
+		}
+
+		if err := r.Validate(); err != nil {
+			return &errpath.ErrKey{Key: k, Err: err}
+		}
+	}
+
+	return nil
+}
+
+// ByIndex returns a sequence of key-value pairs ordered by index.
+func (rs RequestBodies) ByIndex() iter.Seq2[string, *RequestBodyRef] {
+	return ordmap.ByIndex(rs, getIndexRef[RequestBody, *RequestBody])
+}
+
+// Sort sorts the map by key and sets the indices accordingly.
+func (rs RequestBodies) Sort() {
+	ordmap.Sort(rs, setIndexRef[RequestBody, *RequestBody])
+}
+
+// Set sets a value in the map, adding it at the end of the order.
+func (rs *RequestBodies) Set(key string, r *RequestBodyRef) {
+	ordmap.Set(rs, key, r, getIndexRef[RequestBody, *RequestBody], setIndexRef[RequestBody, *RequestBody])
+}
+
+var _ json.MarshalerTo = (*RequestBodies)(nil)
+
+// MarshalJSONTo marshals the key-value pairs in order.
+func (rs *RequestBodies) MarshalJSONTo(enc *jsontext.Encoder) error {
+	return ordmap.MarshalJSONTo(rs, enc)
+}
+
+var _ json.UnmarshalerFrom = (*RequestBodies)(nil)
+
+// UnmarshalJSONFrom unmarshals the key-value pairs in order and sets the indices.
+func (rs *RequestBodies) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
+	return ordmap.UnmarshalJSONFrom(rs, dec, setIndexRef[RequestBody, *RequestBody])
+}
+
+func (l *loader) collectRequestBodies(rs RequestBodies, ref ref) {
+	for k, r := range rs.ByIndex() {
+		l.collectRequestBodyRef(r, append(ref, k))
+	}
+}
+
+func (l *loader) resolveRequestBodies(rs RequestBodies) error {
+	for k, r := range rs.ByIndex() {
+		if err := l.resolveRequestBodyRef(r); err != nil {
+			return &errpath.ErrKey{Key: k, Err: err}
+		}
+	}
+
+	return nil
+}

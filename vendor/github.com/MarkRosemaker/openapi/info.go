@@ -1,0 +1,71 @@
+package openapi
+
+import (
+	"net/url"
+
+	"github.com/MarkRosemaker/errpath"
+)
+
+// The Info object provides metadata about the API. The metadata MAY be used by the clients if needed, and MAY be presented in editing or documentation generation tools for convenience.
+// ([Specification])
+//
+// [Specification]: https://spec.openapis.org/oas/v3.1.0#info-object
+type Info struct {
+	// REQUIRED. The title of the API.
+	Title string `json:"title" yaml:"title"`
+	// A short summary of the API.
+	Summary string `json:"summary,omitempty" yaml:"summary,omitempty"`
+	// A description of the API. CommonMark syntax MAY be used for rich text representation.
+	Description string `json:"description,omitempty" yaml:"description,omitempty"`
+	// A URL to the Terms of Service for the API.
+	TermsOfService *url.URL `json:"termsOfService,omitzero" yaml:"termsOfService,omitempty"`
+	// The contact information for the exposed API.
+	Contact *Contact `json:"contact,omitzero" yaml:"contact,omitempty"`
+	// The license information for the exposed API.
+	License *License `json:"license,omitzero" yaml:"license,omitempty"`
+	// REQUIRED. The version of the OpenAPI document (which is distinct from the OpenAPI Specification version or the API implementation version).
+	Version string `json:"version" yaml:"version"`
+	// The object MAY be extended with Specification Extensions.
+	Extensions Extensions `json:",embed" yaml:",embed"`
+}
+
+// Validate returns an error if the Info breaks the specification.
+func (i *Info) Validate() error {
+	if i.Title == "" {
+		return &errpath.ErrField{Field: "title", Err: &errpath.ErrRequired{}}
+	}
+
+	// NOTE: The version *here* can be any string, but the version in the OpenAPI document must be a valid semantic version.
+	if i.Version == "" {
+		return &errpath.ErrField{Field: "version", Err: &errpath.ErrRequired{}}
+	}
+
+	// assume that the scheme is https and add it if it is missing
+	fixScheme(i.TermsOfService)
+
+	if i.Contact != nil {
+		if err := i.Contact.Validate(); err != nil {
+			return &errpath.ErrField{Field: "contact", Err: err}
+		}
+	}
+
+	if i.License != nil {
+		if err := i.License.Validate(); err != nil {
+			return &errpath.ErrField{Field: "license", Err: err}
+		}
+	}
+
+	return validateExtensions(i.Extensions)
+}
+
+// fixScheme ensures that the URL has a scheme and that it is valid.
+// If the URL is nil, it is a no-op
+func fixScheme(u *url.URL) {
+	if u == nil {
+		return
+	}
+
+	if u.Scheme == "" {
+		u.Scheme = "https"
+	}
+}
