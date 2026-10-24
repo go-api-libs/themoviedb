@@ -52,7 +52,8 @@ rest of the family before generating anything:
   called. To mock a generated client in your own tests, pass
   `WithHTTPClient(&http.Client{Transport: cassette.Replay(interactions)})`: each
   request is answered from the recording it matches, without the network.
-- **JavaScript client** — optional `api.js` alongside the Go output
+- **JavaScript client** — optional `api.js` alongside the Go output. A relative
+  server URL, such as `/api`, makes it call the server that serves the page.
 
 Identifiers are sanitized into valid, idiomatic Go: leading digits are spelled out,
 punctuation only separates words (`S-3` → `S3`, `$ref` → `Ref`), acronyms are

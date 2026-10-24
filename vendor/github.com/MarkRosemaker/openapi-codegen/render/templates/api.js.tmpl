@@ -21,7 +21,12 @@
  */
 
 {{ with .BaseURL -}}
+{{ if .Host -}}
 const API_BASE = "{{ .Scheme }}://{{ .Host }}{{ .Path }}";
+{{- else -}}
+// The server URL is relative: the API is on the server that serves this page.
+const API_BASE = "{{ .Path }}";
+{{- end }}
 {{- else -}}
 const API_BASE = "";
 {{- end }}
@@ -88,7 +93,7 @@ function matchesRequest(mockRequest, method, path) {
     let reqUrl, mockUrl;
     try {
         reqUrl = new URL(API_BASE + path, window.location.href);
-        mockUrl = new URL(mockRequest.url, API_BASE || window.location.href);
+        mockUrl = new URL(mockRequest.url, new URL(API_BASE || ".", window.location.href));
     } catch {
         return false;
     }
