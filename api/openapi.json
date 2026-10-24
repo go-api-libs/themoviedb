@@ -5747,100 +5747,13 @@
         }
       },
       "Movie": {
-        "type": "object",
-        "properties": {
-          "adult": {
-            "type": "boolean",
-            "default": true,
-            "example": false
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MovieCommon"
           },
-          "backdrop_path": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "example": "/hZkgoQYus5vegHoetLkCJzb17zJ.jpg"
-          },
-          "genre_ids": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "default": 0,
-              "example": 18
-            }
-          },
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 550
-          },
-          "original_language": {
-            "type": "string",
-            "example": "en"
-          },
-          "original_title": {
-            "type": "string",
-            "example": "Fight Club"
-          },
-          "overview": {
-            "type": "string",
-            "example": "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy. Their concept catches on, with underground \"fight clubs\" forming in every town, until an eccentric gets in the way and ignites an out-of-control spiral toward oblivion."
-          },
-          "popularity": {
-            "type": "number",
-            "format": "double",
-            "default": 0,
-            "example": 73.433
-          },
-          "poster_path": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "example": "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg"
-          },
-          "release_date": {
-            "type": "string",
-            "format": "date",
-            "example": "1999-10-15"
-          },
-          "title": {
-            "type": "string",
-            "example": "Fight Club"
-          },
-          "video": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "vote_average": {
-            "type": "number",
-            "format": "double",
-            "default": 0,
-            "example": 8.433
-          },
-          "vote_count": {
-            "type": "integer",
-            "default": 0,
-            "example": 26279
-          },
-          "softcore": {
-            "type": "boolean"
+          {
+            "$ref": "#/components/schemas/MovieAllOf1"
           }
-        },
-        "required": [
-          "adult",
-          "genre_ids",
-          "id",
-          "title",
-          "original_language",
-          "original_title",
-          "overview",
-          "popularity",
-          "softcore",
-          "video",
-          "vote_average",
-          "vote_count"
         ]
       },
       "MovieAccountStates": {
@@ -5865,6 +5778,22 @@
             "example": false
           }
         }
+      },
+      "MovieAllOf1": {
+        "type": "object",
+        "properties": {
+          "genre_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "default": 0,
+              "example": 18
+            }
+          }
+        },
+        "required": [
+          "genre_ids"
+        ]
       },
       "MovieChangesOk": {
         "type": "object",
@@ -5942,6 +5871,94 @@
             "example": "/s9ZrHprviFCx3azfWNBtt1LPSnL.jpg"
           }
         }
+      },
+      "MovieCommon": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "default": 0,
+            "example": 550
+          },
+          "title": {
+            "type": "string",
+            "example": "Fight Club"
+          },
+          "release_date": {
+            "type": "string",
+            "format": "date",
+            "example": "1999-10-15"
+          },
+          "overview": {
+            "type": "string",
+            "example": "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy. Their concept catches on, with underground \"fight clubs\" forming in every town, until an eccentric gets in the way and ignites an out-of-control spiral toward oblivion."
+          },
+          "original_title": {
+            "type": "string",
+            "example": "Fight Club"
+          },
+          "original_language": {
+            "type": "string",
+            "example": "en"
+          },
+          "popularity": {
+            "type": "number",
+            "format": "double",
+            "default": 0,
+            "example": 73.433
+          },
+          "vote_average": {
+            "type": "number",
+            "format": "double",
+            "default": 0,
+            "example": 8.433
+          },
+          "vote_count": {
+            "type": "integer",
+            "default": 0,
+            "example": 26279
+          },
+          "poster_path": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg"
+          },
+          "backdrop_path": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "/hZkgoQYus5vegHoetLkCJzb17zJ.jpg"
+          },
+          "video": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          },
+          "adult": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          },
+          "softcore": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "adult",
+          "id",
+          "title",
+          "original_language",
+          "original_title",
+          "overview",
+          "popularity",
+          "softcore",
+          "video",
+          "vote_average",
+          "vote_count"
+        ]
       },
       "MovieCreditsCrew": {
         "type": "array",
