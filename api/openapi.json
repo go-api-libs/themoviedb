@@ -6101,17 +6101,18 @@
         }
       },
       "MovieDetails": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MovieCommon"
+          },
+          {
+            "$ref": "#/components/schemas/MovieDetailsAllOf1"
+          }
+        ]
+      },
+      "MovieDetailsAllOf1": {
         "type": "object",
         "properties": {
-          "adult": {
-            "type": "boolean",
-            "default": false,
-            "example": false
-          },
-          "backdrop_path": {
-            "type": "string",
-            "example": "/2w4xG178RpB4MDAIfTkqAuSJzec.jpg"
-          },
           "belongs_to_collection": {
             "$ref": "#/components/schemas/MovieDetailsBelongsToCollection"
           },
@@ -6127,11 +6128,6 @@
             "type": "string",
             "example": "http://www.starwars.com/films/star-wars-episode-iv-a-new-hope"
           },
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 11
-          },
           "imdb_id": {
             "type": "string",
             "example": "tt0076759"
@@ -6143,38 +6139,11 @@
               "example": "US"
             }
           },
-          "original_language": {
-            "type": "string",
-            "example": "en"
-          },
-          "original_title": {
-            "type": "string",
-            "example": "Star Wars"
-          },
-          "overview": {
-            "type": "string",
-            "example": "Princess Leia is captured and held hostage by the evil Imperial forces in their effort to take over the galactic Empire. Venturesome Luke Skywalker and dashing captain Han Solo team together with the loveable robot duo R2-D2 and C-3PO to rescue the beautiful princess and restore peace and justice in the Empire."
-          },
-          "popularity": {
-            "type": "number",
-            "format": "double",
-            "default": 0,
-            "example": 20.6912
-          },
-          "poster_path": {
-            "type": "string",
-            "example": "/6FfCtAuVAW8XJjZ7eWeLibRLWTw.jpg"
-          },
           "production_companies": {
             "$ref": "#/components/schemas/SearchCompanyResults"
           },
           "production_countries": {
             "$ref": "#/components/schemas/MovieDetailsProductionCountries"
-          },
-          "release_date": {
-            "type": "string",
-            "format": "date",
-            "example": "1977-05-25"
           },
           "revenue": {
             "type": "integer",
@@ -6196,29 +6165,6 @@
           "tagline": {
             "type": "string",
             "example": "A long time ago in a galaxy far, far away..."
-          },
-          "title": {
-            "type": "string",
-            "example": "Star Wars"
-          },
-          "video": {
-            "type": "boolean",
-            "default": false,
-            "example": false
-          },
-          "vote_average": {
-            "type": "number",
-            "format": "double",
-            "default": 0,
-            "example": 8.2
-          },
-          "vote_count": {
-            "type": "integer",
-            "default": 0,
-            "example": 22061
-          },
-          "softcore": {
-            "type": "boolean"
           }
         }
       },

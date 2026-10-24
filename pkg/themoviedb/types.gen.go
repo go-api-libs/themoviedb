@@ -1590,21 +1590,8 @@ type ListsCopyOkResultsItem struct {
 
 // Movie defines a model
 type Movie struct {
-	ID               int        `json:"id"`
-	Title            string     `json:"title"`
-	ReleaseDate      civil.Date `json:"release_date,omitzero"`
-	Overview         string     `json:"overview"`
-	OriginalTitle    string     `json:"original_title"`
-	OriginalLanguage string     `json:"original_language"`
-	Popularity       float64    `json:"popularity"`
-	VoteAverage      float64    `json:"vote_average"`
-	VoteCount        int        `json:"vote_count"`
-	PosterPath       string     `json:"poster_path,omitzero"`
-	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	Video            bool       `json:"video"`
-	Adult            bool       `json:"adult"`
-	Softcore         bool       `json:"softcore"`
-	GenreIds         []int      `json:"genre_ids"`
+	MovieCommon
+	GenreIds []int `json:"genre_ids"`
 }
 
 // MovieAccountStates defines a model
@@ -1650,6 +1637,24 @@ type MovieChangesOkChangesItemItemsItemValue struct {
 // MovieChangesOkChangesItemItemsItemValuePoster defines a model
 type MovieChangesOkChangesItemItemsItemValuePoster struct {
 	FilePath string `json:"file_path,omitzero"`
+}
+
+// MovieCommon defines a model
+type MovieCommon struct {
+	ID               int        `json:"id"`
+	Title            string     `json:"title"`
+	ReleaseDate      civil.Date `json:"release_date,omitzero"`
+	Overview         string     `json:"overview"`
+	OriginalTitle    string     `json:"original_title"`
+	OriginalLanguage string     `json:"original_language"`
+	Popularity       float64    `json:"popularity"`
+	VoteAverage      float64    `json:"vote_average"`
+	VoteCount        int        `json:"vote_count"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	Video            bool       `json:"video"`
+	Adult            bool       `json:"adult"`
+	Softcore         bool       `json:"softcore"`
 }
 
 // MovieCreditsCrew defines a model
@@ -1698,33 +1703,20 @@ type MovieCreditsOkCastItem struct {
 
 // MovieDetails defines a model
 type MovieDetails struct {
-	Adult               bool                             `json:"adult,omitzero"`
-	BackdropPath        string                           `json:"backdrop_path,omitzero"`
+	MovieCommon
 	BelongsToCollection *MovieDetailsBelongsToCollection `json:"belongs_to_collection,omitzero"`
 	Budget              int                              `json:"budget,omitzero"`
 	Genres              GenreTvListGenres                `json:"genres,omitzero"`
 	Homepage            string                           `json:"homepage,omitzero"`
-	ID                  int                              `json:"id,omitzero"`
 	ImdbID              string                           `json:"imdb_id,omitzero"`
 	OriginCountry       []string                         `json:"origin_country,omitzero"`
-	OriginalLanguage    string                           `json:"original_language,omitzero"`
-	OriginalTitle       string                           `json:"original_title,omitzero"`
-	Overview            string                           `json:"overview,omitzero"`
-	Popularity          float64                          `json:"popularity,omitzero"`
-	PosterPath          string                           `json:"poster_path,omitzero"`
 	ProductionCompanies SearchCompanyResults             `json:"production_companies,omitzero"`
 	ProductionCountries MovieDetailsProductionCountries  `json:"production_countries,omitzero"`
-	ReleaseDate         civil.Date                       `json:"release_date,omitzero"`
 	Revenue             int                              `json:"revenue,omitzero"`
 	Runtime             int                              `json:"runtime,omitzero"`
 	SpokenLanguages     ConfigurationLanguages           `json:"spoken_languages,omitzero"`
 	Status              string                           `json:"status,omitzero"`
 	Tagline             string                           `json:"tagline,omitzero"`
-	Title               string                           `json:"title,omitzero"`
-	Video               bool                             `json:"video,omitzero"`
-	VoteAverage         float64                          `json:"vote_average,omitzero"`
-	VoteCount           int                              `json:"vote_count,omitzero"`
-	Softcore            *bool                            `json:"softcore,omitzero"`
 }
 
 // MovieDetailsBelongsToCollection defines a model
