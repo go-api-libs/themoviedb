@@ -5752,7 +5752,7 @@
             "$ref": "#/components/schemas/MovieCommon"
           },
           {
-            "$ref": "#/components/schemas/MovieAllOf1"
+            "$ref": "#/components/schemas/GenreIDsWrapper"
           }
         ]
       },
@@ -5779,7 +5779,7 @@
           }
         }
       },
-      "MovieAllOf1": {
+      "GenreIDsWrapper": {
         "type": "object",
         "properties": {
           "genre_ids": {
@@ -6106,11 +6106,11 @@
             "$ref": "#/components/schemas/MovieCommon"
           },
           {
-            "$ref": "#/components/schemas/MovieDetailsAllOf1"
+            "$ref": "#/components/schemas/MovieAdditionalDetails"
           }
         ]
       },
-      "MovieDetailsAllOf1": {
+      "MovieAdditionalDetails": {
         "type": "object",
         "properties": {
           "belongs_to_collection": {
