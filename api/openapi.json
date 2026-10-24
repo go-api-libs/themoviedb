@@ -4235,6 +4235,31 @@
           }
         }
       },
+      "Collection": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "default": 0,
+            "example": 10
+          },
+          "name": {
+            "type": "string",
+            "example": "Star Wars Collection"
+          },
+          "poster_path": {
+            "type": "string",
+            "example": "/pWVLFh4OuejTpUaDQbB1C4zoS2p.jpg"
+          },
+          "backdrop_path": {
+            "type": "string",
+            "example": "/iY2ujEY2m68OTTlPFTiHub9joHS.jpg"
+          }
+        }
+      },
       "CollectionDetailsOk": {
         "type": "object",
         "properties": {
@@ -5073,6 +5098,22 @@
           }
         }
       },
+      "GenreIDsWrapper": {
+        "type": "object",
+        "properties": {
+          "genre_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "default": 0,
+              "example": 18
+            }
+          }
+        },
+        "required": [
+          "genre_ids"
+        ]
+      },
       "GenreTvList": {
         "type": "object",
         "properties": {
@@ -5779,21 +5820,63 @@
           }
         }
       },
-      "GenreIDsWrapper": {
+      "MovieAdditionalDetails": {
         "type": "object",
         "properties": {
-          "genre_ids": {
+          "belongs_to_collection": {
+            "$ref": "#/components/schemas/Collection"
+          },
+          "budget": {
+            "type": "integer",
+            "default": 0,
+            "example": 11000000
+          },
+          "genres": {
+            "$ref": "#/components/schemas/GenreTvListGenres"
+          },
+          "homepage": {
+            "type": "string",
+            "example": "http://www.starwars.com/films/star-wars-episode-iv-a-new-hope"
+          },
+          "imdb_id": {
+            "type": "string",
+            "example": "tt0076759"
+          },
+          "origin_country": {
             "type": "array",
             "items": {
-              "type": "integer",
-              "default": 0,
-              "example": 18
+              "type": "string",
+              "example": "US"
             }
+          },
+          "production_companies": {
+            "$ref": "#/components/schemas/SearchCompanyResults"
+          },
+          "production_countries": {
+            "$ref": "#/components/schemas/MovieDetailsProductionCountries"
+          },
+          "revenue": {
+            "type": "integer",
+            "default": 0,
+            "example": 775398007
+          },
+          "runtime": {
+            "type": "integer",
+            "default": 0,
+            "example": 121
+          },
+          "spoken_languages": {
+            "$ref": "#/components/schemas/ConfigurationLanguages"
+          },
+          "status": {
+            "type": "string",
+            "example": "Released"
+          },
+          "tagline": {
+            "type": "string",
+            "example": "A long time ago in a galaxy far, far away..."
           }
-        },
-        "required": [
-          "genre_ids"
-        ]
+        }
       },
       "MovieChangesOk": {
         "type": "object",
@@ -6109,89 +6192,6 @@
             "$ref": "#/components/schemas/MovieAdditionalDetails"
           }
         ]
-      },
-      "MovieAdditionalDetails": {
-        "type": "object",
-        "properties": {
-          "belongs_to_collection": {
-            "$ref": "#/components/schemas/MovieDetailsBelongsToCollection"
-          },
-          "budget": {
-            "type": "integer",
-            "default": 0,
-            "example": 11000000
-          },
-          "genres": {
-            "$ref": "#/components/schemas/GenreTvListGenres"
-          },
-          "homepage": {
-            "type": "string",
-            "example": "http://www.starwars.com/films/star-wars-episode-iv-a-new-hope"
-          },
-          "imdb_id": {
-            "type": "string",
-            "example": "tt0076759"
-          },
-          "origin_country": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "example": "US"
-            }
-          },
-          "production_companies": {
-            "$ref": "#/components/schemas/SearchCompanyResults"
-          },
-          "production_countries": {
-            "$ref": "#/components/schemas/MovieDetailsProductionCountries"
-          },
-          "revenue": {
-            "type": "integer",
-            "default": 0,
-            "example": 775398007
-          },
-          "runtime": {
-            "type": "integer",
-            "default": 0,
-            "example": 121
-          },
-          "spoken_languages": {
-            "$ref": "#/components/schemas/ConfigurationLanguages"
-          },
-          "status": {
-            "type": "string",
-            "example": "Released"
-          },
-          "tagline": {
-            "type": "string",
-            "example": "A long time ago in a galaxy far, far away..."
-          }
-        }
-      },
-      "MovieDetailsBelongsToCollection": {
-        "type": [
-          "object",
-          "null"
-        ],
-        "properties": {
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 10
-          },
-          "name": {
-            "type": "string",
-            "example": "Star Wars Collection"
-          },
-          "poster_path": {
-            "type": "string",
-            "example": "/pWVLFh4OuejTpUaDQbB1C4zoS2p.jpg"
-          },
-          "backdrop_path": {
-            "type": "string",
-            "example": "/iY2ujEY2m68OTTlPFTiHub9joHS.jpg"
-          }
-        }
       },
       "MovieDetailsProductionCountries": {
         "type": "array",

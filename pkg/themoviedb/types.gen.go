@@ -1076,6 +1076,14 @@ type ChangesTvListResultsItem struct {
 	Adult *bool `json:"adult,omitzero"`
 }
 
+// Collection defines a model
+type Collection struct {
+	ID           int    `json:"id,omitzero"`
+	Name         string `json:"name,omitzero"`
+	PosterPath   string `json:"poster_path,omitzero"`
+	BackdropPath string `json:"backdrop_path,omitzero"`
+}
+
 // CollectionDetailsOk defines a model
 type CollectionDetailsOk struct {
 	ID               int                      `json:"id,omitzero"`
@@ -1704,27 +1712,19 @@ type MovieCreditsOkCastItem struct {
 // MovieDetails defines a model
 type MovieDetails struct {
 	MovieCommon
-	BelongsToCollection *MovieDetailsBelongsToCollection `json:"belongs_to_collection,omitzero"`
-	Budget              int                              `json:"budget,omitzero"`
-	Genres              GenreTvListGenres                `json:"genres,omitzero"`
-	Homepage            string                           `json:"homepage,omitzero"`
-	ImdbID              string                           `json:"imdb_id,omitzero"`
-	OriginCountry       []string                         `json:"origin_country,omitzero"`
-	ProductionCompanies SearchCompanyResults             `json:"production_companies,omitzero"`
-	ProductionCountries MovieDetailsProductionCountries  `json:"production_countries,omitzero"`
-	Revenue             int                              `json:"revenue,omitzero"`
-	Runtime             int                              `json:"runtime,omitzero"`
-	SpokenLanguages     ConfigurationLanguages           `json:"spoken_languages,omitzero"`
-	Status              string                           `json:"status,omitzero"`
-	Tagline             string                           `json:"tagline,omitzero"`
-}
-
-// MovieDetailsBelongsToCollection defines a model
-type MovieDetailsBelongsToCollection struct {
-	ID           int    `json:"id,omitzero"`
-	Name         string `json:"name,omitzero"`
-	PosterPath   string `json:"poster_path,omitzero"`
-	BackdropPath string `json:"backdrop_path,omitzero"`
+	BelongsToCollection *Collection                     `json:"belongs_to_collection,omitzero"`
+	Budget              int                             `json:"budget,omitzero"`
+	Genres              GenreTvListGenres               `json:"genres,omitzero"`
+	Homepage            string                          `json:"homepage,omitzero"`
+	ImdbID              string                          `json:"imdb_id,omitzero"`
+	OriginCountry       []string                        `json:"origin_country,omitzero"`
+	ProductionCompanies SearchCompanyResults            `json:"production_companies,omitzero"`
+	ProductionCountries MovieDetailsProductionCountries `json:"production_countries,omitzero"`
+	Revenue             int                             `json:"revenue,omitzero"`
+	Runtime             int                             `json:"runtime,omitzero"`
+	SpokenLanguages     ConfigurationLanguages          `json:"spoken_languages,omitzero"`
+	Status              string                          `json:"status,omitzero"`
+	Tagline             string                          `json:"tagline,omitzero"`
 }
 
 // MovieDetailsProductionCountries defines a model
