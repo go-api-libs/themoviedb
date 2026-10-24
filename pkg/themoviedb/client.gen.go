@@ -4991,8 +4991,8 @@ func (c *Client) GetUpcomingWithResult[R any](ctx context.Context, params *GetUp
 // Get the top level details of a movie by ID.
 //
 //	GET /movie/{movie_id}
-func (c *Client) GetMovie(ctx context.Context, movieID int32, params *GetMovieParams) (*MovieDetailsOk, error) {
-	return c.GetMovieWithResult[MovieDetailsOk](ctx, movieID, params)
+func (c *Client) GetMovie(ctx context.Context, movieID int32, params *GetMovieParams) (*MovieDetails, error) {
+	return c.GetMovieWithResult[MovieDetails](ctx, movieID, params)
 }
 
 // Get the top level details of a movie by ID.
@@ -5043,7 +5043,7 @@ func (c *Client) GetMovieWithResult[R any](ctx context.Context, movieID int32, p
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieDetailsOk); ok {
+			if _, ok := any(&out).(*MovieDetails); ok {
 				opts = jsonOpts
 			}
 
