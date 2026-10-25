@@ -38,7 +38,6 @@ func templateFuncs() template.FuncMap {
 			return string(r)
 		},
 		"camelCase":   strcase.ToGoCamel,
-		"typeZeroVal": typeZeroVal,
 		"toGoComment": toGoComment,
 	}
 }
@@ -65,30 +64,6 @@ func isGoKeyword(s string) bool {
 // deref returns the pointer base type, e.g. "*Foo" → "Foo".
 func deref(s string) string {
 	return strings.TrimPrefix(s, "*")
-}
-
-// typeZeroVal returns the Go zero-value literal for a Go type string.
-func typeZeroVal(goType string) string {
-	switch goType {
-	case "string", "types.Email":
-		return `""`
-	case "bool":
-		return "false"
-	case "int", "int32", "int64", "uint", "uint32", "uint64", "float32", "float64", "time.Duration":
-		return "0"
-	case "uuid.UUID":
-		return "uuid.Nil()"
-	case "url.URL":
-		return "url.URL{}"
-	case "time.Time":
-		return "time.Time{}"
-	case "civil.Date":
-		return "civil.Date{}"
-	case "net.IP":
-		return "nil"
-	default:
-		return `""`
-	}
 }
 
 func toGoComment(in string) string {

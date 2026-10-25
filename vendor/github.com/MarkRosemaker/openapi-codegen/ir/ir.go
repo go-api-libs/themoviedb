@@ -484,6 +484,30 @@ type Param struct {
 	Example       string `json:"example,omitzero"` // hardcoded example for tests
 }
 
+// ZeroVal returns the Go zero-value literal for the parameter.
+func (p Param) ZeroVal() string {
+	switch cmp.Or(p.BaseType, p.Type) {
+	case "string", "types.Email":
+		return `""`
+	case "bool":
+		return "false"
+	case "int", "int32", "int64", "uint", "uint32", "uint64", "float32", "float64", "time.Duration":
+		return "0"
+	case "uuid.UUID":
+		return "uuid.Nil()"
+	case "url.URL":
+		return "url.URL{}"
+	case "time.Time":
+		return "time.Time{}"
+	case "civil.Date":
+		return "civil.Date{}"
+	case "net.IP":
+		return "nil"
+	default:
+		return `""`
+	}
+}
+
 func (doc Document) APIKey() *Param {
 	return doc.getGlobal(GlobalAPIKey)
 }
