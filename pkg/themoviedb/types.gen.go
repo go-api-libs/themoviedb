@@ -671,8 +671,8 @@ type TvSeriesDeleteRatingParams struct {
 	SessionID      string
 }
 
-// TvSeasonDetailsParams holds the query parameters for TvSeasonDetails.
-type TvSeasonDetailsParams struct {
+// GetTvShowSeasonParams holds the query parameters for GetTvShowSeason.
+type GetTvShowSeasonParams struct {
 	// comma separated list of endpoints within this namespace, 20 items max
 	AppendToResponse string
 	Language         string
@@ -1674,7 +1674,7 @@ type MovieChangesOkChangesItemItemsItemValuePoster struct {
 
 // MovieCommon defines a model
 type MovieCommon struct {
-	ID               int        `json:"id"`
+	ID               int32      `json:"id"`
 	Title            string     `json:"title"`
 	ReleaseDate      civil.Date `json:"release_date,omitzero"`
 	Overview         string     `json:"overview"`
@@ -2631,6 +2631,42 @@ type SearchPersonOkResultsItem struct {
 	KnownFor           TrendingAllResults `json:"known_for,omitzero"`
 }
 
+// Season defines a model
+type Season struct {
+	UnderscoreID string         `json:"_id,omitzero"`
+	AirDate      string         `json:"air_date,omitzero"`
+	Episodes     SeasonEpisodes `json:"episodes,omitzero"`
+	Name         string         `json:"name,omitzero"`
+	Networks     Companies      `json:"networks,omitzero"`
+	Overview     string         `json:"overview,omitzero"`
+	ID           int            `json:"id,omitzero"`
+	PosterPath   string         `json:"poster_path,omitzero"`
+	SeasonNumber int            `json:"season_number,omitzero"`
+	VoteAverage  float64        `json:"vote_average,omitzero"`
+}
+
+// SeasonEpisodes defines a model
+type SeasonEpisodes []SeasonEpisodesItem
+
+// SeasonEpisodesItem defines a model
+type SeasonEpisodesItem struct {
+	AirDate        string              `json:"air_date,omitzero"`
+	EpisodeNumber  int                 `json:"episode_number,omitzero"`
+	EpisodeType    string              `json:"episode_type,omitzero"`
+	ID             int                 `json:"id,omitzero"`
+	Name           string              `json:"name,omitzero"`
+	Overview       string              `json:"overview,omitzero"`
+	ProductionCode string              `json:"production_code,omitzero"`
+	Runtime        int                 `json:"runtime,omitzero"`
+	SeasonNumber   int                 `json:"season_number,omitzero"`
+	ShowID         int                 `json:"show_id,omitzero"`
+	StillPath      string              `json:"still_path,omitzero"`
+	VoteAverage    float64             `json:"vote_average,omitzero"`
+	VoteCount      int                 `json:"vote_count,omitzero"`
+	Crew           MovieCreditsCrew    `json:"crew,omitzero"`
+	GuestStars     TvSeasonCreditsCast `json:"guest_stars,omitzero"`
+}
+
 // SortBy defines a model
 type SortBy string
 
@@ -2726,7 +2762,7 @@ func (e Status) Valid() bool {
 
 // TVShow defines a model
 type TVShow struct {
-	ID               int        `json:"id"`
+	ID               int32      `json:"id"`
 	Name             string     `json:"name"`
 	FirstAirDate     civil.Date `json:"first_air_date"`
 	OriginalName     string     `json:"original_name"`
@@ -3143,42 +3179,6 @@ type TvSeasonCreditsOkCrewItem struct {
 	CreditID           string    `json:"credit_id,omitzero"`
 	Department         string    `json:"department,omitzero"`
 	Job                string    `json:"job,omitzero"`
-}
-
-// TvSeasonDetailsOk defines a model
-type TvSeasonDetailsOk struct {
-	UnderscoreID string                    `json:"_id,omitzero"`
-	AirDate      string                    `json:"air_date,omitzero"`
-	Episodes     TvSeasonDetailsOkEpisodes `json:"episodes,omitzero"`
-	Name         string                    `json:"name,omitzero"`
-	Networks     Companies                 `json:"networks,omitzero"`
-	Overview     string                    `json:"overview,omitzero"`
-	ID           int                       `json:"id,omitzero"`
-	PosterPath   string                    `json:"poster_path,omitzero"`
-	SeasonNumber int                       `json:"season_number,omitzero"`
-	VoteAverage  float64                   `json:"vote_average,omitzero"`
-}
-
-// TvSeasonDetailsOkEpisodes defines a model
-type TvSeasonDetailsOkEpisodes []TvSeasonDetailsOkEpisodesItem
-
-// TvSeasonDetailsOkEpisodesItem defines a model
-type TvSeasonDetailsOkEpisodesItem struct {
-	AirDate        string              `json:"air_date,omitzero"`
-	EpisodeNumber  int                 `json:"episode_number,omitzero"`
-	EpisodeType    string              `json:"episode_type,omitzero"`
-	ID             int                 `json:"id,omitzero"`
-	Name           string              `json:"name,omitzero"`
-	Overview       string              `json:"overview,omitzero"`
-	ProductionCode string              `json:"production_code,omitzero"`
-	Runtime        int                 `json:"runtime,omitzero"`
-	SeasonNumber   int                 `json:"season_number,omitzero"`
-	ShowID         int                 `json:"show_id,omitzero"`
-	StillPath      string              `json:"still_path,omitzero"`
-	VoteAverage    float64             `json:"vote_average,omitzero"`
-	VoteCount      int                 `json:"vote_count,omitzero"`
-	Crew           MovieCreditsCrew    `json:"crew,omitzero"`
-	GuestStars     TvSeasonCreditsCast `json:"guest_stars,omitzero"`
 }
 
 // TvSeasonExternalIdsOk defines a model

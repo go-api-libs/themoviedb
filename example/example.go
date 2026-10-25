@@ -45,6 +45,7 @@ func (s *Service) SearchMovies(ctx context.Context) error {
 	}
 
 	for _, res := range res.Results {
+		fmt.Printf("res.ID: %v\n", res.ID)
 		fmt.Printf("Title: %s\n", res.OriginalTitle)
 		fmt.Printf("Description: %s\n", res.Overview) // i.e. description
 		fmt.Printf("Popularity: %v\n", res.Popularity)
@@ -80,13 +81,13 @@ func (s *Service) SearchTVShows(ctx context.Context) error {
 		return err
 	}
 
-	for _, res := range res.Results {
-		fmt.Printf("Name: %s\n", res.Name)
-		fmt.Printf("Description: %s\n", res.Overview) // i.e. description
-		fmt.Printf("Popularity: %v\n", res.Popularity)
-		fmt.Printf("First Air Date: %v\n", res.FirstAirDate)
+	for _, show := range res.Results {
+		fmt.Printf("Name: %s\n", show.Name)
+		fmt.Printf("Description: %s\n", show.Overview) // i.e. description
+		fmt.Printf("Popularity: %v\n", show.Popularity)
+		fmt.Printf("First Air Date: %v\n", show.FirstAirDate)
 
-		if imgPath := res.PosterPath; imgPath != "" {
+		if imgPath := show.PosterPath; imgPath != "" {
 			backdrop, err := s.cli.GetImage(ctx, imgPath)
 			if err != nil {
 				return err
@@ -104,7 +105,11 @@ func (s *Service) SearchTVShows(ctx context.Context) error {
 			}
 		}
 
+		_, _ = s.cli.GetTvShowSeason(ctx, show.ID, 1, &themoviedb.GetTvShowSeasonParams{})
+
 		fmt.Println("------------")
+
+		break
 	}
 
 	return nil

@@ -10572,15 +10572,15 @@ func (c *Client) TvSeriesDeleteRatingWithResult[R any](ctx context.Context, seri
 // Query the details of a TV season.
 //
 //	GET /tv/{series_id}/season/{season_number}
-func (c *Client) TvSeasonDetails(ctx context.Context, seriesID int32, seasonNumber int32, params *TvSeasonDetailsParams) (*TvSeasonDetailsOk, error) {
-	return c.TvSeasonDetailsWithResult[TvSeasonDetailsOk](ctx, seriesID, seasonNumber, params)
+func (c *Client) GetTvShowSeason(ctx context.Context, seriesID int32, seasonNumber int32, params *GetTvShowSeasonParams) (*Season, error) {
+	return c.GetTvShowSeasonWithResult[Season](ctx, seriesID, seasonNumber, params)
 }
 
 // Query the details of a TV season.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}
-func (c *Client) TvSeasonDetailsWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, params *TvSeasonDetailsParams) (*R, error) {
+func (c *Client) GetTvShowSeasonWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, params *GetTvShowSeasonParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10))
 	if params != nil {
 		q := make(url.Values, 2)
@@ -10624,7 +10624,7 @@ func (c *Client) TvSeasonDetailsWithResult[R any](ctx context.Context, seriesID 
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeasonDetailsOk); ok {
+			if _, ok := any(&out).(*Season); ok {
 				opts = jsonOpts
 			}
 
