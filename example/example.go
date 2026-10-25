@@ -33,9 +33,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if err := s.SearchMovies(ctx); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (s *Service) SearchMovies(ctx context.Context) error {
 	res, err := s.cli.SearchMovies(ctx, themoviedb.SearchMoviesParams{Query: "The Return of the King"})
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	for _, res := range res.Results {
@@ -47,21 +53,23 @@ func main() {
 		if imgPath := res.PosterPath; imgPath != "" {
 			backdrop, err := s.cli.GetImage(ctx, imgPath)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			defer backdrop.Close()
 
 			f, err := os.Create(filepath.Base(imgPath))
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			defer f.Close()
 
 			if _, err := io.Copy(f, backdrop); err != nil {
-				log.Fatal(err)
+				return err
 			}
 		}
 
 		fmt.Println("------------")
 	}
+
+	return nil
 }
