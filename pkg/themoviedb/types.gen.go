@@ -859,19 +859,19 @@ type AccountRatedTvEpisodesOkResults []AccountRatedTvEpisodesOkResultsItem
 
 // AccountRatedTvEpisodesOkResultsItem defines a model
 type AccountRatedTvEpisodesOkResultsItem struct {
-	AirDate        string  `json:"air_date,omitzero"`
-	EpisodeNumber  int     `json:"episode_number,omitzero"`
-	ID             int     `json:"id,omitzero"`
-	Name           string  `json:"name,omitzero"`
-	Overview       string  `json:"overview,omitzero"`
-	ProductionCode string  `json:"production_code,omitzero"`
-	Runtime        int     `json:"runtime,omitzero"`
-	SeasonNumber   int     `json:"season_number,omitzero"`
-	ShowID         int     `json:"show_id,omitzero"`
-	StillPath      string  `json:"still_path,omitzero"`
-	VoteAverage    float64 `json:"vote_average,omitzero"`
-	VoteCount      int     `json:"vote_count,omitzero"`
-	Rating         int     `json:"rating,omitzero"`
+	AirDate        civil.Date `json:"air_date,omitzero"`
+	EpisodeNumber  int        `json:"episode_number,omitzero"`
+	ID             int        `json:"id,omitzero"`
+	Name           string     `json:"name,omitzero"`
+	Overview       string     `json:"overview,omitzero"`
+	ProductionCode string     `json:"production_code,omitzero"`
+	Runtime        int        `json:"runtime,omitzero"`
+	SeasonNumber   int        `json:"season_number,omitzero"`
+	ShowID         int        `json:"show_id,omitzero"`
+	StillPath      string     `json:"still_path,omitzero"`
+	VoteAverage    float64    `json:"vote_average,omitzero"`
+	VoteCount      int        `json:"vote_count,omitzero"`
+	Rating         int        `json:"rating,omitzero"`
 }
 
 // AccountRatedTvOk defines a model
@@ -887,21 +887,21 @@ type AccountRatedTvOkResults []AccountRatedTvOkResultsItem
 
 // AccountRatedTvOkResultsItem defines a model
 type AccountRatedTvOkResultsItem struct {
-	Adult            *bool    `json:"adult,omitzero"`
-	BackdropPath     string   `json:"backdrop_path,omitzero"`
-	GenreIds         []int    `json:"genre_ids,omitzero"`
-	ID               int      `json:"id,omitzero"`
-	OriginCountry    []string `json:"origin_country,omitzero"`
-	OriginalLanguage string   `json:"original_language,omitzero"`
-	OriginalName     string   `json:"original_name,omitzero"`
-	Overview         string   `json:"overview,omitzero"`
-	Popularity       float64  `json:"popularity,omitzero"`
-	PosterPath       string   `json:"poster_path,omitzero"`
-	FirstAirDate     string   `json:"first_air_date,omitzero"`
-	Name             string   `json:"name,omitzero"`
-	VoteAverage      float64  `json:"vote_average,omitzero"`
-	VoteCount        int      `json:"vote_count,omitzero"`
-	Rating           int      `json:"rating,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	OriginCountry    []string   `json:"origin_country,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalName     string     `json:"original_name,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	FirstAirDate     civil.Date `json:"first_air_date,omitzero"`
+	Name             string     `json:"name,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
+	Rating           int        `json:"rating,omitzero"`
 }
 
 // Actor defines a model
@@ -1281,7 +1281,7 @@ type CreditDetailsOkMedia struct {
 	MediaType        string                      `json:"media_type,omitzero"`
 	GenreIds         []int                       `json:"genre_ids,omitzero"`
 	Popularity       float64                     `json:"popularity,omitzero"`
-	FirstAirDate     string                      `json:"first_air_date,omitzero"`
+	FirstAirDate     civil.Date                  `json:"first_air_date,omitzero"`
 	VoteAverage      float64                     `json:"vote_average,omitzero"`
 	VoteCount        int                         `json:"vote_count,omitzero"`
 	OriginCountry    []string                    `json:"origin_country,omitzero"`
@@ -1295,14 +1295,14 @@ type CreditDetailsOkMediaSeasons []CreditDetailsOkMediaSeasonsItem
 
 // CreditDetailsOkMediaSeasonsItem defines a model
 type CreditDetailsOkMediaSeasonsItem struct {
-	AirDate      string `json:"air_date,omitzero"`
-	EpisodeCount int    `json:"episode_count,omitzero"`
-	ID           int    `json:"id,omitzero"`
-	Name         string `json:"name,omitzero"`
-	Overview     string `json:"overview,omitzero"`
-	PosterPath   string `json:"poster_path,omitzero"`
-	SeasonNumber int    `json:"season_number,omitzero"`
-	ShowID       int    `json:"show_id,omitzero"`
+	AirDate      civil.Date `json:"air_date,omitzero"`
+	EpisodeCount int        `json:"episode_count,omitzero"`
+	ID           int        `json:"id,omitzero"`
+	Name         string     `json:"name,omitzero"`
+	Overview     string     `json:"overview,omitzero"`
+	PosterPath   string     `json:"poster_path,omitzero"`
+	SeasonNumber int        `json:"season_number,omitzero"`
+	ShowID       int        `json:"show_id,omitzero"`
 }
 
 // CreditDetailsOkPerson defines a model
@@ -1381,19 +1381,19 @@ type DiscoverTvResults []DiscoverTvResultsItem
 
 // DiscoverTvResultsItem defines a model
 type DiscoverTvResultsItem struct {
-	BackdropPath     string   `json:"backdrop_path,omitzero"`
-	FirstAirDate     string   `json:"first_air_date,omitzero"`
-	GenreIds         []int    `json:"genre_ids,omitzero"`
-	ID               int      `json:"id,omitzero"`
-	Name             string   `json:"name,omitzero"`
-	OriginCountry    []string `json:"origin_country,omitzero"`
-	OriginalLanguage string   `json:"original_language,omitzero"`
-	OriginalName     string   `json:"original_name,omitzero"`
-	Overview         string   `json:"overview,omitzero"`
-	Popularity       float64  `json:"popularity,omitzero"`
-	PosterPath       string   `json:"poster_path,omitzero"`
-	VoteAverage      int      `json:"vote_average,omitzero"`
-	VoteCount        int      `json:"vote_count,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	FirstAirDate     civil.Date `json:"first_air_date,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	Name             string     `json:"name,omitzero"`
+	OriginCountry    []string   `json:"origin_country,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalName     string     `json:"original_name,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	VoteAverage      int        `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
 }
 
 // Episode defines a model
@@ -1544,19 +1544,19 @@ type GuestSessionRatedTvEpisodesOkResults []GuestSessionRatedTvEpisodesOkResults
 
 // GuestSessionRatedTvEpisodesOkResultsItem defines a model
 type GuestSessionRatedTvEpisodesOkResultsItem struct {
-	AirDate        string  `json:"air_date,omitzero"`
-	EpisodeNumber  int     `json:"episode_number,omitzero"`
-	ID             int     `json:"id,omitzero"`
-	Name           string  `json:"name,omitzero"`
-	Overview       string  `json:"overview,omitzero"`
-	ProductionCode string  `json:"production_code,omitzero"`
-	Runtime        int     `json:"runtime,omitzero"`
-	SeasonNumber   int     `json:"season_number,omitzero"`
-	ShowID         int     `json:"show_id,omitzero"`
-	StillPath      string  `json:"still_path,omitzero"`
-	VoteAverage    float64 `json:"vote_average,omitzero"`
-	VoteCount      int     `json:"vote_count,omitzero"`
-	Rating         float64 `json:"rating,omitzero"`
+	AirDate        civil.Date `json:"air_date,omitzero"`
+	EpisodeNumber  int        `json:"episode_number,omitzero"`
+	ID             int        `json:"id,omitzero"`
+	Name           string     `json:"name,omitzero"`
+	Overview       string     `json:"overview,omitzero"`
+	ProductionCode string     `json:"production_code,omitzero"`
+	Runtime        int        `json:"runtime,omitzero"`
+	SeasonNumber   int        `json:"season_number,omitzero"`
+	ShowID         int        `json:"show_id,omitzero"`
+	StillPath      string     `json:"still_path,omitzero"`
+	VoteAverage    float64    `json:"vote_average,omitzero"`
+	VoteCount      int        `json:"vote_count,omitzero"`
+	Rating         float64    `json:"rating,omitzero"`
 }
 
 // GuestSessionRatedTvOk defines a model
@@ -1572,21 +1572,21 @@ type GuestSessionRatedTvOkResults []GuestSessionRatedTvOkResultsItem
 
 // GuestSessionRatedTvOkResultsItem defines a model
 type GuestSessionRatedTvOkResultsItem struct {
-	Adult            *bool    `json:"adult,omitzero"`
-	BackdropPath     string   `json:"backdrop_path,omitzero"`
-	GenreIds         []int    `json:"genre_ids,omitzero"`
-	ID               int      `json:"id,omitzero"`
-	OriginCountry    []string `json:"origin_country,omitzero"`
-	OriginalLanguage string   `json:"original_language,omitzero"`
-	OriginalName     string   `json:"original_name,omitzero"`
-	Overview         string   `json:"overview,omitzero"`
-	Popularity       float64  `json:"popularity,omitzero"`
-	PosterPath       string   `json:"poster_path,omitzero"`
-	FirstAirDate     string   `json:"first_air_date,omitzero"`
-	Name             string   `json:"name,omitzero"`
-	VoteAverage      float64  `json:"vote_average,omitzero"`
-	VoteCount        int      `json:"vote_count,omitzero"`
-	Rating           float64  `json:"rating,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	OriginCountry    []string   `json:"origin_country,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalName     string     `json:"original_name,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	FirstAirDate     civil.Date `json:"first_air_date,omitzero"`
+	Name             string     `json:"name,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
+	Rating           float64    `json:"rating,omitzero"`
 }
 
 // Image defines a model
@@ -2581,23 +2581,23 @@ type PersonTvCreditsOkCast []PersonTvCreditsOkCastMember
 
 // PersonTvCreditsOkCastMember defines a model
 type PersonTvCreditsOkCastMember struct {
-	Adult            *bool    `json:"adult,omitzero"`
-	BackdropPath     string   `json:"backdrop_path,omitzero"`
-	GenreIds         []int    `json:"genre_ids,omitzero"`
-	ID               int      `json:"id,omitzero"`
-	OriginCountry    []string `json:"origin_country,omitzero"`
-	OriginalLanguage string   `json:"original_language,omitzero"`
-	OriginalName     string   `json:"original_name,omitzero"`
-	Overview         string   `json:"overview,omitzero"`
-	Popularity       float64  `json:"popularity,omitzero"`
-	PosterPath       string   `json:"poster_path,omitzero"`
-	FirstAirDate     string   `json:"first_air_date,omitzero"`
-	Name             string   `json:"name,omitzero"`
-	VoteAverage      float64  `json:"vote_average,omitzero"`
-	VoteCount        int      `json:"vote_count,omitzero"`
-	Character        string   `json:"character,omitzero"`
-	CreditID         string   `json:"credit_id,omitzero"`
-	EpisodeCount     int      `json:"episode_count,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	OriginCountry    []string   `json:"origin_country,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalName     string     `json:"original_name,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	FirstAirDate     civil.Date `json:"first_air_date,omitzero"`
+	Name             string     `json:"name,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
+	Character        string     `json:"character,omitzero"`
+	CreditID         string     `json:"credit_id,omitzero"`
+	EpisodeCount     int        `json:"episode_count,omitzero"`
 }
 
 // PersonTvCreditsOkCrew defines a model
@@ -2615,7 +2615,7 @@ type PersonTvCreditsOkCrewItem struct {
 	Overview         string     `json:"overview,omitzero"`
 	Popularity       float64    `json:"popularity,omitzero"`
 	PosterPath       string     `json:"poster_path,omitzero"`
-	FirstAirDate     string     `json:"first_air_date,omitzero"`
+	FirstAirDate     civil.Date `json:"first_air_date,omitzero"`
 	Name             string     `json:"name,omitzero"`
 	VoteAverage      float64    `json:"vote_average,omitzero"`
 	VoteCount        int        `json:"vote_count,omitzero"`
@@ -2995,21 +2995,21 @@ type TrendingTvResults []TrendingTvResultsItem
 
 // TrendingTvResultsItem defines a model
 type TrendingTvResultsItem struct {
-	Adult            *bool    `json:"adult,omitzero"`
-	BackdropPath     string   `json:"backdrop_path,omitzero"`
-	ID               int      `json:"id,omitzero"`
-	Name             string   `json:"name,omitzero"`
-	OriginalLanguage string   `json:"original_language,omitzero"`
-	OriginalName     string   `json:"original_name,omitzero"`
-	Overview         string   `json:"overview,omitzero"`
-	PosterPath       string   `json:"poster_path,omitzero"`
-	MediaType        string   `json:"media_type,omitzero"`
-	GenreIds         []int    `json:"genre_ids,omitzero"`
-	Popularity       float64  `json:"popularity,omitzero"`
-	FirstAirDate     string   `json:"first_air_date,omitzero"`
-	VoteAverage      float64  `json:"vote_average,omitzero"`
-	VoteCount        int      `json:"vote_count,omitzero"`
-	OriginCountry    []string `json:"origin_country,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	Name             string     `json:"name,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalName     string     `json:"original_name,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	MediaType        string     `json:"media_type,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	FirstAirDate     civil.Date `json:"first_air_date,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
+	OriginCountry    []string   `json:"origin_country,omitzero"`
 }
 
 // TvEpisodeChangesByIDOk defines a model
@@ -3047,19 +3047,19 @@ type TvEpisodeCreditsOk struct {
 
 // TvEpisodeDetailsOk defines a model
 type TvEpisodeDetailsOk struct {
-	AirDate        string  `json:"air_date,omitzero"`
-	Crew           Crew    `json:"crew,omitzero"`
-	EpisodeNumber  int     `json:"episode_number,omitzero"`
-	GuestStars     Actors  `json:"guest_stars,omitzero"`
-	Name           string  `json:"name,omitzero"`
-	Overview       string  `json:"overview,omitzero"`
-	ID             int     `json:"id,omitzero"`
-	ProductionCode string  `json:"production_code,omitzero"`
-	Runtime        int     `json:"runtime,omitzero"`
-	SeasonNumber   int     `json:"season_number,omitzero"`
-	StillPath      string  `json:"still_path,omitzero"`
-	VoteAverage    float64 `json:"vote_average,omitzero"`
-	VoteCount      int     `json:"vote_count,omitzero"`
+	AirDate        civil.Date `json:"air_date,omitzero"`
+	Crew           Crew       `json:"crew,omitzero"`
+	EpisodeNumber  int        `json:"episode_number,omitzero"`
+	GuestStars     Actors     `json:"guest_stars,omitzero"`
+	Name           string     `json:"name,omitzero"`
+	Overview       string     `json:"overview,omitzero"`
+	ID             int        `json:"id,omitzero"`
+	ProductionCode string     `json:"production_code,omitzero"`
+	Runtime        int        `json:"runtime,omitzero"`
+	SeasonNumber   int        `json:"season_number,omitzero"`
+	StillPath      string     `json:"still_path,omitzero"`
+	VoteAverage    float64    `json:"vote_average,omitzero"`
+	VoteCount      int        `json:"vote_count,omitzero"`
 }
 
 // TvEpisodeExternalIdsOk defines a model
@@ -3102,19 +3102,19 @@ type TvEpisodeGroupDetailsOkGroupsItemEpisodes []TvEpisodeGroupDetailsOkGroupsIt
 
 // TvEpisodeGroupDetailsOkGroupsItemEpisodesItem defines a model
 type TvEpisodeGroupDetailsOkGroupsItemEpisodesItem struct {
-	AirDate        string    `json:"air_date,omitzero"`
-	EpisodeNumber  int       `json:"episode_number,omitzero"`
-	ID             int       `json:"id,omitzero"`
-	Name           string    `json:"name,omitzero"`
-	Overview       string    `json:"overview,omitzero"`
-	ProductionCode string    `json:"production_code,omitzero"`
-	Runtime        *struct{} `json:"runtime,omitzero"`
-	SeasonNumber   int       `json:"season_number,omitzero"`
-	ShowID         int       `json:"show_id,omitzero"`
-	StillPath      string    `json:"still_path,omitzero"`
-	VoteAverage    float64   `json:"vote_average,omitzero"`
-	VoteCount      int       `json:"vote_count,omitzero"`
-	Order          int       `json:"order,omitzero"`
+	AirDate        civil.Date `json:"air_date,omitzero"`
+	EpisodeNumber  int        `json:"episode_number,omitzero"`
+	ID             int        `json:"id,omitzero"`
+	Name           string     `json:"name,omitzero"`
+	Overview       string     `json:"overview,omitzero"`
+	ProductionCode string     `json:"production_code,omitzero"`
+	Runtime        *struct{}  `json:"runtime,omitzero"`
+	SeasonNumber   int        `json:"season_number,omitzero"`
+	ShowID         int        `json:"show_id,omitzero"`
+	StillPath      string     `json:"still_path,omitzero"`
+	VoteAverage    float64    `json:"vote_average,omitzero"`
+	VoteCount      int        `json:"vote_count,omitzero"`
+	Order          int        `json:"order,omitzero"`
 }
 
 // TvEpisodeImagesOk defines a model
@@ -3499,13 +3499,13 @@ type TvSeriesDetailsOk struct {
 	BackdropPath        string                             `json:"backdrop_path,omitzero"`
 	CreatedBy           TvSeriesDetailsOkCreatedBy         `json:"created_by,omitzero"`
 	EpisodeRunTime      []int                              `json:"episode_run_time,omitzero"`
-	FirstAirDate        string                             `json:"first_air_date,omitzero"`
+	FirstAirDate        civil.Date                         `json:"first_air_date,omitzero"`
 	Genres              Keywords                           `json:"genres,omitzero"`
 	Homepage            string                             `json:"homepage,omitzero"`
 	ID                  int                                `json:"id,omitzero"`
 	InProduction        *bool                              `json:"in_production,omitzero"`
 	Languages           []string                           `json:"languages,omitzero"`
-	LastAirDate         string                             `json:"last_air_date,omitzero"`
+	LastAirDate         civil.Date                         `json:"last_air_date,omitzero"`
 	LastEpisodeToAir    *TvSeriesDetailsOkLastEpisodeToAir `json:"last_episode_to_air,omitzero"`
 	Name                string                             `json:"name,omitzero"`
 	NextEpisodeToAir    *struct{}                          `json:"next_episode_to_air,omitzero"`
@@ -3543,18 +3543,18 @@ type TvSeriesDetailsOkCreatedByItem struct {
 
 // TvSeriesDetailsOkLastEpisodeToAir defines a model
 type TvSeriesDetailsOkLastEpisodeToAir struct {
-	ID             int     `json:"id,omitzero"`
-	Name           string  `json:"name,omitzero"`
-	Overview       string  `json:"overview,omitzero"`
-	VoteAverage    float64 `json:"vote_average,omitzero"`
-	VoteCount      int     `json:"vote_count,omitzero"`
-	AirDate        string  `json:"air_date,omitzero"`
-	EpisodeNumber  int     `json:"episode_number,omitzero"`
-	ProductionCode string  `json:"production_code,omitzero"`
-	Runtime        int     `json:"runtime,omitzero"`
-	SeasonNumber   int     `json:"season_number,omitzero"`
-	ShowID         int     `json:"show_id,omitzero"`
-	StillPath      string  `json:"still_path,omitzero"`
+	ID             int        `json:"id,omitzero"`
+	Name           string     `json:"name,omitzero"`
+	Overview       string     `json:"overview,omitzero"`
+	VoteAverage    float64    `json:"vote_average,omitzero"`
+	VoteCount      int        `json:"vote_count,omitzero"`
+	AirDate        civil.Date `json:"air_date,omitzero"`
+	EpisodeNumber  int        `json:"episode_number,omitzero"`
+	ProductionCode string     `json:"production_code,omitzero"`
+	Runtime        int        `json:"runtime,omitzero"`
+	SeasonNumber   int        `json:"season_number,omitzero"`
+	ShowID         int        `json:"show_id,omitzero"`
+	StillPath      string     `json:"still_path,omitzero"`
 }
 
 // TvSeriesDetailsOkSeasons defines a model
@@ -3562,14 +3562,14 @@ type TvSeriesDetailsOkSeasons []TvSeriesDetailsOkSeasonsItem
 
 // TvSeriesDetailsOkSeasonsItem defines a model
 type TvSeriesDetailsOkSeasonsItem struct {
-	AirDate      string `json:"air_date,omitzero"`
-	EpisodeCount int    `json:"episode_count,omitzero"`
-	ID           int    `json:"id,omitzero"`
-	Name         string `json:"name,omitzero"`
-	Overview     string `json:"overview,omitzero"`
-	PosterPath   string `json:"poster_path,omitzero"`
-	SeasonNumber int    `json:"season_number,omitzero"`
-	VoteAverage  int    `json:"vote_average,omitzero"`
+	AirDate      civil.Date `json:"air_date,omitzero"`
+	EpisodeCount int        `json:"episode_count,omitzero"`
+	ID           int        `json:"id,omitzero"`
+	Name         string     `json:"name,omitzero"`
+	Overview     string     `json:"overview,omitzero"`
+	PosterPath   string     `json:"poster_path,omitzero"`
+	SeasonNumber int        `json:"season_number,omitzero"`
+	VoteAverage  int        `json:"vote_average,omitzero"`
 }
 
 // TvSeriesEpisodeGroupsOk defines a model
@@ -3618,13 +3618,13 @@ type TvSeriesLatestIDOk struct {
 	BackdropPath        *struct{}                           `json:"backdrop_path,omitzero"`
 	CreatedBy           []struct{}                          `json:"created_by,omitzero"`
 	EpisodeRunTime      []struct{}                          `json:"episode_run_time,omitzero"`
-	FirstAirDate        string                              `json:"first_air_date,omitzero"`
+	FirstAirDate        civil.Date                          `json:"first_air_date,omitzero"`
 	Genres              []struct{}                          `json:"genres,omitzero"`
 	Homepage            string                              `json:"homepage,omitzero"`
 	ID                  int                                 `json:"id,omitzero"`
 	InProduction        *bool                               `json:"in_production,omitzero"`
 	Languages           []struct{}                          `json:"languages,omitzero"`
-	LastAirDate         string                              `json:"last_air_date,omitzero"`
+	LastAirDate         civil.Date                          `json:"last_air_date,omitzero"`
 	LastEpisodeToAir    *TvSeriesLatestIDOkLastEpisodeToAir `json:"last_episode_to_air,omitzero"`
 	Name                string                              `json:"name,omitzero"`
 	NextEpisodeToAir    *struct{}                           `json:"next_episode_to_air,omitzero"`
@@ -3650,18 +3650,18 @@ type TvSeriesLatestIDOk struct {
 
 // TvSeriesLatestIDOkLastEpisodeToAir defines a model
 type TvSeriesLatestIDOkLastEpisodeToAir struct {
-	ID             int       `json:"id,omitzero"`
-	Name           string    `json:"name,omitzero"`
-	Overview       string    `json:"overview,omitzero"`
-	VoteAverage    int       `json:"vote_average,omitzero"`
-	VoteCount      int       `json:"vote_count,omitzero"`
-	AirDate        string    `json:"air_date,omitzero"`
-	EpisodeNumber  int       `json:"episode_number,omitzero"`
-	ProductionCode string    `json:"production_code,omitzero"`
-	Runtime        *struct{} `json:"runtime,omitzero"`
-	SeasonNumber   int       `json:"season_number,omitzero"`
-	ShowID         int       `json:"show_id,omitzero"`
-	StillPath      *struct{} `json:"still_path,omitzero"`
+	ID             int        `json:"id,omitzero"`
+	Name           string     `json:"name,omitzero"`
+	Overview       string     `json:"overview,omitzero"`
+	VoteAverage    int        `json:"vote_average,omitzero"`
+	VoteCount      int        `json:"vote_count,omitzero"`
+	AirDate        civil.Date `json:"air_date,omitzero"`
+	EpisodeNumber  int        `json:"episode_number,omitzero"`
+	ProductionCode string     `json:"production_code,omitzero"`
+	Runtime        *struct{}  `json:"runtime,omitzero"`
+	SeasonNumber   int        `json:"season_number,omitzero"`
+	ShowID         int        `json:"show_id,omitzero"`
+	StillPath      *struct{}  `json:"still_path,omitzero"`
 }
 
 // TvSeriesLatestIDOkSeasons defines a model
