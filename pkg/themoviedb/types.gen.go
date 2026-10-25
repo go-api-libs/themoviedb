@@ -1384,11 +1384,8 @@ type FindByIDOk struct {
 
 // GenreTvList defines a model
 type GenreTvList struct {
-	Genres GenreTvListGenres `json:"genres,omitzero"`
+	Genres Keywords `json:"genres,omitzero"`
 }
-
-// GenreTvListGenres defines a model
-type GenreTvListGenres []Keyword
 
 // GuestSessionRatedMoviesOk defines a model
 type GuestSessionRatedMoviesOk struct {
@@ -1506,6 +1503,9 @@ type KeywordMoviesOk struct {
 	TotalPages   int    `json:"total_pages,omitzero"`
 	TotalResults int    `json:"total_results,omitzero"`
 }
+
+// Keywords defines a model
+type Keywords []Keyword
 
 // ListAddMovie defines a model
 type ListAddMovie struct {
@@ -1714,7 +1714,7 @@ type MovieDetails struct {
 	MovieCommon
 	BelongsToCollection *Collection                     `json:"belongs_to_collection,omitzero"`
 	Budget              int                             `json:"budget,omitzero"`
-	Genres              GenreTvListGenres               `json:"genres,omitzero"`
+	Genres              Keywords                        `json:"genres,omitzero"`
 	Homepage            string                          `json:"homepage,omitzero"`
 	ImdbID              string                          `json:"imdb_id,omitzero"`
 	OriginCountry       []string                        `json:"origin_country,omitzero"`
@@ -1770,8 +1770,8 @@ type MovieImagesLogosItem struct {
 
 // MovieKeywordsOk defines a model
 type MovieKeywordsOk struct {
-	ID       int               `json:"id,omitzero"`
-	Keywords GenreTvListGenres `json:"keywords,omitzero"`
+	ID       int      `json:"id,omitzero"`
+	Keywords Keywords `json:"keywords,omitzero"`
 }
 
 // MovieLatestIDOk defines a model
@@ -2564,10 +2564,10 @@ type SearchCompanyResultsItem struct {
 
 // SearchKeywordOk defines a model
 type SearchKeywordOk struct {
-	Page         int               `json:"page,omitzero"`
-	Results      GenreTvListGenres `json:"results,omitzero"`
-	TotalPages   int               `json:"total_pages,omitzero"`
-	TotalResults int               `json:"total_results,omitzero"`
+	Page         int      `json:"page,omitzero"`
+	Results      Keywords `json:"results,omitzero"`
+	TotalPages   int      `json:"total_pages,omitzero"`
+	TotalResults int      `json:"total_results,omitzero"`
 }
 
 // SearchMultiOk defines a model
@@ -3400,7 +3400,7 @@ type TvSeriesDetailsOk struct {
 	CreatedBy           TvSeriesDetailsOkCreatedBy         `json:"created_by,omitzero"`
 	EpisodeRunTime      []int                              `json:"episode_run_time,omitzero"`
 	FirstAirDate        string                             `json:"first_air_date,omitzero"`
-	Genres              GenreTvListGenres                  `json:"genres,omitzero"`
+	Genres              Keywords                           `json:"genres,omitzero"`
 	Homepage            string                             `json:"homepage,omitzero"`
 	ID                  int                                `json:"id,omitzero"`
 	InProduction        *bool                              `json:"in_production,omitzero"`
@@ -3508,8 +3508,8 @@ type TvSeriesExternalIdsOk struct {
 
 // TvSeriesKeywordsOk defines a model
 type TvSeriesKeywordsOk struct {
-	ID      int               `json:"id,omitzero"`
-	Results GenreTvListGenres `json:"results,omitzero"`
+	ID      int      `json:"id,omitzero"`
+	Results Keywords `json:"results,omitzero"`
 }
 
 // TvSeriesLatestIDOk defines a model

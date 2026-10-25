@@ -5118,14 +5118,8 @@
         "type": "object",
         "properties": {
           "genres": {
-            "$ref": "#/components/schemas/GenreTvListGenres"
+            "$ref": "#/components/schemas/Keywords"
           }
-        }
-      },
-      "GenreTvListGenres": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/Keyword"
         }
       },
       "GuestSessionRatedMoviesOk": {
@@ -5518,6 +5512,12 @@
           }
         }
       },
+      "Keywords": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Keyword"
+        }
+      },
       "ListAddMovie": {
         "type": "object",
         "properties": {
@@ -5832,7 +5832,7 @@
             "example": 11000000
           },
           "genres": {
-            "$ref": "#/components/schemas/GenreTvListGenres"
+            "$ref": "#/components/schemas/Keywords"
           },
           "homepage": {
             "type": "string",
@@ -6305,7 +6305,7 @@
             "example": 550
           },
           "keywords": {
-            "$ref": "#/components/schemas/GenreTvListGenres"
+            "$ref": "#/components/schemas/Keywords"
           }
         }
       },
@@ -8688,7 +8688,7 @@
             "example": 1
           },
           "results": {
-            "$ref": "#/components/schemas/GenreTvListGenres"
+            "$ref": "#/components/schemas/Keywords"
           },
           "total_pages": {
             "type": "integer",
@@ -10890,7 +10890,7 @@
             "example": "2011-04-17"
           },
           "genres": {
-            "$ref": "#/components/schemas/GenreTvListGenres"
+            "$ref": "#/components/schemas/Keywords"
           },
           "homepage": {
             "type": "string",
@@ -11253,7 +11253,7 @@
             "example": 1399
           },
           "results": {
-            "$ref": "#/components/schemas/GenreTvListGenres"
+            "$ref": "#/components/schemas/Keywords"
           }
         }
       },
