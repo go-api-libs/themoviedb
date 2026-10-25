@@ -4927,6 +4927,65 @@
           }
         }
       },
+      "Crew": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/CrewMember"
+        }
+      },
+      "CrewMember": {
+        "type": "object",
+        "properties": {
+          "adult": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          },
+          "gender": {
+            "type": "integer",
+            "default": 0,
+            "example": 2
+          },
+          "id": {
+            "type": "integer",
+            "default": 0,
+            "example": 376
+          },
+          "known_for_department": {
+            "type": "string",
+            "example": "Production"
+          },
+          "name": {
+            "type": "string",
+            "example": "Arnon Milchan"
+          },
+          "original_name": {
+            "type": "string",
+            "example": "Arnon Milchan"
+          },
+          "popularity": {
+            "type": "number",
+            "default": 0,
+            "example": 2.931
+          },
+          "profile_path": {
+            "type": "string",
+            "example": "/b2hBExX4NnczNAnLuTBF4kmNhZm.jpg"
+          },
+          "credit_id": {
+            "type": "string",
+            "example": "55731b8192514111610027d7"
+          },
+          "department": {
+            "type": "string",
+            "example": "Production"
+          },
+          "job": {
+            "type": "string",
+            "example": "Executive Producer"
+          }
+        }
+      },
       "DetailsCopy": {
         "type": "object",
         "properties": {
@@ -5120,7 +5179,7 @@
             "example": 396
           },
           "crew": {
-            "$ref": "#/components/schemas/MovieCreditsCrew"
+            "$ref": "#/components/schemas/Crew"
           },
           "guest_stars": {
             "$ref": "#/components/schemas/People"
@@ -6209,65 +6268,6 @@
           "vote_count"
         ]
       },
-      "MovieCreditsCrew": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/MovieCreditsCrewItem"
-        }
-      },
-      "MovieCreditsCrewItem": {
-        "type": "object",
-        "properties": {
-          "adult": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 2
-          },
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 376
-          },
-          "known_for_department": {
-            "type": "string",
-            "example": "Production"
-          },
-          "name": {
-            "type": "string",
-            "example": "Arnon Milchan"
-          },
-          "original_name": {
-            "type": "string",
-            "example": "Arnon Milchan"
-          },
-          "popularity": {
-            "type": "number",
-            "default": 0,
-            "example": 2.931
-          },
-          "profile_path": {
-            "type": "string",
-            "example": "/b2hBExX4NnczNAnLuTBF4kmNhZm.jpg"
-          },
-          "credit_id": {
-            "type": "string",
-            "example": "55731b8192514111610027d7"
-          },
-          "department": {
-            "type": "string",
-            "example": "Production"
-          },
-          "job": {
-            "type": "string",
-            "example": "Executive Producer"
-          }
-        }
-      },
       "MovieCreditsOk": {
         "type": "object",
         "properties": {
@@ -6280,7 +6280,7 @@
             "$ref": "#/components/schemas/Cast"
           },
           "crew": {
-            "$ref": "#/components/schemas/MovieCreditsCrew"
+            "$ref": "#/components/schemas/Crew"
           }
         }
       },
@@ -7558,7 +7558,20 @@
             "default": 0,
             "example": 0
           }
-        }
+        },
+        "required": [
+          "id",
+          "name",
+          "original_name",
+          "adult",
+          "gender",
+          "known_for_department",
+          "popularity",
+          "profile_path",
+          "character",
+          "credit_id",
+          "order"
+        ]
       },
       "PersonCast": {
         "type": "array",
@@ -9653,7 +9666,7 @@
             "$ref": "#/components/schemas/People"
           },
           "crew": {
-            "$ref": "#/components/schemas/MovieCreditsCrew"
+            "$ref": "#/components/schemas/Crew"
           },
           "guest_stars": {
             "$ref": "#/components/schemas/People"
@@ -9673,7 +9686,7 @@
             "example": "2011-04-17"
           },
           "crew": {
-            "$ref": "#/components/schemas/MovieCreditsCrew"
+            "$ref": "#/components/schemas/Crew"
           },
           "episode_number": {
             "type": "integer",
@@ -10884,7 +10897,7 @@
             "$ref": "#/components/schemas/People"
           },
           "crew": {
-            "$ref": "#/components/schemas/MovieCreditsCrew"
+            "$ref": "#/components/schemas/Crew"
           },
           "id": {
             "type": "integer",
