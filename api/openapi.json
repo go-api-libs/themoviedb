@@ -7430,7 +7430,7 @@
       "MoviesResultPage": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/PaginationBase"
+            "$ref": "#/components/schemas/PaginatedResponse"
           },
           {
             "$ref": "#/components/schemas/MoviesResultWrapper"
@@ -7475,7 +7475,7 @@
           }
         }
       },
-      "PaginationBase": {
+      "PaginatedResponse": {
         "type": "object",
         "properties": {
           "page": {
@@ -8628,7 +8628,7 @@
       "RatedEpisodesPage": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/PaginationBase"
+            "$ref": "#/components/schemas/PaginatedResponse"
           },
           {
             "$ref": "#/components/schemas/RatedEpisodesResultWrapper"
@@ -9240,7 +9240,7 @@
       "TVShowsResultPage": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/PaginationBase"
+            "$ref": "#/components/schemas/PaginatedResponse"
           },
           {
             "$ref": "#/components/schemas/TVShowsResultWrapper"

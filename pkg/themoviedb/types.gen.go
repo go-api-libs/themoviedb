@@ -2250,7 +2250,7 @@ type Movies []Movie
 
 // MoviesResultPage defines a model
 type MoviesResultPage struct {
-	PaginationBase
+	PaginatedResponse
 	Results Movies `json:"results,omitzero"`
 }
 
@@ -2264,8 +2264,8 @@ type NetworkDetailsOk struct {
 	OriginCountry string `json:"origin_country,omitzero"`
 }
 
-// PaginationBase defines a model
-type PaginationBase struct {
+// PaginatedResponse defines a model
+type PaginatedResponse struct {
 	Page         int `json:"page,omitzero"`
 	TotalPages   int `json:"total_pages,omitzero"`
 	TotalResults int `json:"total_results,omitzero"`
@@ -2618,7 +2618,7 @@ type RatedEpisodes []RatedEpisode
 
 // RatedEpisodesPage defines a model
 type RatedEpisodesPage struct {
-	PaginationBase
+	PaginatedResponse
 	Results RatedEpisodes `json:"results,omitzero"`
 }
 
@@ -2876,7 +2876,7 @@ type TVShows []TVShow
 
 // TVShowsResultPage defines a model
 type TVShowsResultPage struct {
-	PaginationBase
+	PaginatedResponse
 	Results TVShows `json:"results,omitzero"`
 }
 
