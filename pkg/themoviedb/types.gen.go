@@ -785,7 +785,7 @@ type WatchProviderTvListParams struct {
 type AccountDetailsOk struct {
 	Avatar       *AccountDetailsOkAvatar `json:"avatar,omitzero"`
 	ID           int                     `json:"id,omitzero"`
-	Iso6391      string                  `json:"iso_639_1,omitzero"`
+	ISO639Part1  string                  `json:"iso_639_1,omitzero"`
 	ISO3166Part1 string                  `json:"iso_3166_1,omitzero"`
 	Name         string                  `json:"name,omitzero"`
 	IncludeAdult *bool                   `json:"include_adult,omitzero"`
@@ -1142,7 +1142,7 @@ type CollectionTranslationsOkTranslations []CollectionTranslationsOkTranslations
 // CollectionTranslationsOkTranslationsItem defines a model
 type CollectionTranslationsOkTranslationsItem struct {
 	ISO3166Part1 string                                        `json:"iso_3166_1,omitzero"`
-	Iso6391      string                                        `json:"iso_639_1,omitzero"`
+	ISO639Part1  string                                        `json:"iso_639_1,omitzero"`
 	Name         string                                        `json:"name,omitzero"`
 	EnglishName  string                                        `json:"english_name,omitzero"`
 	Data         *CollectionTranslationsOkTranslationsItemData `json:"data,omitzero"`
@@ -1225,7 +1225,7 @@ type ConfigurationLanguages []ConfigurationLanguagesItem
 
 // ConfigurationLanguagesItem defines a model
 type ConfigurationLanguagesItem struct {
-	Iso6391     string `json:"iso_639_1,omitzero"`
+	ISO639Part1 string `json:"iso_639_1,omitzero"`
 	EnglishName string `json:"english_name,omitzero"`
 	Name        string `json:"name,omitzero"`
 }
@@ -1488,7 +1488,7 @@ type GuestSessionRatedTvOkResultsItem struct {
 // Image defines a model
 type Image struct {
 	ImageBase
-	Iso6391 *struct{} `json:"iso_639_1,omitzero"`
+	ISO639Part1 *struct{} `json:"iso_639_1,omitzero"`
 }
 
 // ImageAsset defines a model
@@ -1570,7 +1570,7 @@ type ListDetailsOk struct {
 	ID            string             `json:"id,omitzero"`
 	Items         ListDetailsOkItems `json:"items,omitzero"`
 	ItemCount     int                `json:"item_count,omitzero"`
-	Iso6391       string             `json:"iso_639_1,omitzero"`
+	ISO639Part1   string             `json:"iso_639_1,omitzero"`
 	Name          string             `json:"name,omitzero"`
 	PosterPath    string             `json:"poster_path,omitzero"`
 }
@@ -1615,7 +1615,7 @@ type ListsCopyOkResultsItem struct {
 	FavoriteCount int       `json:"favorite_count,omitzero"`
 	ID            int       `json:"id,omitzero"`
 	ItemCount     int       `json:"item_count,omitzero"`
-	Iso6391       string    `json:"iso_639_1,omitzero"`
+	ISO639Part1   string    `json:"iso_639_1,omitzero"`
 	ISO3166Part1  string    `json:"iso_3166_1,omitzero"`
 	Name          string    `json:"name,omitzero"`
 	PosterPath    *struct{} `json:"poster_path,omitzero"`
@@ -1657,7 +1657,7 @@ type MovieChangesOkChangesItemItemsItem struct {
 	ID           string                                   `json:"id,omitzero"`
 	Action       string                                   `json:"action,omitzero"`
 	Time         string                                   `json:"time,omitzero"`
-	Iso6391      string                                   `json:"iso_639_1,omitzero"`
+	ISO639Part1  string                                   `json:"iso_639_1,omitzero"`
 	ISO3166Part1 string                                   `json:"iso_3166_1,omitzero"`
 	Value        *MovieChangesOkChangesItemItemsItemValue `json:"value,omitzero"`
 }
@@ -1777,7 +1777,7 @@ type MovieImagesLogos []MovieImagesLogosItem
 type MovieImagesLogosItem struct {
 	AspectRatio float64 `json:"aspect_ratio,omitzero"`
 	Height      int     `json:"height,omitzero"`
-	Iso6391     string  `json:"iso_639_1,omitzero"`
+	ISO639Part1 string  `json:"iso_639_1,omitzero"`
 	FilePath    string  `json:"file_path,omitzero"`
 	VoteAverage float64 `json:"vote_average,omitzero"`
 	VoteCount   int     `json:"vote_count,omitzero"`
@@ -1837,7 +1837,7 @@ type MovieListsResultsItem struct {
 	FavoriteCount int       `json:"favorite_count,omitzero"`
 	ID            int       `json:"id,omitzero"`
 	ItemCount     int       `json:"item_count,omitzero"`
-	Iso6391       string    `json:"iso_639_1,omitzero"`
+	ISO639Part1   string    `json:"iso_639_1,omitzero"`
 	ListType      string    `json:"list_type,omitzero"`
 	Name          string    `json:"name,omitzero"`
 	PosterPath    *struct{} `json:"poster_path,omitzero"`
@@ -1874,7 +1874,7 @@ type MovieReleaseDatesOkResultsItemReleaseDates []MovieReleaseDatesOkResultsItem
 type MovieReleaseDatesOkResultsItemReleaseDatesItem struct {
 	Certification string     `json:"certification,omitzero"`
 	Descriptors   []struct{} `json:"descriptors,omitzero"`
-	Iso6391       string     `json:"iso_639_1,omitzero"`
+	ISO639Part1   string     `json:"iso_639_1,omitzero"`
 	Note          string     `json:"note,omitzero"`
 	ReleaseDate   civil.Date `json:"release_date,omitzero"`
 	Type          int        `json:"type,omitzero"`
@@ -1923,7 +1923,7 @@ type MovieTranslationsOkTranslations []MovieTranslationsOkTranslationsItem
 // MovieTranslationsOkTranslationsItem defines a model
 type MovieTranslationsOkTranslationsItem struct {
 	ISO3166Part1 string                                   `json:"iso_3166_1,omitzero"`
-	Iso6391      string                                   `json:"iso_639_1,omitzero"`
+	ISO639Part1  string                                   `json:"iso_639_1,omitzero"`
 	Name         string                                   `json:"name,omitzero"`
 	EnglishName  string                                   `json:"english_name,omitzero"`
 	Data         *MovieTranslationsOkTranslationsItemData `json:"data,omitzero"`
@@ -1985,7 +1985,7 @@ type MovieVideosResults []MovieVideosResultsItem
 
 // MovieVideosResultsItem defines a model
 type MovieVideosResultsItem struct {
-	Iso6391      string `json:"iso_639_1,omitzero"`
+	ISO639Part1  string `json:"iso_639_1,omitzero"`
 	ISO3166Part1 string `json:"iso_3166_1,omitzero"`
 	Name         string `json:"name,omitzero"`
 	Key          string `json:"key,omitzero"`
@@ -2207,7 +2207,7 @@ type PersonChangesOkChangesItemItemsItem struct {
 	ID           string `json:"id,omitzero"`
 	Action       string `json:"action,omitzero"`
 	Time         string `json:"time,omitzero"`
-	Iso6391      string `json:"iso_639_1,omitzero"`
+	ISO639Part1  string `json:"iso_639_1,omitzero"`
 	ISO3166Part1 string `json:"iso_3166_1,omitzero"`
 	Value        string `json:"value,omitzero"`
 }
@@ -2443,7 +2443,7 @@ type PersonTaggedImagesOkResultsItem struct {
 	FilePath    string                  `json:"file_path,omitzero"`
 	Height      int                     `json:"height,omitzero"`
 	ID          string                  `json:"id,omitzero"`
-	Iso6391     string                  `json:"iso_639_1,omitzero"`
+	ISO639Part1 string                  `json:"iso_639_1,omitzero"`
 	VoteAverage float64                 `json:"vote_average,omitzero"`
 	VoteCount   int                     `json:"vote_count,omitzero"`
 	Width       int                     `json:"width,omitzero"`
@@ -2528,7 +2528,7 @@ type ReviewDetailsOk struct {
 	AuthorDetails *ReviewDetailsAuthorDetails `json:"author_details,omitzero"`
 	Content       string                      `json:"content,omitzero"`
 	CreatedAt     string                      `json:"created_at,omitzero"`
-	Iso6391       string                      `json:"iso_639_1,omitzero"`
+	ISO639Part1   string                      `json:"iso_639_1,omitzero"`
 	MediaID       int                         `json:"media_id,omitzero"`
 	MediaTitle    string                      `json:"media_title,omitzero"`
 	MediaType     string                      `json:"media_type,omitzero"`
@@ -2766,7 +2766,7 @@ type TranslationsOkTranslations []TranslationsOkTranslationsItem
 // TranslationsOkTranslationsItem defines a model
 type TranslationsOkTranslationsItem struct {
 	ISO3166Part1 string                              `json:"iso_3166_1,omitzero"`
-	Iso6391      string                              `json:"iso_639_1,omitzero"`
+	ISO639Part1  string                              `json:"iso_639_1,omitzero"`
 	Name         string                              `json:"name,omitzero"`
 	EnglishName  string                              `json:"english_name,omitzero"`
 	Data         *TranslationsOkTranslationsItemData `json:"data,omitzero"`
@@ -3191,7 +3191,7 @@ type TvSeasonTranslations2 []TvSeasonTranslationsItem
 // TvSeasonTranslationsItem defines a model
 type TvSeasonTranslationsItem struct {
 	ISO3166Part1 string                        `json:"iso_3166_1,omitzero"`
-	Iso6391      string                        `json:"iso_639_1,omitzero"`
+	ISO639Part1  string                        `json:"iso_639_1,omitzero"`
 	Name         string                        `json:"name,omitzero"`
 	EnglishName  string                        `json:"english_name,omitzero"`
 	Data         *TvSeasonTranslationsItemData `json:"data,omitzero"`
@@ -3343,8 +3343,8 @@ type TvSeriesChangesItemItemsItemValue struct {
 
 // TvSeriesChangesItemItemsItemValuePoster defines a model
 type TvSeriesChangesItemItemsItemValuePoster struct {
-	FilePath string `json:"file_path,omitzero"`
-	Iso6391  string `json:"iso_639_1,omitzero"`
+	FilePath    string `json:"file_path,omitzero"`
+	ISO639Part1 string `json:"iso_639_1,omitzero"`
 }
 
 // TvSeriesChangesOk defines a model
@@ -3369,7 +3369,7 @@ type TvSeriesChangesOkChangesItemItemsItem struct {
 	ID            string                             `json:"id,omitzero"`
 	Action        string                             `json:"action,omitzero"`
 	Time          string                             `json:"time,omitzero"`
-	Iso6391       string                             `json:"iso_639_1,omitzero"`
+	ISO639Part1   string                             `json:"iso_639_1,omitzero"`
 	ISO3166Part1  string                             `json:"iso_3166_1,omitzero"`
 	Value         *TvSeriesChangesItemItemsItemValue `json:"value,omitzero"`
 	OriginalValue *TvSeriesChangesItemItemsItemValue `json:"original_value,omitzero"`
@@ -3691,7 +3691,7 @@ type TvSeriesTranslationsOkTranslations []TvSeriesTranslationsOkTranslationsItem
 // TvSeriesTranslationsOkTranslationsItem defines a model
 type TvSeriesTranslationsOkTranslationsItem struct {
 	ISO3166Part1 string                                      `json:"iso_3166_1,omitzero"`
-	Iso6391      string                                      `json:"iso_639_1,omitzero"`
+	ISO639Part1  string                                      `json:"iso_639_1,omitzero"`
 	Name         string                                      `json:"name,omitzero"`
 	EnglishName  string                                      `json:"english_name,omitzero"`
 	Data         *TvSeriesTranslationsOkTranslationsItemData `json:"data,omitzero"`

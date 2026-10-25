@@ -3397,7 +3397,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "en"
+            "example": "en",
+            "x-go-name": "ISO639Part1"
           },
           "iso_3166_1": {
             "type": "string",
@@ -4426,7 +4427,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "ar"
+            "example": "ar",
+            "x-go-name": "ISO639Part1"
           },
           "name": {
             "type": "string",
@@ -4657,7 +4659,8 @@
         "properties": {
           "iso_639_1": {
             "type": "string",
-            "example": "bi"
+            "example": "bi",
+            "x-go-name": "ISO639Part1"
           },
           "english_name": {
             "type": "string",
@@ -5513,7 +5516,9 @@
       "ImageISO639_1": {
         "type": "object",
         "properties": {
-          "iso_639_1": {}
+          "iso_639_1": {
+            "x-go-name": "ISO639Part1"
+          }
         }
       },
       "Images": {
@@ -5674,7 +5679,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "en"
+            "example": "en",
+            "x-go-name": "ISO639Part1"
           },
           "name": {
             "type": "string",
@@ -5826,7 +5832,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "en"
+            "example": "en",
+            "x-go-name": "ISO639Part1"
           },
           "iso_3166_1": {
             "type": "string",
@@ -5981,7 +5988,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": ""
+            "example": "",
+            "x-go-name": "ISO639Part1"
           },
           "iso_3166_1": {
             "type": "string",
@@ -6309,7 +6317,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "he"
+            "example": "he",
+            "x-go-name": "ISO639Part1"
           },
           "file_path": {
             "type": "string",
@@ -6502,7 +6511,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "en"
+            "example": "en",
+            "x-go-name": "ISO639Part1"
           },
           "list_type": {
             "type": "string",
@@ -6591,7 +6601,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": ""
+            "example": "",
+            "x-go-name": "ISO639Part1"
           },
           "note": {
             "type": "string",
@@ -6722,7 +6733,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "ar"
+            "example": "ar",
+            "x-go-name": "ISO639Part1"
           },
           "name": {
             "type": "string",
@@ -6904,7 +6916,8 @@
         "properties": {
           "iso_639_1": {
             "type": "string",
-            "example": "en"
+            "example": "en",
+            "x-go-name": "ISO639Part1"
           },
           "iso_3166_1": {
             "type": "string",
@@ -7498,7 +7511,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "ca"
+            "example": "ca",
+            "x-go-name": "ISO639Part1"
           },
           "iso_3166_1": {
             "type": "string",
@@ -8282,7 +8296,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "en"
+            "example": "en",
+            "x-go-name": "ISO639Part1"
           },
           "vote_average": {
             "type": "number",
@@ -8572,7 +8587,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "en"
+            "example": "en",
+            "x-go-name": "ISO639Part1"
           },
           "media_id": {
             "type": "integer",
@@ -9080,7 +9096,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "en"
+            "example": "en",
+            "x-go-name": "ISO639Part1"
           },
           "name": {
             "type": "string",
@@ -10323,7 +10340,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "ar"
+            "example": "ar",
+            "x-go-name": "ISO639Part1"
           },
           "name": {
             "type": "string",
@@ -10755,7 +10773,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "en"
+            "example": "en",
+            "x-go-name": "ISO639Part1"
           }
         }
       },
@@ -10808,7 +10827,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "en"
+            "example": "en",
+            "x-go-name": "ISO639Part1"
           },
           "iso_3166_1": {
             "type": "string",
@@ -11817,7 +11837,8 @@
           },
           "iso_639_1": {
             "type": "string",
-            "example": "ar"
+            "example": "ar",
+            "x-go-name": "ISO639Part1"
           },
           "name": {
             "type": "string",
