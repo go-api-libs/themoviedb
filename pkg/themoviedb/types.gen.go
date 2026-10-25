@@ -1185,19 +1185,7 @@ type CompanyImages struct {
 }
 
 // CompanyImagesLogos defines a model
-type CompanyImagesLogos []CompanyImagesLogosItem
-
-// CompanyImagesLogosItem defines a model
-type CompanyImagesLogosItem struct {
-	AspectRatio float64 `json:"aspect_ratio,omitzero"`
-	FilePath    string  `json:"file_path,omitzero"`
-	Height      int     `json:"height,omitzero"`
-	ID          string  `json:"id,omitzero"`
-	FileType    string  `json:"file_type,omitzero"`
-	VoteAverage float64 `json:"vote_average,omitzero"`
-	VoteCount   int     `json:"vote_count,omitzero"`
-	Width       int     `json:"width,omitzero"`
-}
+type CompanyImagesLogos []Image2
 
 // ConfigurationCountries defines a model
 type ConfigurationCountries []ConfigurationCountriesItem
@@ -1500,6 +1488,18 @@ type Image struct {
 	VoteAverage float64   `json:"vote_average,omitzero"`
 	VoteCount   int       `json:"vote_count,omitzero"`
 	Width       int       `json:"width,omitzero"`
+}
+
+// Image2 defines a model
+type Image2 struct {
+	AspectRatio float64 `json:"aspect_ratio,omitzero"`
+	FilePath    string  `json:"file_path,omitzero"`
+	Height      int     `json:"height,omitzero"`
+	ID          string  `json:"id,omitzero"`
+	FileType    string  `json:"file_type,omitzero"`
+	VoteAverage float64 `json:"vote_average,omitzero"`
+	VoteCount   int     `json:"vote_count,omitzero"`
+	Width       int     `json:"width,omitzero"`
 }
 
 // Images defines a model

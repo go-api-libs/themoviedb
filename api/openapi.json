@@ -4537,49 +4537,7 @@
       "CompanyImagesLogos": {
         "type": "array",
         "items": {
-          "$ref": "#/components/schemas/CompanyImagesLogosItem"
-        }
-      },
-      "CompanyImagesLogosItem": {
-        "type": "object",
-        "properties": {
-          "aspect_ratio": {
-            "type": "number",
-            "default": 0,
-            "example": 2.97979797979798
-          },
-          "file_path": {
-            "type": "string",
-            "example": "/o86DbpburjxrqAzEDhXZcyE8pDb.png"
-          },
-          "height": {
-            "type": "integer",
-            "default": 0,
-            "example": 99
-          },
-          "id": {
-            "type": "string",
-            "example": "5aa080d6c3a3683fea00011e"
-          },
-          "file_type": {
-            "type": "string",
-            "example": ".svg"
-          },
-          "vote_average": {
-            "type": "number",
-            "default": 0,
-            "example": 5.384
-          },
-          "vote_count": {
-            "type": "integer",
-            "default": 0,
-            "example": 2
-          },
-          "width": {
-            "type": "integer",
-            "default": 0,
-            "example": 295
-          }
+          "$ref": "#/components/schemas/Image2"
         }
       },
       "ConfigurationCountries": {
@@ -5492,6 +5450,48 @@
             "type": "integer",
             "default": 0,
             "example": 1422
+          }
+        }
+      },
+      "Image2": {
+        "type": "object",
+        "properties": {
+          "aspect_ratio": {
+            "type": "number",
+            "default": 0,
+            "example": 2.97979797979798
+          },
+          "file_path": {
+            "type": "string",
+            "example": "/o86DbpburjxrqAzEDhXZcyE8pDb.png"
+          },
+          "height": {
+            "type": "integer",
+            "default": 0,
+            "example": 99
+          },
+          "id": {
+            "type": "string",
+            "example": "5aa080d6c3a3683fea00011e"
+          },
+          "file_type": {
+            "type": "string",
+            "example": ".svg"
+          },
+          "vote_average": {
+            "type": "number",
+            "default": 0,
+            "example": 5.384
+          },
+          "vote_count": {
+            "type": "integer",
+            "default": 0,
+            "example": 2
+          },
+          "width": {
+            "type": "integer",
+            "default": 0,
+            "example": 295
           }
         }
       },
