@@ -1355,7 +1355,7 @@
     "/movie/{movie_id}": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         },
         {
           "$ref": "#/components/parameters/append_to_response"
@@ -1378,7 +1378,7 @@
     "/movie/{movie_id}/account_states": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         },
         {
           "$ref": "#/components/parameters/session_id"
@@ -1401,7 +1401,7 @@
     "/movie/{movie_id}/alternative_titles": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         },
         {
           "$ref": "#/components/parameters/country"
@@ -1421,7 +1421,7 @@
     "/movie/{movie_id}/changes": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         },
         {
           "$ref": "#/components/parameters/end_date"
@@ -1447,7 +1447,7 @@
     "/movie/{movie_id}/credits": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         },
         {
           "$ref": "#/components/parameters/language"
@@ -1466,7 +1466,7 @@
     "/movie/{movie_id}/external_ids": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         }
       ],
       "get": {
@@ -1482,7 +1482,7 @@
     "/movie/{movie_id}/images": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         },
         {
           "$ref": "#/components/parameters/include_image_language"
@@ -1505,7 +1505,7 @@
     "/movie/{movie_id}/keywords": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id9"
+          "$ref": "#/components/parameters/movie_id_path"
         }
       ],
       "get": {
@@ -1533,7 +1533,7 @@
     "/movie/{movie_id}/lists": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         },
         {
           "$ref": "#/components/parameters/language"
@@ -1556,7 +1556,7 @@
     "/movie/{movie_id}/recommendations": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         },
         {
           "$ref": "#/components/parameters/language"
@@ -1578,7 +1578,7 @@
     "/movie/{movie_id}/release_dates": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         }
       ],
       "get": {
@@ -1595,7 +1595,7 @@
     "/movie/{movie_id}/reviews": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         },
         {
           "$ref": "#/components/parameters/language"
@@ -1618,7 +1618,7 @@
     "/movie/{movie_id}/similar": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         },
         {
           "$ref": "#/components/parameters/language"
@@ -1641,7 +1641,7 @@
     "/movie/{movie_id}/translations": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         }
       ],
       "get": {
@@ -1658,7 +1658,7 @@
     "/movie/{movie_id}/videos": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         },
         {
           "$ref": "#/components/parameters/language"
@@ -1677,7 +1677,7 @@
     "/movie/{movie_id}/watch/providers": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         }
       ],
       "get": {
@@ -1694,7 +1694,7 @@
     "/movie/{movie_id}/rating": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/movie_id10"
+          "$ref": "#/components/parameters/movie_id_path"
         },
         {
           "$ref": "#/components/parameters/guest_session_id10"
@@ -6163,10 +6163,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "format": "int32",
-            "default": 0,
-            "example": 550
+            "description": "The ID of the movie",
+            "$ref": "#/components/schemas/MovieID"
           },
           "title": {
             "type": "string",
@@ -6294,6 +6292,12 @@
           "instagram_id": {},
           "twitter_id": {}
         }
+      },
+      "MovieID": {
+        "description": "The ID of a movie",
+        "type": "integer",
+        "format": "int32",
+        "example": 550
       },
       "MovieImages": {
         "type": "object",
@@ -17273,25 +17277,15 @@
         "name": "movie_id",
         "in": "query",
         "schema": {
-          "type": "integer",
-          "format": "int32"
+          "$ref": "#/components/schemas/MovieID"
         }
       },
-      "movie_id10": {
+      "movie_id_path": {
         "name": "movie_id",
         "in": "path",
         "required": true,
         "schema": {
-          "type": "integer",
-          "format": "int32"
-        }
-      },
-      "movie_id9": {
-        "name": "movie_id",
-        "in": "path",
-        "required": true,
-        "schema": {
-          "type": "string"
+          "$ref": "#/components/schemas/MovieID"
         }
       },
       "network_id": {

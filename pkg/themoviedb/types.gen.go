@@ -300,7 +300,7 @@ type ListAddMovieParams struct {
 // ListCheckItemStatusParams holds the query parameters for ListCheckItemStatus.
 type ListCheckItemStatusParams struct {
 	Language string
-	MovieID  int32
+	MovieID  MovieID
 }
 
 // ListClearParams holds the query parameters for ListClear.
@@ -1792,7 +1792,8 @@ type MovieChangesOkChangesItemItemsItemValuePoster struct {
 
 // MovieCommon defines a model
 type MovieCommon struct {
-	ID               int32      `json:"id"`
+	// The ID of the movie
+	ID               MovieID    `json:"id"`
 	Title            string     `json:"title"`
 	ReleaseDate      civil.Date `json:"release_date,omitzero"`
 	Overview         string     `json:"overview"`
@@ -1842,6 +1843,9 @@ type MovieExternalIdsOk struct {
 	InstagramID *struct{} `json:"instagram_id,omitzero"`
 	TwitterID   *struct{} `json:"twitter_id,omitzero"`
 }
+
+// The ID of a movie
+type MovieID int32
 
 // MovieImages defines a model
 type MovieImages struct {
