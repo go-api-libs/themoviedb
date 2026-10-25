@@ -2684,8 +2684,8 @@ func (c *Client) ConfigurationJobsWithResult[R any](ctx context.Context) (*R, er
 // Get the list of languages (ISO 639-1 tags) used throughout TMDB.
 //
 //	GET /configuration/languages
-func (c *Client) ConfigurationLanguages(ctx context.Context) (ConfigurationLanguages, error) {
-	out, err := c.ConfigurationLanguagesWithResult[ConfigurationLanguages](ctx)
+func (c *Client) ConfigurationLanguages(ctx context.Context) (Languages, error) {
+	out, err := c.ConfigurationLanguagesWithResult[Languages](ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -2727,7 +2727,7 @@ func (c *Client) ConfigurationLanguagesWithResult[R any](ctx context.Context) (*
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ConfigurationLanguages); ok {
+			if _, ok := any(&out).(*Languages); ok {
 				opts = jsonOpts
 			}
 

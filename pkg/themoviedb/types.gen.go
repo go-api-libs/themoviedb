@@ -1220,16 +1220,6 @@ type ConfigurationJobsOkItem struct {
 	Jobs       []string `json:"jobs,omitzero"`
 }
 
-// ConfigurationLanguages defines a model
-type ConfigurationLanguages []ConfigurationLanguagesItem
-
-// ConfigurationLanguagesItem defines a model
-type ConfigurationLanguagesItem struct {
-	ISO639Part1 string `json:"iso_639_1,omitzero"`
-	EnglishName string `json:"english_name,omitzero"`
-	Name        string `json:"name,omitzero"`
-}
-
 // ConfigurationTimezonesOk defines a model
 type ConfigurationTimezonesOk []ConfigurationTimezonesOkItem
 
@@ -1532,6 +1522,16 @@ type KeywordMoviesOk struct {
 // Keywords defines a model
 type Keywords []Keyword
 
+// Language defines a model
+type Language struct {
+	ISO639Part1 string `json:"iso_639_1,omitzero"`
+	EnglishName string `json:"english_name,omitzero"`
+	Name        string `json:"name,omitzero"`
+}
+
+// Languages defines a model
+type Languages []Language
+
 // ListAddMovie defines a model
 type ListAddMovie struct {
 	RawBody string `json:"RAW_BODY,omitzero"`
@@ -1737,19 +1737,19 @@ type MovieCreditsOkCastItem struct {
 // MovieDetails defines a model
 type MovieDetails struct {
 	MovieCommon
-	BelongsToCollection *Collection            `json:"belongs_to_collection,omitzero"`
-	Budget              int                    `json:"budget,omitzero"`
-	Genres              Keywords               `json:"genres,omitzero"`
-	Homepage            url.URL                `json:"homepage,omitzero"`
-	ImdbID              string                 `json:"imdb_id,omitzero"`
-	OriginCountry       []string               `json:"origin_country,omitzero"`
-	ProductionCompanies Companies              `json:"production_companies,omitzero"`
-	ProductionCountries Countries              `json:"production_countries,omitzero"`
-	Revenue             int                    `json:"revenue,omitzero"`
-	Runtime             int                    `json:"runtime,omitzero"`
-	SpokenLanguages     ConfigurationLanguages `json:"spoken_languages,omitzero"`
-	Status              string                 `json:"status,omitzero"`
-	Tagline             string                 `json:"tagline,omitzero"`
+	BelongsToCollection *Collection `json:"belongs_to_collection,omitzero"`
+	Budget              int         `json:"budget,omitzero"`
+	Genres              Keywords    `json:"genres,omitzero"`
+	Homepage            url.URL     `json:"homepage,omitzero"`
+	ImdbID              string      `json:"imdb_id,omitzero"`
+	OriginCountry       []string    `json:"origin_country,omitzero"`
+	ProductionCompanies Companies   `json:"production_companies,omitzero"`
+	ProductionCountries Countries   `json:"production_countries,omitzero"`
+	Revenue             int         `json:"revenue,omitzero"`
+	Runtime             int         `json:"runtime,omitzero"`
+	SpokenLanguages     Languages   `json:"spoken_languages,omitzero"`
+	Status              string      `json:"status,omitzero"`
+	Tagline             string      `json:"tagline,omitzero"`
 }
 
 // MovieExternalIdsOk defines a model
@@ -3426,7 +3426,7 @@ type TvSeriesDetailsOk struct {
 	ProductionCompanies Companies                          `json:"production_companies,omitzero"`
 	ProductionCountries Countries                          `json:"production_countries,omitzero"`
 	Seasons             TvSeriesDetailsOkSeasons           `json:"seasons,omitzero"`
-	SpokenLanguages     ConfigurationLanguages             `json:"spoken_languages,omitzero"`
+	SpokenLanguages     Languages                          `json:"spoken_languages,omitzero"`
 	Status              string                             `json:"status,omitzero"`
 	Tagline             string                             `json:"tagline,omitzero"`
 	Type                string                             `json:"type,omitzero"`
