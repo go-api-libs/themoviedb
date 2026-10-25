@@ -5056,6 +5056,83 @@
           }
         }
       },
+      "Episode": {
+        "type": "object",
+        "properties": {
+          "air_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2011-04-17"
+          },
+          "episode_number": {
+            "type": "integer",
+            "default": 0,
+            "example": 1
+          },
+          "episode_type": {
+            "type": "string",
+            "example": "standard"
+          },
+          "id": {
+            "type": "integer",
+            "default": 0,
+            "example": 63056
+          },
+          "name": {
+            "type": "string",
+            "example": "Winter Is Coming"
+          },
+          "overview": {
+            "type": "string",
+            "example": "Jon Arryn, the Hand of the King, is dead. King Robert Baratheon plans to ask his oldest friend, Eddard Stark, to take Jon's place. Across the sea, Viserys Targaryen plans to wed his sister to a nomadic warlord in exchange for an army."
+          },
+          "production_code": {
+            "type": "string",
+            "example": "101"
+          },
+          "runtime": {
+            "type": "integer",
+            "default": 0,
+            "example": 62
+          },
+          "season_number": {
+            "type": "integer",
+            "default": 0,
+            "example": 1
+          },
+          "show_id": {
+            "type": "integer",
+            "default": 0,
+            "example": 1399
+          },
+          "still_path": {
+            "type": "string",
+            "example": "/9hGF3WUkBf7cSjMg0cdMDHJkByd.jpg"
+          },
+          "vote_average": {
+            "type": "number",
+            "default": 0,
+            "example": 8.1
+          },
+          "vote_count": {
+            "type": "integer",
+            "default": 0,
+            "example": 396
+          },
+          "crew": {
+            "$ref": "#/components/schemas/MovieCreditsCrew"
+          },
+          "guest_stars": {
+            "$ref": "#/components/schemas/People"
+          }
+        }
+      },
+      "Episodes": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Episode"
+        }
+      },
       "Error": {
         "type": "object",
         "properties": {
@@ -8941,10 +9018,11 @@
           },
           "air_date": {
             "type": "string",
+            "format": "date",
             "example": "2011-04-17"
           },
           "episodes": {
-            "$ref": "#/components/schemas/SeasonEpisodes"
+            "$ref": "#/components/schemas/Episodes"
           },
           "name": {
             "type": "string",
@@ -8975,82 +9053,6 @@
             "type": "number",
             "default": 0,
             "example": 8.4
-          }
-        }
-      },
-      "SeasonEpisodes": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/SeasonEpisodesItem"
-        }
-      },
-      "SeasonEpisodesItem": {
-        "type": "object",
-        "properties": {
-          "air_date": {
-            "type": "string",
-            "example": "2011-04-17"
-          },
-          "episode_number": {
-            "type": "integer",
-            "default": 0,
-            "example": 1
-          },
-          "episode_type": {
-            "type": "string",
-            "example": "standard"
-          },
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 63056
-          },
-          "name": {
-            "type": "string",
-            "example": "Winter Is Coming"
-          },
-          "overview": {
-            "type": "string",
-            "example": "Jon Arryn, the Hand of the King, is dead. King Robert Baratheon plans to ask his oldest friend, Eddard Stark, to take Jon's place. Across the sea, Viserys Targaryen plans to wed his sister to a nomadic warlord in exchange for an army."
-          },
-          "production_code": {
-            "type": "string",
-            "example": "101"
-          },
-          "runtime": {
-            "type": "integer",
-            "default": 0,
-            "example": 62
-          },
-          "season_number": {
-            "type": "integer",
-            "default": 0,
-            "example": 1
-          },
-          "show_id": {
-            "type": "integer",
-            "default": 0,
-            "example": 1399
-          },
-          "still_path": {
-            "type": "string",
-            "example": "/9hGF3WUkBf7cSjMg0cdMDHJkByd.jpg"
-          },
-          "vote_average": {
-            "type": "number",
-            "default": 0,
-            "example": 8.1
-          },
-          "vote_count": {
-            "type": "integer",
-            "default": 0,
-            "example": 396
-          },
-          "crew": {
-            "$ref": "#/components/schemas/MovieCreditsCrew"
-          },
-          "guest_stars": {
-            "$ref": "#/components/schemas/People"
           }
         }
       },

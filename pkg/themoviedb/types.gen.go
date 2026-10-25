@@ -1351,6 +1351,28 @@ type DiscoverTvResultsItem struct {
 	VoteCount        int      `json:"vote_count,omitzero"`
 }
 
+// Episode defines a model
+type Episode struct {
+	AirDate        civil.Date       `json:"air_date,omitzero"`
+	EpisodeNumber  int              `json:"episode_number,omitzero"`
+	EpisodeType    string           `json:"episode_type,omitzero"`
+	ID             int              `json:"id,omitzero"`
+	Name           string           `json:"name,omitzero"`
+	Overview       string           `json:"overview,omitzero"`
+	ProductionCode string           `json:"production_code,omitzero"`
+	Runtime        int              `json:"runtime,omitzero"`
+	SeasonNumber   int              `json:"season_number,omitzero"`
+	ShowID         int              `json:"show_id,omitzero"`
+	StillPath      string           `json:"still_path,omitzero"`
+	VoteAverage    float64          `json:"vote_average,omitzero"`
+	VoteCount      int              `json:"vote_count,omitzero"`
+	Crew           MovieCreditsCrew `json:"crew,omitzero"`
+	GuestStars     People           `json:"guest_stars,omitzero"`
+}
+
+// Episodes defines a model
+type Episodes []Episode
+
 // Error defines a model
 type Error struct {
 	StatusCode    int    `json:"status_code"`
@@ -2641,38 +2663,16 @@ type SearchPersonOkResultsItem struct {
 
 // Season defines a model
 type Season struct {
-	UnderscoreID string         `json:"_id,omitzero"`
-	AirDate      string         `json:"air_date,omitzero"`
-	Episodes     SeasonEpisodes `json:"episodes,omitzero"`
-	Name         string         `json:"name,omitzero"`
-	Networks     Companies      `json:"networks,omitzero"`
-	Overview     string         `json:"overview,omitzero"`
-	ID           int            `json:"id,omitzero"`
-	PosterPath   string         `json:"poster_path,omitzero"`
-	SeasonNumber int            `json:"season_number,omitzero"`
-	VoteAverage  float64        `json:"vote_average,omitzero"`
-}
-
-// SeasonEpisodes defines a model
-type SeasonEpisodes []SeasonEpisodesItem
-
-// SeasonEpisodesItem defines a model
-type SeasonEpisodesItem struct {
-	AirDate        string           `json:"air_date,omitzero"`
-	EpisodeNumber  int              `json:"episode_number,omitzero"`
-	EpisodeType    string           `json:"episode_type,omitzero"`
-	ID             int              `json:"id,omitzero"`
-	Name           string           `json:"name,omitzero"`
-	Overview       string           `json:"overview,omitzero"`
-	ProductionCode string           `json:"production_code,omitzero"`
-	Runtime        int              `json:"runtime,omitzero"`
-	SeasonNumber   int              `json:"season_number,omitzero"`
-	ShowID         int              `json:"show_id,omitzero"`
-	StillPath      string           `json:"still_path,omitzero"`
-	VoteAverage    float64          `json:"vote_average,omitzero"`
-	VoteCount      int              `json:"vote_count,omitzero"`
-	Crew           MovieCreditsCrew `json:"crew,omitzero"`
-	GuestStars     People           `json:"guest_stars,omitzero"`
+	UnderscoreID string     `json:"_id,omitzero"`
+	AirDate      civil.Date `json:"air_date,omitzero"`
+	Episodes     Episodes   `json:"episodes,omitzero"`
+	Name         string     `json:"name,omitzero"`
+	Networks     Companies  `json:"networks,omitzero"`
+	Overview     string     `json:"overview,omitzero"`
+	ID           int        `json:"id,omitzero"`
+	PosterPath   string     `json:"poster_path,omitzero"`
+	SeasonNumber int        `json:"season_number,omitzero"`
+	VoteAverage  float64    `json:"vote_average,omitzero"`
 }
 
 // SortBy defines a model
