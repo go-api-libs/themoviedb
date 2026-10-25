@@ -3401,7 +3401,8 @@
           },
           "iso_3166_1": {
             "type": "string",
-            "example": "CA"
+            "example": "CA",
+            "x-go-name": "ISO3166Part1"
           },
           "name": {
             "type": "string",
@@ -3782,7 +3783,8 @@
         "properties": {
           "iso_3166_1": {
             "type": "string",
-            "example": "RS"
+            "example": "RS",
+            "x-go-name": "ISO3166Part1"
           },
           "title": {
             "type": "string",
@@ -4419,7 +4421,8 @@
         "properties": {
           "iso_3166_1": {
             "type": "string",
-            "example": "AE"
+            "example": "AE",
+            "x-go-name": "ISO3166Part1"
           },
           "iso_639_1": {
             "type": "string",
@@ -4545,7 +4548,8 @@
         "properties": {
           "iso_3166_1": {
             "type": "string",
-            "example": "AD"
+            "example": "AD",
+            "x-go-name": "ISO3166Part1"
           },
           "english_name": {
             "type": "string",
@@ -4676,7 +4680,8 @@
         "properties": {
           "iso_3166_1": {
             "type": "string",
-            "example": "AD"
+            "example": "AD",
+            "x-go-name": "ISO3166Part1"
           },
           "zones": {
             "type": "array",
@@ -4684,6 +4689,26 @@
               "type": "string",
               "example": "Europe/Andorra"
             }
+          }
+        }
+      },
+      "Countries": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Country"
+        }
+      },
+      "Country": {
+        "type": "object",
+        "properties": {
+          "iso_3166_1": {
+            "type": "string",
+            "example": "US",
+            "x-go-name": "ISO3166Part1"
+          },
+          "name": {
+            "type": "string",
+            "example": "United States of America"
           }
         }
       },
@@ -5805,7 +5830,8 @@
           },
           "iso_3166_1": {
             "type": "string",
-            "example": "US"
+            "example": "US",
+            "x-go-name": "ISO3166Part1"
           },
           "name": {
             "type": "string",
@@ -5881,7 +5907,7 @@
             "$ref": "#/components/schemas/Companies"
           },
           "production_countries": {
-            "$ref": "#/components/schemas/MovieDetailsProductionCountries"
+            "$ref": "#/components/schemas/Countries"
           },
           "revenue": {
             "type": "integer",
@@ -5959,7 +5985,8 @@
           },
           "iso_3166_1": {
             "type": "string",
-            "example": ""
+            "example": "",
+            "x-go-name": "ISO3166Part1"
           },
           "value": {
             "$ref": "#/components/schemas/MovieChangesOkChangesItemItemsItemValue"
@@ -6220,25 +6247,6 @@
             "$ref": "#/components/schemas/MovieAdditionalDetails"
           }
         ]
-      },
-      "MovieDetailsProductionCountries": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/MovieDetailsProductionCountriesItem"
-        }
-      },
-      "MovieDetailsProductionCountriesItem": {
-        "type": "object",
-        "properties": {
-          "iso_3166_1": {
-            "type": "string",
-            "example": "US"
-          },
-          "name": {
-            "type": "string",
-            "example": "United States of America"
-          }
-        }
       },
       "MovieExternalIdsOk": {
         "type": "object",
@@ -6557,7 +6565,8 @@
         "properties": {
           "iso_3166_1": {
             "type": "string",
-            "example": "BG"
+            "example": "BG",
+            "x-go-name": "ISO3166Part1"
           },
           "release_dates": {
             "$ref": "#/components/schemas/MovieReleaseDatesOkResultsItemReleaseDates"
@@ -6708,7 +6717,8 @@
         "properties": {
           "iso_3166_1": {
             "type": "string",
-            "example": "SA"
+            "example": "SA",
+            "x-go-name": "ISO3166Part1"
           },
           "iso_639_1": {
             "type": "string",
@@ -6898,7 +6908,8 @@
           },
           "iso_3166_1": {
             "type": "string",
-            "example": "US"
+            "example": "US",
+            "x-go-name": "ISO3166Part1"
           },
           "name": {
             "type": "string",
@@ -7491,7 +7502,8 @@
           },
           "iso_3166_1": {
             "type": "string",
-            "example": "ES"
+            "example": "ES",
+            "x-go-name": "ISO3166Part1"
           },
           "value": {
             "type": "string",
@@ -9063,7 +9075,8 @@
         "properties": {
           "iso_3166_1": {
             "type": "string",
-            "example": "US"
+            "example": "US",
+            "x-go-name": "ISO3166Part1"
           },
           "iso_639_1": {
             "type": "string",
@@ -10305,7 +10318,8 @@
         "properties": {
           "iso_3166_1": {
             "type": "string",
-            "example": "SA"
+            "example": "SA",
+            "x-go-name": "ISO3166Part1"
           },
           "iso_639_1": {
             "type": "string",
@@ -10798,7 +10812,8 @@
           },
           "iso_3166_1": {
             "type": "string",
-            "example": ""
+            "example": "",
+            "x-go-name": "ISO3166Part1"
           },
           "value": {
             "$ref": "#/components/schemas/TvSeriesChangesItemItemsItemValue"
@@ -10835,7 +10850,8 @@
           },
           "iso_3166_1": {
             "type": "string",
-            "example": "DE"
+            "example": "DE",
+            "x-go-name": "ISO3166Part1"
           },
           "rating": {
             "type": "string",
@@ -10967,7 +10983,7 @@
             "$ref": "#/components/schemas/Companies"
           },
           "production_countries": {
-            "$ref": "#/components/schemas/MovieDetailsProductionCountries"
+            "$ref": "#/components/schemas/Countries"
           },
           "seasons": {
             "$ref": "#/components/schemas/TvSeriesDetailsOkSeasons"
@@ -11796,7 +11812,8 @@
         "properties": {
           "iso_3166_1": {
             "type": "string",
-            "example": "SA"
+            "example": "SA",
+            "x-go-name": "ISO3166Part1"
           },
           "iso_639_1": {
             "type": "string",
