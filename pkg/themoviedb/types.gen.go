@@ -1297,15 +1297,15 @@ type CreditDetailsOkMediaSeasonsItem struct {
 
 // CreditDetailsOkPerson defines a model
 type CreditDetailsOkPerson struct {
-	Adult              *bool   `json:"adult,omitzero"`
-	ID                 int     `json:"id,omitzero"`
-	Name               string  `json:"name,omitzero"`
-	OriginalName       string  `json:"original_name,omitzero"`
-	MediaType          string  `json:"media_type,omitzero"`
-	Popularity         float64 `json:"popularity,omitzero"`
-	Gender             Gender  `json:"gender,omitzero"`
-	KnownForDepartment string  `json:"known_for_department,omitzero"`
-	ProfilePath        string  `json:"profile_path,omitzero"`
+	Adult              *bool      `json:"adult,omitzero"`
+	ID                 int        `json:"id,omitzero"`
+	Name               string     `json:"name,omitzero"`
+	OriginalName       string     `json:"original_name,omitzero"`
+	MediaType          string     `json:"media_type,omitzero"`
+	Popularity         float64    `json:"popularity,omitzero"`
+	Gender             Gender     `json:"gender,omitzero"`
+	KnownForDepartment Department `json:"known_for_department,omitzero"`
+	ProfilePath        string     `json:"profile_path,omitzero"`
 }
 
 // Crew defines a model
@@ -1313,17 +1313,36 @@ type Crew []CrewMember
 
 // CrewMember defines a model
 type CrewMember struct {
-	Adult              *bool   `json:"adult,omitzero"`
-	Gender             Gender  `json:"gender,omitzero"`
-	ID                 int     `json:"id,omitzero"`
-	KnownForDepartment string  `json:"known_for_department,omitzero"`
-	Name               string  `json:"name,omitzero"`
-	OriginalName       string  `json:"original_name,omitzero"`
-	Popularity         float64 `json:"popularity,omitzero"`
-	ProfilePath        string  `json:"profile_path,omitzero"`
-	CreditID           string  `json:"credit_id,omitzero"`
-	Department         string  `json:"department,omitzero"`
-	Job                string  `json:"job,omitzero"`
+	Adult              *bool      `json:"adult,omitzero"`
+	Gender             Gender     `json:"gender,omitzero"`
+	ID                 int        `json:"id,omitzero"`
+	KnownForDepartment Department `json:"known_for_department,omitzero"`
+	Name               string     `json:"name,omitzero"`
+	OriginalName       string     `json:"original_name,omitzero"`
+	Popularity         float64    `json:"popularity,omitzero"`
+	ProfilePath        string     `json:"profile_path,omitzero"`
+	CreditID           string     `json:"credit_id,omitzero"`
+	Department         string     `json:"department,omitzero"`
+	Job                string     `json:"job,omitzero"`
+}
+
+// Department defines a model
+type Department string
+
+const (
+	DepartmentActing     Department = "Acting"
+	DepartmentArt        Department = "Art"
+	DepartmentProduction Department = "Production"
+)
+
+// Valid indicates whether the value is a known member of the Department enum.
+func (e Department) Valid() bool {
+	switch e {
+	case DepartmentActing, DepartmentArt, DepartmentProduction:
+		return true
+	default:
+		return false
+	}
 }
 
 // DetailsCopy defines a model
@@ -2222,17 +2241,17 @@ type People []Person
 
 // Person defines a model
 type Person struct {
-	ID                 int     `json:"id"`
-	Name               string  `json:"name"`
-	OriginalName       string  `json:"original_name"`
-	Adult              bool    `json:"adult"`
-	Gender             Gender  `json:"gender"`
-	KnownForDepartment string  `json:"known_for_department"`
-	Popularity         float64 `json:"popularity"`
-	ProfilePath        string  `json:"profile_path"`
-	Character          string  `json:"character"`
-	CreditID           string  `json:"credit_id"`
-	Order              int     `json:"order"`
+	ID                 int        `json:"id"`
+	Name               string     `json:"name"`
+	OriginalName       string     `json:"original_name"`
+	Adult              bool       `json:"adult"`
+	Gender             Gender     `json:"gender"`
+	KnownForDepartment Department `json:"known_for_department"`
+	Popularity         float64    `json:"popularity"`
+	ProfilePath        string     `json:"profile_path"`
+	Character          string     `json:"character"`
+	CreditID           string     `json:"credit_id"`
+	Order              int        `json:"order"`
 }
 
 // PersonCast defines a model
@@ -2345,20 +2364,20 @@ type PersonCombinedCreditsOkCrewItem struct {
 
 // PersonDetailsOk defines a model
 type PersonDetailsOk struct {
-	Adult              *bool     `json:"adult,omitzero"`
-	AlsoKnownAs        []string  `json:"also_known_as,omitzero"`
-	Biography          string    `json:"biography,omitzero"`
-	Birthday           string    `json:"birthday,omitzero"`
-	Deathday           *struct{} `json:"deathday,omitzero"`
-	Gender             Gender    `json:"gender,omitzero"`
-	Homepage           *struct{} `json:"homepage,omitzero"`
-	ID                 int       `json:"id,omitzero"`
-	ImdbID             string    `json:"imdb_id,omitzero"`
-	KnownForDepartment string    `json:"known_for_department,omitzero"`
-	Name               string    `json:"name,omitzero"`
-	PlaceOfBirth       string    `json:"place_of_birth,omitzero"`
-	Popularity         float64   `json:"popularity,omitzero"`
-	ProfilePath        string    `json:"profile_path,omitzero"`
+	Adult              *bool      `json:"adult,omitzero"`
+	AlsoKnownAs        []string   `json:"also_known_as,omitzero"`
+	Biography          string     `json:"biography,omitzero"`
+	Birthday           string     `json:"birthday,omitzero"`
+	Deathday           *struct{}  `json:"deathday,omitzero"`
+	Gender             Gender     `json:"gender,omitzero"`
+	Homepage           *struct{}  `json:"homepage,omitzero"`
+	ID                 int        `json:"id,omitzero"`
+	ImdbID             string     `json:"imdb_id,omitzero"`
+	KnownForDepartment Department `json:"known_for_department,omitzero"`
+	Name               string     `json:"name,omitzero"`
+	PlaceOfBirth       string     `json:"place_of_birth,omitzero"`
+	Popularity         float64    `json:"popularity,omitzero"`
+	ProfilePath        string     `json:"profile_path,omitzero"`
 }
 
 // PersonExternalIdsOk defines a model
@@ -2448,7 +2467,7 @@ type PersonPopularListOkResultsItem struct {
 	Gender             Gender                                 `json:"gender,omitzero"`
 	ID                 int                                    `json:"id,omitzero"`
 	KnownFor           PersonPopularListOkResultsItemKnownFor `json:"known_for,omitzero"`
-	KnownForDepartment string                                 `json:"known_for_department,omitzero"`
+	KnownForDepartment Department                             `json:"known_for_department,omitzero"`
 	Name               string                                 `json:"name,omitzero"`
 	Popularity         float64                                `json:"popularity,omitzero"`
 	ProfilePath        string                                 `json:"profile_path,omitzero"`
@@ -2673,7 +2692,7 @@ type SearchPersonOkResultsItem struct {
 	Adult              *bool              `json:"adult,omitzero"`
 	Gender             Gender             `json:"gender,omitzero"`
 	ID                 int                `json:"id,omitzero"`
-	KnownForDepartment string             `json:"known_for_department,omitzero"`
+	KnownForDepartment Department         `json:"known_for_department,omitzero"`
 	Name               string             `json:"name,omitzero"`
 	OriginalName       string             `json:"original_name,omitzero"`
 	Popularity         float64            `json:"popularity,omitzero"`
@@ -2910,7 +2929,7 @@ type TrendingPeopleOkResultsItem struct {
 	MediaType          string             `json:"media_type,omitzero"`
 	Popularity         float64            `json:"popularity,omitzero"`
 	Gender             Gender             `json:"gender,omitzero"`
-	KnownForDepartment string             `json:"known_for_department,omitzero"`
+	KnownForDepartment Department         `json:"known_for_department,omitzero"`
 	ProfilePath        string             `json:"profile_path,omitzero"`
 	KnownFor           TrendingAllResults `json:"known_for,omitzero"`
 }
@@ -3080,7 +3099,7 @@ type TvSeasonAggregateCreditsCastMember struct {
 	Adult              *bool                                   `json:"adult,omitzero"`
 	Gender             Gender                                  `json:"gender,omitzero"`
 	ID                 int                                     `json:"id,omitzero"`
-	KnownForDepartment string                                  `json:"known_for_department,omitzero"`
+	KnownForDepartment Department                              `json:"known_for_department,omitzero"`
 	Name               string                                  `json:"name,omitzero"`
 	OriginalName       string                                  `json:"original_name,omitzero"`
 	Popularity         float64                                 `json:"popularity,omitzero"`
@@ -3125,7 +3144,7 @@ type TvSeasonAggregateCreditsOkCrewItem struct {
 	Adult              *bool                                `json:"adult,omitzero"`
 	Gender             Gender                               `json:"gender,omitzero"`
 	ID                 int                                  `json:"id,omitzero"`
-	KnownForDepartment string                               `json:"known_for_department,omitzero"`
+	KnownForDepartment Department                           `json:"known_for_department,omitzero"`
 	Name               string                               `json:"name,omitzero"`
 	OriginalName       string                               `json:"original_name,omitzero"`
 	Popularity         float64                              `json:"popularity,omitzero"`
@@ -3178,17 +3197,17 @@ type TvSeasonCreditsOkCrew []TvSeasonCreditsOkCrewItem
 
 // TvSeasonCreditsOkCrewItem defines a model
 type TvSeasonCreditsOkCrewItem struct {
-	Adult              *bool     `json:"adult,omitzero"`
-	Gender             Gender    `json:"gender,omitzero"`
-	ID                 int       `json:"id,omitzero"`
-	KnownForDepartment string    `json:"known_for_department,omitzero"`
-	Name               string    `json:"name,omitzero"`
-	OriginalName       string    `json:"original_name,omitzero"`
-	Popularity         float64   `json:"popularity,omitzero"`
-	ProfilePath        *struct{} `json:"profile_path,omitzero"`
-	CreditID           string    `json:"credit_id,omitzero"`
-	Department         string    `json:"department,omitzero"`
-	Job                string    `json:"job,omitzero"`
+	Adult              *bool      `json:"adult,omitzero"`
+	Gender             Gender     `json:"gender,omitzero"`
+	ID                 int        `json:"id,omitzero"`
+	KnownForDepartment Department `json:"known_for_department,omitzero"`
+	Name               string     `json:"name,omitzero"`
+	OriginalName       string     `json:"original_name,omitzero"`
+	Popularity         float64    `json:"popularity,omitzero"`
+	ProfilePath        *struct{}  `json:"profile_path,omitzero"`
+	CreditID           string     `json:"credit_id,omitzero"`
+	Department         string     `json:"department,omitzero"`
+	Job                string     `json:"job,omitzero"`
 }
 
 // TvSeasonExternalIdsOk defines a model
@@ -3354,7 +3373,7 @@ type TvSeriesAggregateCreditsOkCrewItem struct {
 	Adult              *bool                                `json:"adult,omitzero"`
 	Gender             Gender                               `json:"gender,omitzero"`
 	ID                 int                                  `json:"id,omitzero"`
-	KnownForDepartment string                               `json:"known_for_department,omitzero"`
+	KnownForDepartment Department                           `json:"known_for_department,omitzero"`
 	Name               string                               `json:"name,omitzero"`
 	OriginalName       string                               `json:"original_name,omitzero"`
 	Popularity         float64                              `json:"popularity,omitzero"`

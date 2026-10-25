@@ -4916,8 +4916,7 @@
             "$ref": "#/components/schemas/Gender"
           },
           "known_for_department": {
-            "type": "string",
-            "example": "Acting"
+            "$ref": "#/components/schemas/Department"
           },
           "profile_path": {
             "type": "string",
@@ -4948,8 +4947,7 @@
             "example": 376
           },
           "known_for_department": {
-            "type": "string",
-            "example": "Production"
+            "$ref": "#/components/schemas/Department"
           },
           "name": {
             "type": "string",
@@ -4981,6 +4979,15 @@
             "example": "Executive Producer"
           }
         }
+      },
+      "Department": {
+        "type": "string",
+        "enum": [
+          "Acting",
+          "Art",
+          "Production"
+        ],
+        "example": "Acting"
       },
       "DetailsCopy": {
         "type": "object",
@@ -7544,8 +7551,7 @@
             "$ref": "#/components/schemas/Gender"
           },
           "known_for_department": {
-            "type": "string",
-            "example": "Acting"
+            "$ref": "#/components/schemas/Department"
           },
           "popularity": {
             "type": "number",
@@ -7981,8 +7987,7 @@
             "example": "nm0000158"
           },
           "known_for_department": {
-            "type": "string",
-            "example": "Acting"
+            "$ref": "#/components/schemas/Department"
           },
           "name": {
             "type": "string",
@@ -8260,8 +8265,7 @@
             "$ref": "#/components/schemas/PersonPopularListOkResultsItemKnownFor"
           },
           "known_for_department": {
-            "type": "string",
-            "example": "Acting"
+            "$ref": "#/components/schemas/Department"
           },
           "name": {
             "type": "string",
@@ -9000,8 +9004,7 @@
             "example": 31
           },
           "known_for_department": {
-            "type": "string",
-            "example": "Acting"
+            "$ref": "#/components/schemas/Department"
           },
           "name": {
             "type": "string",
@@ -9489,8 +9492,7 @@
             "$ref": "#/components/schemas/Gender"
           },
           "known_for_department": {
-            "type": "string",
-            "example": "Acting"
+            "$ref": "#/components/schemas/Department"
           },
           "profile_path": {
             "type": "string",
@@ -9986,8 +9988,7 @@
             "example": 22970
           },
           "known_for_department": {
-            "type": "string",
-            "example": "Acting"
+            "$ref": "#/components/schemas/Department"
           },
           "name": {
             "type": "string",
@@ -10108,8 +10109,7 @@
             "example": 9153
           },
           "known_for_department": {
-            "type": "string",
-            "example": "Art"
+            "$ref": "#/components/schemas/Department"
           },
           "name": {
             "type": "string",
@@ -10245,8 +10245,7 @@
             "example": 1223796
           },
           "known_for_department": {
-            "type": "string",
-            "example": "Production"
+            "$ref": "#/components/schemas/Department"
           },
           "name": {
             "type": "string",
@@ -10726,8 +10725,7 @@
             "example": 6411
           },
           "known_for_department": {
-            "type": "string",
-            "example": "Art"
+            "$ref": "#/components/schemas/Department"
           },
           "name": {
             "type": "string",
