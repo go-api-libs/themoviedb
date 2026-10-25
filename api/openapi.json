@@ -5140,8 +5140,7 @@
             "example": 1
           },
           "episode_type": {
-            "type": "string",
-            "example": "standard"
+            "$ref": "#/components/schemas/EpisodeType"
           },
           "id": {
             "type": "integer",
@@ -5197,6 +5196,14 @@
             "$ref": "#/components/schemas/Actors"
           }
         }
+      },
+      "EpisodeType": {
+        "type": "string",
+        "enum": [
+          "standard",
+          "finale"
+        ],
+        "example": "standard"
       },
       "Episodes": {
         "type": "array",

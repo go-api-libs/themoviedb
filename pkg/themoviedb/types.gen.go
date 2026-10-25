@@ -1398,21 +1398,39 @@ type DiscoverTvResultsItem struct {
 
 // Episode defines a model
 type Episode struct {
-	AirDate        civil.Date `json:"air_date,omitzero"`
-	EpisodeNumber  int        `json:"episode_number,omitzero"`
-	EpisodeType    string     `json:"episode_type,omitzero"`
-	ID             int        `json:"id,omitzero"`
-	Name           string     `json:"name,omitzero"`
-	Overview       string     `json:"overview,omitzero"`
-	ProductionCode string     `json:"production_code,omitzero"`
-	Runtime        int        `json:"runtime,omitzero"`
-	SeasonNumber   int        `json:"season_number,omitzero"`
-	ShowID         int        `json:"show_id,omitzero"`
-	StillPath      string     `json:"still_path,omitzero"`
-	VoteAverage    float64    `json:"vote_average,omitzero"`
-	VoteCount      int        `json:"vote_count,omitzero"`
-	Crew           Crew       `json:"crew,omitzero"`
-	GuestStars     Actors     `json:"guest_stars,omitzero"`
+	AirDate        civil.Date  `json:"air_date,omitzero"`
+	EpisodeNumber  int         `json:"episode_number,omitzero"`
+	EpisodeType    EpisodeType `json:"episode_type,omitzero"`
+	ID             int         `json:"id,omitzero"`
+	Name           string      `json:"name,omitzero"`
+	Overview       string      `json:"overview,omitzero"`
+	ProductionCode string      `json:"production_code,omitzero"`
+	Runtime        int         `json:"runtime,omitzero"`
+	SeasonNumber   int         `json:"season_number,omitzero"`
+	ShowID         int         `json:"show_id,omitzero"`
+	StillPath      string      `json:"still_path,omitzero"`
+	VoteAverage    float64     `json:"vote_average,omitzero"`
+	VoteCount      int         `json:"vote_count,omitzero"`
+	Crew           Crew        `json:"crew,omitzero"`
+	GuestStars     Actors      `json:"guest_stars,omitzero"`
+}
+
+// EpisodeType defines a model
+type EpisodeType string
+
+const (
+	EpisodeTypeStandard EpisodeType = "standard"
+	EpisodeTypeFinale   EpisodeType = "finale"
+)
+
+// Valid indicates whether the value is a known member of the EpisodeType enum.
+func (e EpisodeType) Valid() bool {
+	switch e {
+	case EpisodeTypeStandard, EpisodeTypeFinale:
+		return true
+	default:
+		return false
+	}
 }
 
 // Episodes defines a model
