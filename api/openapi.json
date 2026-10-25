@@ -4761,8 +4761,7 @@
             "$ref": "#/components/schemas/Department"
           },
           "job": {
-            "type": "string",
-            "example": "Actor"
+            "$ref": "#/components/schemas/Job"
           },
           "media": {
             "$ref": "#/components/schemas/CreditDetailsOkMedia"
@@ -4979,8 +4978,7 @@
             "$ref": "#/components/schemas/Department"
           },
           "job": {
-            "type": "string",
-            "example": "Executive Producer"
+            "$ref": "#/components/schemas/Job"
           }
         }
       },
@@ -5690,6 +5688,18 @@
         "items": {
           "$ref": "#/components/schemas/Image"
         }
+      },
+      "Job": {
+        "type": "string",
+        "enum": [
+          "Actor",
+          "Producer",
+          "Director",
+          "Executive Producer",
+          "Production Design",
+          "Thanks"
+        ],
+        "example": "Producer"
       },
       "Keyword": {
         "type": "object",
@@ -7929,8 +7939,7 @@
             "$ref": "#/components/schemas/Department"
           },
           "job": {
-            "type": "string",
-            "example": "Thanks"
+            "$ref": "#/components/schemas/Job"
           },
           "media_type": {
             "type": "string",
@@ -8199,8 +8208,7 @@
             "$ref": "#/components/schemas/Department"
           },
           "job": {
-            "type": "string",
-            "example": "Thanks"
+            "$ref": "#/components/schemas/Job"
           }
         }
       },
@@ -8633,8 +8641,7 @@
             "example": 1
           },
           "job": {
-            "type": "string",
-            "example": "Director"
+            "$ref": "#/components/schemas/Job"
           }
         }
       },
@@ -10047,8 +10054,7 @@
             "example": "54eee8b8c3a3686d5e005430"
           },
           "job": {
-            "type": "string",
-            "example": "Production Design"
+            "$ref": "#/components/schemas/Job"
           },
           "episode_count": {
             "type": "integer",
@@ -10255,8 +10261,7 @@
             "$ref": "#/components/schemas/Department"
           },
           "job": {
-            "type": "string",
-            "example": "Producer"
+            "$ref": "#/components/schemas/Job"
           }
         }
       },

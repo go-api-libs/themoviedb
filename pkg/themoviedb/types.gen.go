@@ -1262,7 +1262,7 @@ type Country struct {
 type CreditDetailsOk struct {
 	CreditType string                 `json:"credit_type,omitzero"`
 	Department Department             `json:"department,omitzero"`
-	Job        string                 `json:"job,omitzero"`
+	Job        Job                    `json:"job,omitzero"`
 	Media      *CreditDetailsOkMedia  `json:"media,omitzero"`
 	MediaType  string                 `json:"media_type,omitzero"`
 	ID         string                 `json:"id,omitzero"`
@@ -1326,7 +1326,7 @@ type Crew []CrewMember
 type CrewMember struct {
 	Person
 	Department Department `json:"department,omitzero"`
-	Job        string     `json:"job,omitzero"`
+	Job        Job        `json:"job,omitzero"`
 }
 
 // Department defines a model
@@ -1596,6 +1596,28 @@ type ImageBase struct {
 
 // Images defines a model
 type Images []Image
+
+// Job defines a model
+type Job string
+
+const (
+	JobActor             Job = "Actor"
+	JobProducer          Job = "Producer"
+	JobDirector          Job = "Director"
+	JobExecutiveProducer Job = "Executive Producer"
+	JobProductionDesign  Job = "Production Design"
+	JobThanks            Job = "Thanks"
+)
+
+// Valid indicates whether the value is a known member of the Job enum.
+func (e Job) Valid() bool {
+	switch e {
+	case JobActor, JobProducer, JobDirector, JobExecutiveProducer, JobProductionDesign, JobThanks:
+		return true
+	default:
+		return false
+	}
+}
 
 // Keyword defines a model
 type Keyword struct {
@@ -2358,7 +2380,7 @@ type PersonCombinedCreditsOkCrewItem struct {
 	VoteCount        int        `json:"vote_count,omitzero"`
 	CreditID         string     `json:"credit_id,omitzero"`
 	Department       Department `json:"department,omitzero"`
-	Job              string     `json:"job,omitzero"`
+	Job              Job        `json:"job,omitzero"`
 	MediaType        string     `json:"media_type,omitzero"`
 }
 
@@ -2447,7 +2469,7 @@ type PersonMovieCreditsOkCrewItem struct {
 	VoteCount        int        `json:"vote_count,omitzero"`
 	CreditID         string     `json:"credit_id,omitzero"`
 	Department       Department `json:"department,omitzero"`
-	Job              string     `json:"job,omitzero"`
+	Job              Job        `json:"job,omitzero"`
 }
 
 // PersonPopularListOk defines a model
@@ -2574,7 +2596,7 @@ type PersonTvCreditsOkCrewItem struct {
 	CreditID         string     `json:"credit_id,omitzero"`
 	Department       Department `json:"department,omitzero"`
 	EpisodeCount     int        `json:"episode_count,omitzero"`
-	Job              string     `json:"job,omitzero"`
+	Job              Job        `json:"job,omitzero"`
 }
 
 // Rating defines a model
@@ -3125,7 +3147,7 @@ type TvSeasonAggregateCreditsCrewItemJobs []TvSeasonAggregateCreditsCrewItemJobs
 // TvSeasonAggregateCreditsCrewItemJobsItem defines a model
 type TvSeasonAggregateCreditsCrewItemJobsItem struct {
 	CreditID     string `json:"credit_id,omitzero"`
-	Job          string `json:"job,omitzero"`
+	Job          Job    `json:"job,omitzero"`
 	EpisodeCount int    `json:"episode_count,omitzero"`
 }
 
@@ -3207,7 +3229,7 @@ type TvSeasonCreditsOkCrewItem struct {
 	ProfilePath        *struct{}  `json:"profile_path,omitzero"`
 	CreditID           string     `json:"credit_id,omitzero"`
 	Department         Department `json:"department,omitzero"`
-	Job                string     `json:"job,omitzero"`
+	Job                Job        `json:"job,omitzero"`
 }
 
 // TvSeasonExternalIdsOk defines a model
