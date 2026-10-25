@@ -52,19 +52,7 @@ func (s *Service) SearchMovies(ctx context.Context) error {
 		fmt.Printf("Release Date: %v\n", res.ReleaseDate)
 
 		if imgPath := res.PosterPath; imgPath != "" {
-			backdrop, err := s.cli.GetImage(ctx, imgPath)
-			if err != nil {
-				return err
-			}
-			defer backdrop.Close()
-
-			f, err := os.Create(filepath.Base(imgPath))
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-
-			if _, err := io.Copy(f, backdrop); err != nil {
+			if err := s.saveImage(ctx, imgPath); err != nil {
 				return err
 			}
 		}
@@ -88,29 +76,59 @@ func (s *Service) SearchTVShows(ctx context.Context) error {
 		fmt.Printf("First Air Date: %v\n", show.FirstAirDate)
 
 		if imgPath := show.PosterPath; imgPath != "" {
-			backdrop, err := s.cli.GetImage(ctx, imgPath)
-			if err != nil {
-				return err
-			}
-			defer backdrop.Close()
-
-			f, err := os.Create(filepath.Base(imgPath))
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-
-			if _, err := io.Copy(f, backdrop); err != nil {
+			if err := s.saveImage(ctx, imgPath); err != nil {
 				return err
 			}
 		}
 
-		_, _ = s.cli.GetTvShowSeason(ctx, show.ID, 1, &themoviedb.GetTvShowSeasonParams{})
+		season1, err := s.cli.GetTvShowSeason(ctx, show.ID, 1, &themoviedb.GetTvShowSeasonParams{})
+		if err != nil {
+			return err
+		}
 
-		fmt.Println("------------")
+		fmt.Printf("season1.ID: %v\n", season1.ID)
+		fmt.Printf("season1.UnderscoreID: %v\n", season1.UnderscoreID)
+		fmt.Printf("season1.Name: %v\n", season1.Name)
+		fmt.Printf("season1.PosterPath: %v\n", season1.PosterPath)
+		fmt.Printf("season1.AirDate: %v\n", season1.AirDate)
+
+		for _, ep := range season1.Episodes {
+			fmt.Println("---")
+
+			fmt.Printf("ep.ID: %v\n", ep.ID)
+			fmt.Printf("ep.Name: %v\n", ep.Name)
+			fmt.Printf("ep.Overview: %v\n", ep.Overview)
+			fmt.Printf("ep.EpisodeType: %v\n", ep.EpisodeType)
+
+			if imgPath := ep.StillPath; imgPath != "" {
+				if err := s.saveImage(ctx, imgPath); err != nil {
+					return err
+				}
+			}
+		}
 
 		break
 	}
 
 	return nil
+}
+
+func (s *Service) saveImage(ctx context.Context, path string) error {
+	img, err := s.cli.GetImage(ctx, path)
+	if err != nil {
+		return err
+	}
+	defer img.Close()
+
+	f, err := os.Create(filepath.Base(path))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if _, err := io.Copy(f, img); err != nil {
+		return err
+	}
+
+	return err
 }
