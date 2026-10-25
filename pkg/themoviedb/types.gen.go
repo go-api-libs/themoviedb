@@ -80,8 +80,8 @@ type AccountRatedTvParams struct {
 	SortBy    SortBy
 }
 
-// AccountRatedTvEpisodesParams holds the query parameters for AccountRatedTvEpisodes.
-type AccountRatedTvEpisodesParams struct {
+// GetRatedTvEpisodesParams holds the query parameters for GetRatedTvEpisodes.
+type GetRatedTvEpisodesParams struct {
 	Language  string
 	Page      int32
 	SessionID string
@@ -846,34 +846,6 @@ type AccountRatedMoviesOkResultsItem struct {
 	Rating           int        `json:"rating,omitzero"`
 }
 
-// AccountRatedTvEpisodesOk defines a model
-type AccountRatedTvEpisodesOk struct {
-	Page         int                             `json:"page,omitzero"`
-	Results      AccountRatedTvEpisodesOkResults `json:"results,omitzero"`
-	TotalPages   int                             `json:"total_pages,omitzero"`
-	TotalResults int                             `json:"total_results,omitzero"`
-}
-
-// AccountRatedTvEpisodesOkResults defines a model
-type AccountRatedTvEpisodesOkResults []AccountRatedTvEpisodesOkResultsItem
-
-// AccountRatedTvEpisodesOkResultsItem defines a model
-type AccountRatedTvEpisodesOkResultsItem struct {
-	AirDate        civil.Date `json:"air_date,omitzero"`
-	EpisodeNumber  int        `json:"episode_number,omitzero"`
-	ID             int        `json:"id,omitzero"`
-	Name           string     `json:"name,omitzero"`
-	Overview       string     `json:"overview,omitzero"`
-	ProductionCode string     `json:"production_code,omitzero"`
-	Runtime        int        `json:"runtime,omitzero"`
-	SeasonNumber   int        `json:"season_number,omitzero"`
-	ShowID         int        `json:"show_id,omitzero"`
-	StillPath      string     `json:"still_path,omitzero"`
-	VoteAverage    float64    `json:"vote_average,omitzero"`
-	VoteCount      int        `json:"vote_count,omitzero"`
-	Rating         int        `json:"rating,omitzero"`
-}
-
 // AccountRatedTvOk defines a model
 type AccountRatedTvOk struct {
 	Page         int                     `json:"page,omitzero"`
@@ -1398,21 +1370,26 @@ type DiscoverTvResultsItem struct {
 
 // Episode defines a model
 type Episode struct {
-	AirDate        civil.Date  `json:"air_date,omitzero"`
-	EpisodeNumber  int         `json:"episode_number,omitzero"`
-	EpisodeType    EpisodeType `json:"episode_type,omitzero"`
-	ID             int         `json:"id,omitzero"`
-	Name           string      `json:"name,omitzero"`
-	Overview       string      `json:"overview,omitzero"`
-	ProductionCode string      `json:"production_code,omitzero"`
-	Runtime        int         `json:"runtime,omitzero"`
-	SeasonNumber   int         `json:"season_number,omitzero"`
-	ShowID         int         `json:"show_id,omitzero"`
-	StillPath      string      `json:"still_path,omitzero"`
-	VoteAverage    float64     `json:"vote_average,omitzero"`
-	VoteCount      int         `json:"vote_count,omitzero"`
-	Crew           Crew        `json:"crew,omitzero"`
-	GuestStars     Actors      `json:"guest_stars,omitzero"`
+	EpisodeBase
+	EpisodeType EpisodeType `json:"episode_type,omitzero"`
+	Crew        Crew        `json:"crew,omitzero"`
+	GuestStars  Actors      `json:"guest_stars,omitzero"`
+}
+
+// EpisodeBase defines a model
+type EpisodeBase struct {
+	ID             int        `json:"id,omitzero"`
+	SeasonNumber   int        `json:"season_number,omitzero"`
+	EpisodeNumber  int        `json:"episode_number,omitzero"`
+	Name           string     `json:"name,omitzero"`
+	Overview       string     `json:"overview,omitzero"`
+	AirDate        civil.Date `json:"air_date,omitzero"`
+	ProductionCode string     `json:"production_code,omitzero"`
+	Runtime        int        `json:"runtime,omitzero"`
+	ShowID         int        `json:"show_id,omitzero"`
+	StillPath      string     `json:"still_path,omitzero"`
+	VoteAverage    float64    `json:"vote_average,omitzero"`
+	VoteCount      int        `json:"vote_count,omitzero"`
 }
 
 // EpisodeType defines a model
@@ -2623,6 +2600,23 @@ type PersonTvCreditsOkCrewItem struct {
 	Department       Department `json:"department,omitzero"`
 	EpisodeCount     int        `json:"episode_count,omitzero"`
 	Job              Job        `json:"job,omitzero"`
+}
+
+// RatedEpisode defines a model
+type RatedEpisode struct {
+	EpisodeBase
+	Rating int `json:"rating,omitzero"`
+}
+
+// RatedEpisodes defines a model
+type RatedEpisodes []RatedEpisode
+
+// RatedEpisodesPage defines a model
+type RatedEpisodesPage struct {
+	Page         int           `json:"page,omitzero"`
+	Results      RatedEpisodes `json:"results,omitzero"`
+	TotalPages   int           `json:"total_pages,omitzero"`
+	TotalResults int           `json:"total_results,omitzero"`
 }
 
 // Rating defines a model
