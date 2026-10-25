@@ -3779,6 +3779,76 @@
           }
         }
       },
+      "Actor": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "default": 0,
+            "example": 22970
+          },
+          "name": {
+            "type": "string",
+            "example": "Peter Dinklage"
+          },
+          "original_name": {
+            "type": "string",
+            "example": "Peter Dinklage"
+          },
+          "adult": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          },
+          "gender": {
+            "$ref": "#/components/schemas/Gender"
+          },
+          "known_for_department": {
+            "$ref": "#/components/schemas/Department"
+          },
+          "popularity": {
+            "type": "number",
+            "default": 0,
+            "example": 30.6
+          },
+          "profile_path": {
+            "type": "string",
+            "example": "/lRsRgnksAhBRXwAB68MFjmTtLrk.jpg"
+          },
+          "character": {
+            "type": "string",
+            "example": "Tyrion Lannister"
+          },
+          "credit_id": {
+            "type": "string",
+            "example": "5256c8b219c2956ff6047cd8"
+          },
+          "order": {
+            "type": "integer",
+            "default": 0,
+            "example": 0
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "original_name",
+          "adult",
+          "gender",
+          "known_for_department",
+          "popularity",
+          "profile_path",
+          "character",
+          "credit_id",
+          "order"
+        ]
+      },
+      "Actors": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Actor"
+        }
+      },
       "AlternativeTitle": {
         "type": "object",
         "properties": {
@@ -3911,7 +3981,7 @@
             "$ref": "#/components/schemas/CastIDWrapper"
           },
           {
-            "$ref": "#/components/schemas/Person"
+            "$ref": "#/components/schemas/Actor"
           }
         ]
       },
@@ -5184,7 +5254,7 @@
             "$ref": "#/components/schemas/Crew"
           },
           "guest_stars": {
-            "$ref": "#/components/schemas/People"
+            "$ref": "#/components/schemas/Actors"
           }
         }
       },
@@ -7519,76 +7589,6 @@
           }
         }
       },
-      "People": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/Person"
-        }
-      },
-      "Person": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 22970
-          },
-          "name": {
-            "type": "string",
-            "example": "Peter Dinklage"
-          },
-          "original_name": {
-            "type": "string",
-            "example": "Peter Dinklage"
-          },
-          "adult": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "gender": {
-            "$ref": "#/components/schemas/Gender"
-          },
-          "known_for_department": {
-            "$ref": "#/components/schemas/Department"
-          },
-          "popularity": {
-            "type": "number",
-            "default": 0,
-            "example": 30.6
-          },
-          "profile_path": {
-            "type": "string",
-            "example": "/lRsRgnksAhBRXwAB68MFjmTtLrk.jpg"
-          },
-          "character": {
-            "type": "string",
-            "example": "Tyrion Lannister"
-          },
-          "credit_id": {
-            "type": "string",
-            "example": "5256c8b219c2956ff6047cd8"
-          },
-          "order": {
-            "type": "integer",
-            "default": 0,
-            "example": 0
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "original_name",
-          "adult",
-          "gender",
-          "known_for_department",
-          "popularity",
-          "profile_path",
-          "character",
-          "credit_id",
-          "order"
-        ]
-      },
       "PersonCast": {
         "type": "array",
         "items": {
@@ -9662,13 +9662,13 @@
         "type": "object",
         "properties": {
           "cast": {
-            "$ref": "#/components/schemas/People"
+            "$ref": "#/components/schemas/Actors"
           },
           "crew": {
             "$ref": "#/components/schemas/Crew"
           },
           "guest_stars": {
-            "$ref": "#/components/schemas/People"
+            "$ref": "#/components/schemas/Actors"
           },
           "id": {
             "type": "integer",
@@ -9693,7 +9693,7 @@
             "example": 1
           },
           "guest_stars": {
-            "$ref": "#/components/schemas/People"
+            "$ref": "#/components/schemas/Actors"
           },
           "name": {
             "type": "string",
@@ -10205,7 +10205,7 @@
         "type": "object",
         "properties": {
           "cast": {
-            "$ref": "#/components/schemas/People"
+            "$ref": "#/components/schemas/Actors"
           },
           "crew": {
             "$ref": "#/components/schemas/TvSeasonCreditsOkCrew"
@@ -10878,7 +10878,7 @@
         "type": "object",
         "properties": {
           "cast": {
-            "$ref": "#/components/schemas/People"
+            "$ref": "#/components/schemas/Actors"
           },
           "crew": {
             "$ref": "#/components/schemas/Crew"
