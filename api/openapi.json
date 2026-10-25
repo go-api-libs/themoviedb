@@ -5930,8 +5930,7 @@
             "$ref": "#/components/schemas/Languages"
           },
           "status": {
-            "type": "string",
-            "example": "Released"
+            "$ref": "#/components/schemas/Status"
           },
           "tagline": {
             "type": "string",
@@ -8956,6 +8955,13 @@
           "vote_count.desc"
         ],
         "default": "popularity.desc"
+      },
+      "Status": {
+        "type": "string",
+        "enum": [
+          "Released"
+        ],
+        "example": "Released"
       },
       "TVShow": {
         "type": "object",

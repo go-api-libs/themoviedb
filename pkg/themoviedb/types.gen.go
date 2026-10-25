@@ -1748,7 +1748,7 @@ type MovieDetails struct {
 	Revenue             int         `json:"revenue,omitzero"`
 	Runtime             int         `json:"runtime,omitzero"`
 	SpokenLanguages     Languages   `json:"spoken_languages,omitzero"`
-	Status              string      `json:"status,omitzero"`
+	Status              Status      `json:"status,omitzero"`
 	Tagline             string      `json:"tagline,omitzero"`
 }
 
@@ -2701,6 +2701,23 @@ const (
 func (e SortBy9) Valid() bool {
 	switch e {
 	case SortBy9FirstAirDateDotAsc, SortBy9FirstAirDateDotDesc, SortBy9NameDotAsc, SortBy9NameDotDesc, SortBy9OriginalNameDotAsc, SortBy9OriginalNameDotDesc, SortBy9PopularityDotAsc, SortBy9PopularityDotDesc, SortBy9VoteAverageDotAsc, SortBy9VoteAverageDotDesc, SortBy9VoteCountDotAsc, SortBy9VoteCountDotDesc:
+		return true
+	default:
+		return false
+	}
+}
+
+// Status defines a model
+type Status string
+
+const (
+	StatusReleased Status = "Released"
+)
+
+// Valid indicates whether the value is a known member of the Status enum.
+func (e Status) Valid() bool {
+	switch e {
+	case StatusReleased:
 		return true
 	default:
 		return false
