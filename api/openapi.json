@@ -5836,6 +5836,7 @@
           },
           "homepage": {
             "type": "string",
+            "format": "uri",
             "example": "http://www.starwars.com/films/star-wars-episode-iv-a-new-hope"
           },
           "imdb_id": {

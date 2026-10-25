@@ -6,6 +6,7 @@ package themoviedb
 
 import (
 	"encoding/json/v2"
+	"net/url"
 
 	"cloud.google.com/go/civil"
 	"github.com/MarkRosemaker/jsonutil"
@@ -13,7 +14,11 @@ import (
 
 var jsonOpts = json.JoinOptions(
 	json.RejectUnknownMembers(true),
+	json.WithMarshalers(json.JoinMarshalers(
+		json.MarshalToFunc(jsonutil.URLMarshal),
+	)),
 	json.WithUnmarshalers(json.JoinUnmarshalers(
+		json.UnmarshalFromFunc(jsonutil.URLUnmarshal),
 		json.UnmarshalFromFunc(jsonutil.DateUnmarshalEmptyAsZero),
 	)),
 )
@@ -1715,7 +1720,7 @@ type MovieDetails struct {
 	BelongsToCollection *Collection                     `json:"belongs_to_collection,omitzero"`
 	Budget              int                             `json:"budget,omitzero"`
 	Genres              Keywords                        `json:"genres,omitzero"`
-	Homepage            string                          `json:"homepage,omitzero"`
+	Homepage            url.URL                         `json:"homepage,omitzero"`
 	ImdbID              string                          `json:"imdb_id,omitzero"`
 	OriginCountry       []string                        `json:"origin_country,omitzero"`
 	ProductionCompanies SearchCompanyResults            `json:"production_companies,omitzero"`
