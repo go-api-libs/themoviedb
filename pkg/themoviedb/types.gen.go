@@ -1180,12 +1180,9 @@ type CompanyDetailsOk struct {
 
 // CompanyImages defines a model
 type CompanyImages struct {
-	ID    int                `json:"id,omitzero"`
-	Logos CompanyImagesLogos `json:"logos,omitzero"`
+	ID    int         `json:"id,omitzero"`
+	Logos ImageAssets `json:"logos,omitzero"`
 }
-
-// CompanyImagesLogos defines a model
-type CompanyImagesLogos []Image2
 
 // ConfigurationCountries defines a model
 type ConfigurationCountries []ConfigurationCountriesItem
@@ -1481,22 +1478,25 @@ type GuestSessionRatedTvOkResultsItem struct {
 
 // Image defines a model
 type Image struct {
-	AspectRatio float64   `json:"aspect_ratio,omitzero"`
-	Height      int       `json:"height,omitzero"`
-	Iso6391     *struct{} `json:"iso_639_1,omitzero"`
-	FilePath    string    `json:"file_path,omitzero"`
-	VoteAverage float64   `json:"vote_average,omitzero"`
-	VoteCount   int       `json:"vote_count,omitzero"`
-	Width       int       `json:"width,omitzero"`
+	ImageBase
+	Iso6391 *struct{} `json:"iso_639_1,omitzero"`
 }
 
-// Image2 defines a model
-type Image2 struct {
+// ImageAsset defines a model
+type ImageAsset struct {
+	ID       string `json:"id,omitzero"`
+	FileType string `json:"file_type,omitzero"`
+	ImageBase
+}
+
+// ImageAssets defines a model
+type ImageAssets []ImageAsset
+
+// ImageBase defines a model
+type ImageBase struct {
 	AspectRatio float64 `json:"aspect_ratio,omitzero"`
-	FilePath    string  `json:"file_path,omitzero"`
 	Height      int     `json:"height,omitzero"`
-	ID          string  `json:"id,omitzero"`
-	FileType    string  `json:"file_type,omitzero"`
+	FilePath    string  `json:"file_path,omitzero"`
 	VoteAverage float64 `json:"vote_average,omitzero"`
 	VoteCount   int     `json:"vote_count,omitzero"`
 	Width       int     `json:"width,omitzero"`

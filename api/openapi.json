@@ -4530,14 +4530,8 @@
             "example": 1
           },
           "logos": {
-            "$ref": "#/components/schemas/CompanyImagesLogos"
+            "$ref": "#/components/schemas/ImageAssets"
           }
-        }
-      },
-      "CompanyImagesLogos": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/Image2"
         }
       },
       "ConfigurationCountries": {
@@ -5419,6 +5413,32 @@
         }
       },
       "Image": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ImageBase"
+          },
+          {
+            "$ref": "#/components/schemas/ImageISO639_1"
+          }
+        ]
+      },
+      "ImageAsset": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ImageIDAndType"
+          },
+          {
+            "$ref": "#/components/schemas/ImageBase"
+          }
+        ]
+      },
+      "ImageAssets": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ImageAsset"
+        }
+      },
+      "ImageBase": {
         "type": "object",
         "properties": {
           "aspect_ratio": {
@@ -5431,7 +5451,6 @@
             "default": 0,
             "example": 800
           },
-          "iso_639_1": {},
           "file_path": {
             "type": "string",
             "example": "/hZkgoQYus5vegHoetLkCJzb17zJ.jpg"
@@ -5453,23 +5472,9 @@
           }
         }
       },
-      "Image2": {
+      "ImageIDAndType": {
         "type": "object",
         "properties": {
-          "aspect_ratio": {
-            "type": "number",
-            "default": 0,
-            "example": 2.97979797979798
-          },
-          "file_path": {
-            "type": "string",
-            "example": "/o86DbpburjxrqAzEDhXZcyE8pDb.png"
-          },
-          "height": {
-            "type": "integer",
-            "default": 0,
-            "example": 99
-          },
           "id": {
             "type": "string",
             "example": "5aa080d6c3a3683fea00011e"
@@ -5477,22 +5482,13 @@
           "file_type": {
             "type": "string",
             "example": ".svg"
-          },
-          "vote_average": {
-            "type": "number",
-            "default": 0,
-            "example": 5.384
-          },
-          "vote_count": {
-            "type": "integer",
-            "default": 0,
-            "example": 2
-          },
-          "width": {
-            "type": "integer",
-            "default": 0,
-            "example": 295
           }
+        }
+      },
+      "ImageISO639_1": {
+        "type": "object",
+        "properties": {
+          "iso_639_1": {}
         }
       },
       "Images": {
