@@ -4913,9 +4913,7 @@
             "example": 106.095
           },
           "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 2
+            "$ref": "#/components/schemas/Gender"
           },
           "known_for_department": {
             "type": "string",
@@ -4942,9 +4940,7 @@
             "example": false
           },
           "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 2
+            "$ref": "#/components/schemas/Gender"
           },
           "id": {
             "type": "integer",
@@ -5246,6 +5242,23 @@
             "type": "array"
           }
         }
+      },
+      "Gender": {
+        "type": "integer",
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "default": 0,
+        "example": 2,
+        "x-enumNames": [
+          "NotSet",
+          "Female",
+          "Male",
+          "NonBinary"
+        ]
       },
       "GenreIDsWrapper": {
         "type": "object",
@@ -7528,9 +7541,7 @@
             "example": false
           },
           "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 2
+            "$ref": "#/components/schemas/Gender"
           },
           "known_for_department": {
             "type": "string",
@@ -7957,9 +7968,7 @@
           },
           "deathday": {},
           "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 2
+            "$ref": "#/components/schemas/Gender"
           },
           "homepage": {},
           "id": {
@@ -8073,9 +8082,7 @@
           "birthday": {},
           "deathday": {},
           "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 0
+            "$ref": "#/components/schemas/Gender"
           },
           "homepage": {},
           "id": {
@@ -8242,9 +8249,7 @@
             "example": false
           },
           "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 1
+            "$ref": "#/components/schemas/Gender"
           },
           "id": {
             "type": "integer",
@@ -8987,9 +8992,7 @@
             "example": false
           },
           "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 2
+            "$ref": "#/components/schemas/Gender"
           },
           "id": {
             "type": "integer",
@@ -9483,9 +9486,7 @@
             "example": 349.766
           },
           "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 1
+            "$ref": "#/components/schemas/Gender"
           },
           "known_for_department": {
             "type": "string",
@@ -9977,9 +9978,7 @@
             "example": false
           },
           "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 2
+            "$ref": "#/components/schemas/Gender"
           },
           "id": {
             "type": "integer",
@@ -10101,9 +10100,7 @@
             "example": false
           },
           "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 1
+            "$ref": "#/components/schemas/Gender"
           },
           "id": {
             "type": "integer",
@@ -10240,9 +10237,7 @@
             "example": false
           },
           "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 0
+            "$ref": "#/components/schemas/Gender"
           },
           "id": {
             "type": "integer",
@@ -10723,9 +10718,7 @@
             "example": false
           },
           "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 1
+            "$ref": "#/components/schemas/Gender"
           },
           "id": {
             "type": "integer",
@@ -11069,9 +11062,7 @@
             "example": "David Benioff"
           },
           "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 2
+            "$ref": "#/components/schemas/Gender"
           },
           "profile_path": {
             "type": "string",
