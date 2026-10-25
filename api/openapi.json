@@ -7428,25 +7428,20 @@
         }
       },
       "MoviesResultPage": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationBase"
+          },
+          {
+            "$ref": "#/components/schemas/MoviesResultWrapper"
+          }
+        ]
+      },
+      "MoviesResultWrapper": {
         "type": "object",
         "properties": {
-          "page": {
-            "type": "integer",
-            "default": 0,
-            "example": 1
-          },
           "results": {
             "$ref": "#/components/schemas/Movies"
-          },
-          "total_pages": {
-            "type": "integer",
-            "default": 0,
-            "example": 2
-          },
-          "total_results": {
-            "type": "integer",
-            "default": 0,
-            "example": 39
           }
         }
       },
@@ -7477,6 +7472,26 @@
           "origin_country": {
             "type": "string",
             "example": "US"
+          }
+        }
+      },
+      "PaginationBase": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "default": 0,
+            "example": 1
+          },
+          "total_pages": {
+            "type": "integer",
+            "default": 0,
+            "example": 10
+          },
+          "total_results": {
+            "type": "integer",
+            "default": 0,
+            "example": 186
           }
         }
       },
@@ -8611,25 +8626,20 @@
         }
       },
       "RatedEpisodesPage": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationBase"
+          },
+          {
+            "$ref": "#/components/schemas/RatedEpisodesResultWrapper"
+          }
+        ]
+      },
+      "RatedEpisodesResultWrapper": {
         "type": "object",
         "properties": {
-          "page": {
-            "type": "integer",
-            "default": 0,
-            "example": 1
-          },
           "results": {
             "$ref": "#/components/schemas/RatedEpisodes"
-          },
-          "total_pages": {
-            "type": "integer",
-            "default": 0,
-            "example": 10
-          },
-          "total_results": {
-            "type": "integer",
-            "default": 0,
-            "example": 186
           }
         }
       },
@@ -9228,25 +9238,20 @@
         }
       },
       "TVShowsResultPage": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationBase"
+          },
+          {
+            "$ref": "#/components/schemas/TVShowsResultWrapper"
+          }
+        ]
+      },
+      "TVShowsResultWrapper": {
         "type": "object",
         "properties": {
-          "page": {
-            "type": "integer",
-            "default": 0,
-            "example": 1
-          },
           "results": {
             "$ref": "#/components/schemas/TVShows"
-          },
-          "total_pages": {
-            "type": "integer",
-            "default": 0,
-            "example": 1
-          },
-          "total_results": {
-            "type": "integer",
-            "default": 0,
-            "example": 1
           }
         }
       },

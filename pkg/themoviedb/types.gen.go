@@ -2250,10 +2250,8 @@ type Movies []Movie
 
 // MoviesResultPage defines a model
 type MoviesResultPage struct {
-	Page         int    `json:"page,omitzero"`
-	Results      Movies `json:"results,omitzero"`
-	TotalPages   int    `json:"total_pages,omitzero"`
-	TotalResults int    `json:"total_results,omitzero"`
+	PaginationBase
+	Results Movies `json:"results,omitzero"`
 }
 
 // NetworkDetailsOk defines a model
@@ -2264,6 +2262,13 @@ type NetworkDetailsOk struct {
 	LogoPath      string `json:"logo_path,omitzero"`
 	Name          string `json:"name,omitzero"`
 	OriginCountry string `json:"origin_country,omitzero"`
+}
+
+// PaginationBase defines a model
+type PaginationBase struct {
+	Page         int `json:"page,omitzero"`
+	TotalPages   int `json:"total_pages,omitzero"`
+	TotalResults int `json:"total_results,omitzero"`
 }
 
 // Person defines a model
@@ -2613,10 +2618,8 @@ type RatedEpisodes []RatedEpisode
 
 // RatedEpisodesPage defines a model
 type RatedEpisodesPage struct {
-	Page         int           `json:"page,omitzero"`
-	Results      RatedEpisodes `json:"results,omitzero"`
-	TotalPages   int           `json:"total_pages,omitzero"`
-	TotalResults int           `json:"total_results,omitzero"`
+	PaginationBase
+	Results RatedEpisodes `json:"results,omitzero"`
 }
 
 // Rating defines a model
@@ -2873,10 +2876,8 @@ type TVShows []TVShow
 
 // TVShowsResultPage defines a model
 type TVShowsResultPage struct {
-	Page         int     `json:"page,omitzero"`
-	Results      TVShows `json:"results,omitzero"`
-	TotalPages   int     `json:"total_pages,omitzero"`
-	TotalResults int     `json:"total_results,omitzero"`
+	PaginationBase
+	Results TVShows `json:"results,omitzero"`
 }
 
 // TimeWindow defines a model
