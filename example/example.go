@@ -33,7 +33,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := s.SearchMovies(ctx); err != nil {
+	if err := s.SearchTVShows(ctx); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -49,6 +49,42 @@ func (s *Service) SearchMovies(ctx context.Context) error {
 		fmt.Printf("Description: %s\n", res.Overview) // i.e. description
 		fmt.Printf("Popularity: %v\n", res.Popularity)
 		fmt.Printf("Release Date: %v\n", res.ReleaseDate)
+
+		if imgPath := res.PosterPath; imgPath != "" {
+			backdrop, err := s.cli.GetImage(ctx, imgPath)
+			if err != nil {
+				return err
+			}
+			defer backdrop.Close()
+
+			f, err := os.Create(filepath.Base(imgPath))
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+
+			if _, err := io.Copy(f, backdrop); err != nil {
+				return err
+			}
+		}
+
+		fmt.Println("------------")
+	}
+
+	return nil
+}
+
+func (s *Service) SearchTVShows(ctx context.Context) error {
+	res, err := s.cli.SearchTvShows(ctx, themoviedb.SearchTvShowsParams{Query: "The Crown"})
+	if err != nil {
+		return err
+	}
+
+	for _, res := range res.Results {
+		fmt.Printf("Name: %s\n", res.Name)
+		fmt.Printf("Description: %s\n", res.Overview) // i.e. description
+		fmt.Printf("Popularity: %v\n", res.Popularity)
+		fmt.Printf("First Air Date: %v\n", res.FirstAirDate)
 
 		if imgPath := res.PosterPath; imgPath != "" {
 			backdrop, err := s.cli.GetImage(ctx, imgPath)
