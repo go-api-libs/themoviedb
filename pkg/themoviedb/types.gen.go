@@ -1225,8 +1225,8 @@ type ConfigurationJobsOk []ConfigurationJobsOkItem
 
 // ConfigurationJobsOkItem defines a model
 type ConfigurationJobsOkItem struct {
-	Department string   `json:"department,omitzero"`
-	Jobs       []string `json:"jobs,omitzero"`
+	Department Department `json:"department,omitzero"`
+	Jobs       []string   `json:"jobs,omitzero"`
 }
 
 // ConfigurationTimezonesOk defines a model
@@ -1250,7 +1250,7 @@ type Country struct {
 // CreditDetailsOk defines a model
 type CreditDetailsOk struct {
 	CreditType string                 `json:"credit_type,omitzero"`
-	Department string                 `json:"department,omitzero"`
+	Department Department             `json:"department,omitzero"`
 	Job        string                 `json:"job,omitzero"`
 	Media      *CreditDetailsOkMedia  `json:"media,omitzero"`
 	MediaType  string                 `json:"media_type,omitzero"`
@@ -1322,7 +1322,7 @@ type CrewMember struct {
 	Popularity         float64    `json:"popularity,omitzero"`
 	ProfilePath        string     `json:"profile_path,omitzero"`
 	CreditID           string     `json:"credit_id,omitzero"`
-	Department         string     `json:"department,omitzero"`
+	Department         Department `json:"department,omitzero"`
 	Job                string     `json:"job,omitzero"`
 }
 
@@ -1332,13 +1332,15 @@ type Department string
 const (
 	DepartmentActing     Department = "Acting"
 	DepartmentArt        Department = "Art"
+	DepartmentCrew       Department = "Crew"
+	DepartmentDirecting  Department = "Directing"
 	DepartmentProduction Department = "Production"
 )
 
 // Valid indicates whether the value is a known member of the Department enum.
 func (e Department) Valid() bool {
 	switch e {
-	case DepartmentActing, DepartmentArt, DepartmentProduction:
+	case DepartmentActing, DepartmentArt, DepartmentCrew, DepartmentDirecting, DepartmentProduction:
 		return true
 	default:
 		return false
@@ -2357,7 +2359,7 @@ type PersonCombinedCreditsOkCrewItem struct {
 	VoteAverage      float64    `json:"vote_average,omitzero"`
 	VoteCount        int        `json:"vote_count,omitzero"`
 	CreditID         string     `json:"credit_id,omitzero"`
-	Department       string     `json:"department,omitzero"`
+	Department       Department `json:"department,omitzero"`
 	Job              string     `json:"job,omitzero"`
 	MediaType        string     `json:"media_type,omitzero"`
 }
@@ -2446,7 +2448,7 @@ type PersonMovieCreditsOkCrewItem struct {
 	VoteAverage      float64    `json:"vote_average,omitzero"`
 	VoteCount        int        `json:"vote_count,omitzero"`
 	CreditID         string     `json:"credit_id,omitzero"`
-	Department       string     `json:"department,omitzero"`
+	Department       Department `json:"department,omitzero"`
 	Job              string     `json:"job,omitzero"`
 }
 
@@ -2557,24 +2559,24 @@ type PersonTvCreditsOkCrew []PersonTvCreditsOkCrewItem
 
 // PersonTvCreditsOkCrewItem defines a model
 type PersonTvCreditsOkCrewItem struct {
-	Adult            *bool    `json:"adult,omitzero"`
-	BackdropPath     string   `json:"backdrop_path,omitzero"`
-	GenreIds         []int    `json:"genre_ids,omitzero"`
-	ID               int      `json:"id,omitzero"`
-	OriginCountry    []string `json:"origin_country,omitzero"`
-	OriginalLanguage string   `json:"original_language,omitzero"`
-	OriginalName     string   `json:"original_name,omitzero"`
-	Overview         string   `json:"overview,omitzero"`
-	Popularity       float64  `json:"popularity,omitzero"`
-	PosterPath       string   `json:"poster_path,omitzero"`
-	FirstAirDate     string   `json:"first_air_date,omitzero"`
-	Name             string   `json:"name,omitzero"`
-	VoteAverage      float64  `json:"vote_average,omitzero"`
-	VoteCount        int      `json:"vote_count,omitzero"`
-	CreditID         string   `json:"credit_id,omitzero"`
-	Department       string   `json:"department,omitzero"`
-	EpisodeCount     int      `json:"episode_count,omitzero"`
-	Job              string   `json:"job,omitzero"`
+	Adult            *bool      `json:"adult,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	GenreIds         []int      `json:"genre_ids,omitzero"`
+	ID               int        `json:"id,omitzero"`
+	OriginCountry    []string   `json:"origin_country,omitzero"`
+	OriginalLanguage string     `json:"original_language,omitzero"`
+	OriginalName     string     `json:"original_name,omitzero"`
+	Overview         string     `json:"overview,omitzero"`
+	Popularity       float64    `json:"popularity,omitzero"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	FirstAirDate     string     `json:"first_air_date,omitzero"`
+	Name             string     `json:"name,omitzero"`
+	VoteAverage      float64    `json:"vote_average,omitzero"`
+	VoteCount        int        `json:"vote_count,omitzero"`
+	CreditID         string     `json:"credit_id,omitzero"`
+	Department       Department `json:"department,omitzero"`
+	EpisodeCount     int        `json:"episode_count,omitzero"`
+	Job              string     `json:"job,omitzero"`
 }
 
 // Rating defines a model
@@ -3150,7 +3152,7 @@ type TvSeasonAggregateCreditsOkCrewItem struct {
 	Popularity         float64                              `json:"popularity,omitzero"`
 	ProfilePath        *struct{}                            `json:"profile_path,omitzero"`
 	Jobs               TvSeasonAggregateCreditsCrewItemJobs `json:"jobs,omitzero"`
-	Department         string                               `json:"department,omitzero"`
+	Department         Department                           `json:"department,omitzero"`
 	TotalEpisodeCount  int                                  `json:"total_episode_count,omitzero"`
 }
 
@@ -3206,7 +3208,7 @@ type TvSeasonCreditsOkCrewItem struct {
 	Popularity         float64    `json:"popularity,omitzero"`
 	ProfilePath        *struct{}  `json:"profile_path,omitzero"`
 	CreditID           string     `json:"credit_id,omitzero"`
-	Department         string     `json:"department,omitzero"`
+	Department         Department `json:"department,omitzero"`
 	Job                string     `json:"job,omitzero"`
 }
 
@@ -3379,7 +3381,7 @@ type TvSeriesAggregateCreditsOkCrewItem struct {
 	Popularity         float64                              `json:"popularity,omitzero"`
 	ProfilePath        string                               `json:"profile_path,omitzero"`
 	Jobs               TvSeasonAggregateCreditsCrewItemJobs `json:"jobs,omitzero"`
-	Department         string                               `json:"department,omitzero"`
+	Department         Department                           `json:"department,omitzero"`
 	TotalEpisodeCount  int                                  `json:"total_episode_count,omitzero"`
 }
 

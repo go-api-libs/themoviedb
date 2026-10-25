@@ -4662,8 +4662,7 @@
         "type": "object",
         "properties": {
           "department": {
-            "type": "string",
-            "example": "Production"
+            "$ref": "#/components/schemas/Department"
           },
           "jobs": {
             "type": "array",
@@ -4725,8 +4724,7 @@
             "example": "cast"
           },
           "department": {
-            "type": "string",
-            "example": "Acting"
+            "$ref": "#/components/schemas/Department"
           },
           "job": {
             "type": "string",
@@ -4971,8 +4969,7 @@
             "example": "55731b8192514111610027d7"
           },
           "department": {
-            "type": "string",
-            "example": "Production"
+            "$ref": "#/components/schemas/Department"
           },
           "job": {
             "type": "string",
@@ -4985,6 +4982,8 @@
         "enum": [
           "Acting",
           "Art",
+          "Crew",
+          "Directing",
           "Production"
         ],
         "example": "Acting"
@@ -7936,8 +7935,7 @@
             "example": "5d818a63d34eb3002c4f8fea"
           },
           "department": {
-            "type": "string",
-            "example": "Crew"
+            "$ref": "#/components/schemas/Department"
           },
           "job": {
             "type": "string",
@@ -8207,8 +8205,7 @@
             "example": "5d818a63d34eb3002c4f8fea"
           },
           "department": {
-            "type": "string",
-            "example": "Crew"
+            "$ref": "#/components/schemas/Department"
           },
           "job": {
             "type": "string",
@@ -8637,8 +8634,7 @@
             "example": "525734f3760ee3776a397211"
           },
           "department": {
-            "type": "string",
-            "example": "Directing"
+            "$ref": "#/components/schemas/Department"
           },
           "episode_count": {
             "type": "integer",
@@ -10129,8 +10125,7 @@
             "$ref": "#/components/schemas/TvSeasonAggregateCreditsCrewItemJobs"
           },
           "department": {
-            "type": "string",
-            "example": "Art"
+            "$ref": "#/components/schemas/Department"
           },
           "total_episode_count": {
             "type": "integer",
@@ -10266,8 +10261,7 @@
             "example": "5256c8c419c2956ff604867c"
           },
           "department": {
-            "type": "string",
-            "example": "Production"
+            "$ref": "#/components/schemas/Department"
           },
           "job": {
             "type": "string",
@@ -10748,8 +10742,7 @@
             "$ref": "#/components/schemas/TvSeasonAggregateCreditsCrewItemJobs"
           },
           "department": {
-            "type": "string",
-            "example": "Art"
+            "$ref": "#/components/schemas/Department"
           },
           "total_episode_count": {
             "type": "integer",
