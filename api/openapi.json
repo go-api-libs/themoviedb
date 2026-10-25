@@ -2197,10 +2197,10 @@
       "get": {
         "summary": "TV",
         "description": "Search for TV shows by their original, translated and also known as names.",
-        "operationId": "search-tv",
+        "operationId": "SearchTVShows",
         "responses": {
           "200": {
-            "$ref": "#/components/responses/TVShowsResultPageOk"
+            "$ref": "#/components/responses/TVShowsResultPage"
           }
         }
       }
@@ -14572,7 +14572,7 @@
           }
         }
       },
-      "TVShowsResultPageOk": {
+      "TVShowsResultPage": {
         "description": "200",
         "content": {
           "application/json": {

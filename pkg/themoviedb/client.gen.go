@@ -8117,15 +8117,15 @@ func (c *Client) SearchPersonWithResult[R any](ctx context.Context, params Searc
 // Search for TV shows by their original, translated and also known as names.
 //
 //	GET /search/tv
-func (c *Client) SearchTv(ctx context.Context, params SearchTvParams) (*TVShowsResultPage, error) {
-	return c.SearchTvWithResult[TVShowsResultPage](ctx, params)
+func (c *Client) SearchTvShows(ctx context.Context, params SearchTvShowsParams) (*TVShowsResultPage, error) {
+	return c.SearchTvShowsWithResult[TVShowsResultPage](ctx, params)
 }
 
 // Search for TV shows by their original, translated and also known as names.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /search/tv
-func (c *Client) SearchTvWithResult[R any](ctx context.Context, params SearchTvParams) (*R, error) {
+func (c *Client) SearchTvShowsWithResult[R any](ctx context.Context, params SearchTvShowsParams) (*R, error) {
 	u := c.baseURL.JoinPath("search", "tv")
 
 	q := make(url.Values, 6)

@@ -529,8 +529,8 @@ type SearchPersonParams struct {
 	Page         int32
 }
 
-// SearchTvParams holds the query parameters for SearchTv.
-type SearchTvParams struct {
+// SearchTvShowsParams holds the query parameters for SearchTvShows.
+type SearchTvShowsParams struct {
 	Query string
 	// Search only the first air date. Valid values are: 1000..9999
 	FirstAirDateYear int32
