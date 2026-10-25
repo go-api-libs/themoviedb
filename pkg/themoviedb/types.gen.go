@@ -7,6 +7,7 @@ package themoviedb
 import (
 	"encoding/json/v2"
 	"net/url"
+	"uuid"
 
 	"cloud.google.com/go/civil"
 	"github.com/MarkRosemaker/jsonutil"
@@ -906,17 +907,9 @@ type AccountRatedTvOkResultsItem struct {
 
 // Actor defines a model
 type Actor struct {
-	ID                 int        `json:"id"`
-	Name               string     `json:"name"`
-	OriginalName       string     `json:"original_name"`
-	Adult              bool       `json:"adult"`
-	Gender             Gender     `json:"gender"`
-	KnownForDepartment Department `json:"known_for_department"`
-	Popularity         float64    `json:"popularity"`
-	ProfilePath        string     `json:"profile_path"`
-	Character          string     `json:"character"`
-	CreditID           string     `json:"credit_id"`
-	Order              int        `json:"order"`
+	Person
+	Character string `json:"character"`
+	Order     int    `json:"order"`
 }
 
 // Actors defines a model
@@ -1331,17 +1324,9 @@ type Crew []CrewMember
 
 // CrewMember defines a model
 type CrewMember struct {
-	Adult              *bool      `json:"adult,omitzero"`
-	Gender             Gender     `json:"gender,omitzero"`
-	ID                 int        `json:"id,omitzero"`
-	KnownForDepartment Department `json:"known_for_department,omitzero"`
-	Name               string     `json:"name,omitzero"`
-	OriginalName       string     `json:"original_name,omitzero"`
-	Popularity         float64    `json:"popularity,omitzero"`
-	ProfilePath        string     `json:"profile_path,omitzero"`
-	CreditID           string     `json:"credit_id,omitzero"`
-	Department         Department `json:"department,omitzero"`
-	Job                string     `json:"job,omitzero"`
+	Person
+	Department Department `json:"department,omitzero"`
+	Job        string     `json:"job,omitzero"`
 }
 
 // Department defines a model
@@ -2254,6 +2239,19 @@ type NetworkDetailsOk struct {
 	LogoPath      string `json:"logo_path,omitzero"`
 	Name          string `json:"name,omitzero"`
 	OriginCountry string `json:"origin_country,omitzero"`
+}
+
+// Person defines a model
+type Person struct {
+	ID                 int        `json:"id"`
+	Name               string     `json:"name"`
+	OriginalName       string     `json:"original_name"`
+	Adult              bool       `json:"adult"`
+	Gender             Gender     `json:"gender"`
+	KnownForDepartment Department `json:"known_for_department"`
+	Popularity         float64    `json:"popularity"`
+	ProfilePath        string     `json:"profile_path"`
+	CreditID           uuid.UUID  `json:"credit_id"`
 }
 
 // PersonCast defines a model

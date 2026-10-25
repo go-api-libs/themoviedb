@@ -3780,67 +3780,13 @@
         }
       },
       "Actor": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 22970
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Person"
           },
-          "name": {
-            "type": "string",
-            "example": "Peter Dinklage"
-          },
-          "original_name": {
-            "type": "string",
-            "example": "Peter Dinklage"
-          },
-          "adult": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "gender": {
-            "$ref": "#/components/schemas/Gender"
-          },
-          "known_for_department": {
-            "$ref": "#/components/schemas/Department"
-          },
-          "popularity": {
-            "type": "number",
-            "default": 0,
-            "example": 30.6
-          },
-          "profile_path": {
-            "type": "string",
-            "example": "/lRsRgnksAhBRXwAB68MFjmTtLrk.jpg"
-          },
-          "character": {
-            "type": "string",
-            "example": "Tyrion Lannister"
-          },
-          "credit_id": {
-            "type": "string",
-            "example": "5256c8b219c2956ff6047cd8"
-          },
-          "order": {
-            "type": "integer",
-            "default": 0,
-            "example": 0
+          {
+            "$ref": "#/components/schemas/CharacterBase"
           }
-        },
-        "required": [
-          "id",
-          "name",
-          "original_name",
-          "adult",
-          "gender",
-          "known_for_department",
-          "popularity",
-          "profile_path",
-          "character",
-          "credit_id",
-          "order"
         ]
       },
       "Actors": {
@@ -4333,6 +4279,24 @@
             "example": false
           }
         }
+      },
+      "CharacterBase": {
+        "type": "object",
+        "properties": {
+          "character": {
+            "type": "string",
+            "example": "Tyrion Lannister"
+          },
+          "order": {
+            "type": "integer",
+            "default": 0,
+            "example": 0
+          }
+        },
+        "required": [
+          "character",
+          "order"
+        ]
       },
       "Collection": {
         "type": [
@@ -4999,45 +4963,18 @@
         }
       },
       "CrewMember": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Person"
+          },
+          {
+            "$ref": "#/components/schemas/CrewMemberBase"
+          }
+        ]
+      },
+      "CrewMemberBase": {
         "type": "object",
         "properties": {
-          "adult": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "gender": {
-            "$ref": "#/components/schemas/Gender"
-          },
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 376
-          },
-          "known_for_department": {
-            "$ref": "#/components/schemas/Department"
-          },
-          "name": {
-            "type": "string",
-            "example": "Arnon Milchan"
-          },
-          "original_name": {
-            "type": "string",
-            "example": "Arnon Milchan"
-          },
-          "popularity": {
-            "type": "number",
-            "default": 0,
-            "example": 2.931
-          },
-          "profile_path": {
-            "type": "string",
-            "example": "/b2hBExX4NnczNAnLuTBF4kmNhZm.jpg"
-          },
-          "credit_id": {
-            "type": "string",
-            "example": "55731b8192514111610027d7"
-          },
           "department": {
             "$ref": "#/components/schemas/Department"
           },
@@ -7588,6 +7525,60 @@
             "example": "US"
           }
         }
+      },
+      "Person": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "default": 0,
+            "example": 22970
+          },
+          "name": {
+            "type": "string",
+            "example": "Peter Dinklage"
+          },
+          "original_name": {
+            "type": "string",
+            "example": "Peter Dinklage"
+          },
+          "adult": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          },
+          "gender": {
+            "$ref": "#/components/schemas/Gender"
+          },
+          "known_for_department": {
+            "$ref": "#/components/schemas/Department"
+          },
+          "popularity": {
+            "type": "number",
+            "default": 0,
+            "example": 30.6
+          },
+          "profile_path": {
+            "type": "string",
+            "example": "/lRsRgnksAhBRXwAB68MFjmTtLrk.jpg"
+          },
+          "credit_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "5256c8b219c2956ff6047cd8"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "original_name",
+          "adult",
+          "gender",
+          "known_for_department",
+          "popularity",
+          "profile_path",
+          "credit_id"
+        ]
       },
       "PersonCast": {
         "type": "array",
