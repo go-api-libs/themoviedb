@@ -14324,4 +14324,8 @@ func TestClient_Interactions(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("SearchTvShows: %v", err)
 	}
+
+	if _, err := c.GetTvShowSeason(ctx, 65494, 1, &GetTvShowSeasonParams{}); err != nil {
+		t.Fatalf("GetTvShowSeason: %v", err)
+	}
 }

@@ -7,7 +7,6 @@ package themoviedb
 import (
 	"encoding/json/v2"
 	"net/url"
-	"uuid"
 
 	"cloud.google.com/go/civil"
 	"github.com/MarkRosemaker/jsonutil"
@@ -1333,17 +1332,21 @@ type CrewMember struct {
 type Department string
 
 const (
-	DepartmentActing     Department = "Acting"
-	DepartmentArt        Department = "Art"
-	DepartmentCrew       Department = "Crew"
-	DepartmentDirecting  Department = "Directing"
-	DepartmentProduction Department = "Production"
+	DepartmentActing        Department = "Acting"
+	DepartmentArt           Department = "Art"
+	DepartmentCrew          Department = "Crew"
+	DepartmentDirecting     Department = "Directing"
+	DepartmentProduction    Department = "Production"
+	DepartmentWriting       Department = "Writing"
+	DepartmentCostumeMakeUp Department = "Costume & Make-Up"
+	DepartmentEditing       Department = "Editing"
+	DepartmentCamera        Department = "Camera"
 )
 
 // Valid indicates whether the value is a known member of the Department enum.
 func (e Department) Valid() bool {
 	switch e {
-	case DepartmentActing, DepartmentArt, DepartmentCrew, DepartmentDirecting, DepartmentProduction:
+	case DepartmentActing, DepartmentArt, DepartmentCrew, DepartmentDirecting, DepartmentProduction, DepartmentWriting, DepartmentCostumeMakeUp, DepartmentEditing, DepartmentCamera:
 		return true
 	default:
 		return false
@@ -1601,18 +1604,23 @@ type Images []Image
 type Job string
 
 const (
-	JobActor             Job = "Actor"
-	JobProducer          Job = "Producer"
-	JobDirector          Job = "Director"
-	JobExecutiveProducer Job = "Executive Producer"
-	JobProductionDesign  Job = "Production Design"
-	JobThanks            Job = "Thanks"
+	JobActor                 Job = "Actor"
+	JobProducer              Job = "Producer"
+	JobDirector              Job = "Director"
+	JobExecutiveProducer     Job = "Executive Producer"
+	JobProductionDesign      Job = "Production Design"
+	JobThanks                Job = "Thanks"
+	JobWriter                Job = "Writer"
+	JobCostumeDesign         Job = "Costume Design"
+	JobEditor                Job = "Editor"
+	JobDirectorOfPhotography Job = "Director of Photography"
+	JobSetDecoration         Job = "Set Decoration"
 )
 
 // Valid indicates whether the value is a known member of the Job enum.
 func (e Job) Valid() bool {
 	switch e {
-	case JobActor, JobProducer, JobDirector, JobExecutiveProducer, JobProductionDesign, JobThanks:
+	case JobActor, JobProducer, JobDirector, JobExecutiveProducer, JobProductionDesign, JobThanks, JobWriter, JobCostumeDesign, JobEditor, JobDirectorOfPhotography, JobSetDecoration:
 		return true
 	default:
 		return false
@@ -2273,7 +2281,7 @@ type Person struct {
 	KnownForDepartment Department `json:"known_for_department"`
 	Popularity         float64    `json:"popularity"`
 	ProfilePath        string     `json:"profile_path"`
-	CreditID           uuid.UUID  `json:"credit_id"`
+	CreditID           string     `json:"credit_id"`
 }
 
 // PersonCast defines a model

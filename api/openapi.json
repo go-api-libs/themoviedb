@@ -4989,7 +4989,11 @@
           "Art",
           "Crew",
           "Directing",
-          "Production"
+          "Production",
+          "Writing",
+          "Costume & Make-Up",
+          "Editing",
+          "Camera"
         ],
         "example": "Acting"
       },
@@ -5177,6 +5181,7 @@
           },
           "vote_average": {
             "type": "number",
+            "format": "double",
             "default": 0,
             "example": 8.1
           },
@@ -5697,7 +5702,12 @@
           "Director",
           "Executive Producer",
           "Production Design",
-          "Thanks"
+          "Thanks",
+          "Writer",
+          "Costume Design",
+          "Editor",
+          "Director of Photography",
+          "Set Decoration"
         ],
         "example": "Producer"
       },
@@ -7565,16 +7575,19 @@
           },
           "popularity": {
             "type": "number",
+            "format": "double",
             "default": 0,
             "example": 30.6
           },
           "profile_path": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "example": "/lRsRgnksAhBRXwAB68MFjmTtLrk.jpg"
           },
           "credit_id": {
             "type": "string",
-            "format": "uuid",
             "example": "5256c8b219c2956ff6047cd8"
           }
         },
@@ -9064,6 +9077,7 @@
           },
           "vote_average": {
             "type": "number",
+            "format": "double",
             "default": 0,
             "example": 8.4
           }
