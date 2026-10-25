@@ -14318,4 +14318,10 @@ func TestClient_Interactions(t *testing.T) {
 	if _, err := c.GetMovie(ctx, 55931, &GetMovieParams{}); err != nil {
 		t.Fatalf("GetMovie: %v", err)
 	}
+
+	if _, err := c.SearchTvShows(ctx, SearchTvShowsParams{
+		Query: "The Crown",
+	}); err != nil {
+		t.Fatalf("SearchTvShows: %v", err)
+	}
 }

@@ -8966,38 +8966,19 @@
       "TVShow": {
         "type": "object",
         "properties": {
-          "adult": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "backdrop_path": {
-            "type": "string",
-            "example": "/bsNm9z2TJfe0WO3RedPGWQ8mG1X.jpg"
-          },
-          "genre_ids": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "default": 0,
-              "example": 18
-            }
-          },
           "id": {
             "type": "integer",
             "default": 0,
             "example": 1396
           },
-          "origin_country": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "example": "US"
-            }
-          },
-          "original_language": {
+          "name": {
             "type": "string",
-            "example": "en"
+            "example": "Breaking Bad"
+          },
+          "first_air_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2008-01-20"
           },
           "original_name": {
             "type": "string",
@@ -9007,25 +8988,34 @@
             "type": "string",
             "example": "When Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer and given a prognosis of only two years left to live. He becomes filled with a sense of fearlessness and an unrelenting desire to secure his family's financial future at any cost as he enters the dangerous world of drugs and crime."
           },
+          "original_language": {
+            "type": "string",
+            "example": "en"
+          },
+          "origin_country": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "US"
+            }
+          },
+          "genre_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "default": 0,
+              "example": 18
+            }
+          },
           "popularity": {
             "type": "number",
+            "format": "double",
             "default": 0,
             "example": 298.884
           },
-          "poster_path": {
-            "type": "string",
-            "example": "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg"
-          },
-          "first_air_date": {
-            "type": "string",
-            "example": "2008-01-20"
-          },
-          "name": {
-            "type": "string",
-            "example": "Breaking Bad"
-          },
           "vote_average": {
             "type": "number",
+            "format": "double",
             "default": 0,
             "example": 8.879
           },
@@ -9033,8 +9023,45 @@
             "type": "integer",
             "default": 0,
             "example": 11536
+          },
+          "poster_path": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg"
+          },
+          "backdrop_path": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "/bsNm9z2TJfe0WO3RedPGWQ8mG1X.jpg"
+          },
+          "adult": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          },
+          "softcore": {
+            "type": "boolean"
           }
-        }
+        },
+        "required": [
+          "genre_ids",
+          "id",
+          "origin_country",
+          "original_language",
+          "original_name",
+          "overview",
+          "popularity",
+          "first_air_date",
+          "name",
+          "vote_average",
+          "vote_count",
+          "adult",
+          "softcore"
+        ]
       },
       "TVShows": {
         "type": "array",

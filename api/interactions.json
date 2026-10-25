@@ -608,5 +608,445 @@
 				"vote_count": 1867
 			}
 		}
+	},
+	{
+		"request": {
+			"method": "GET",
+			"url": "https://api.themoviedb.org/3/search/tv?query=The+Crown",
+			"header": {
+				"Authorization": "Bearer ***********************************************************************************************************************************************************************************************************************************************",
+				"User-Agent": "tmdb-api"
+			}
+		},
+		"response": {
+			"statusCode": 200,
+			"header": {
+				"Content-Type": "application/json;charset=utf-8"
+			},
+			"body": {
+				"page": 1,
+				"results": [
+					{
+						"adult": false,
+						"backdrop_path": "/8VXhcrl5z2I1zEU9X3pkkNrZlD.jpg",
+						"genre_ids": [
+							18
+						],
+						"id": 65494,
+						"origin_country": [
+							"GB",
+							"US"
+						],
+						"original_language": "en",
+						"original_name": "The Crown",
+						"overview": "The gripping, decades-spanning inside story of Her Majesty Queen Elizabeth II and the Prime Ministers who shaped Britain's post-war destiny. \n\nThe Crown tells the inside story of two of the most famous addresses in the world – Buckingham Palace and 10 Downing Street – and the intrigues, love lives and machinations behind the great events that shaped the second half of the 20th century. Two houses, two courts, one Crown.",
+						"popularity": 91.1519,
+						"poster_path": "/1M876KPjulVwppEpldhdc8V4o68.jpg",
+						"first_air_date": "2016-11-04",
+						"softcore": false,
+						"name": "The Crown",
+						"vote_average": 8.18,
+						"vote_count": 2455
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/6EqzzM5UW0MqNmYaJVCWc9fAIJR.jpg",
+						"genre_ids": [
+							18,
+							36
+						],
+						"id": 44037,
+						"origin_country": [
+							"GB"
+						],
+						"original_language": "en",
+						"original_name": "The Hollow Crown",
+						"overview": "A series of British television films featuring William Shakespeare's History Plays.",
+						"popularity": 14.9321,
+						"poster_path": "/1Q8m6nI5m66DjnQ5V661anWqpVu.jpg",
+						"first_air_date": "2012-06-30",
+						"softcore": false,
+						"name": "The Hollow Crown",
+						"vote_average": 7.4,
+						"vote_count": 86
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/qNcjBQyQBHKH5OY2fBvDF1fgJMO.jpg",
+						"genre_ids": [
+							18
+						],
+						"id": 3591,
+						"origin_country": [
+							"GB"
+						],
+						"original_language": "en",
+						"original_name": "The Jewel in the Crown",
+						"overview": "In India, during the final years of British rule in World War II, an unjust arrest for rape sets off questions of identity and personal responsibility being explored against a background of war and personal intrigue.",
+						"popularity": 7.883,
+						"poster_path": "/88NRL7zQhc587n3yDEl0SW6vwE1.jpg",
+						"first_air_date": "1984-01-09",
+						"softcore": false,
+						"name": "The Jewel in the Crown",
+						"vote_average": 6.5,
+						"vote_count": 25
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/xqfacS8cSBy0upWiC9uunfnDAxc.jpg",
+						"genre_ids": [
+							18
+						],
+						"id": 38852,
+						"origin_country": [
+							"KR"
+						],
+						"original_language": "ko",
+						"original_name": "동이",
+						"overview": "Set during the reign of King Sukjong in the Joseon dynasty, the story focuses on Dong Yi, a water maid who gains the trust of Queen Inhyeon and later the favour of the king when he is moved by her prayers for the health of the Queen during the court disputes caused by Jang Hee Bin. Dong Yi becomes a concubine with the rank of sook-bin and bears a son who will later become the 21st king of Joseon, Yeongjo.",
+						"popularity": 17.1834,
+						"poster_path": "/ko46oHoWmGWYaWMPZM931Cjv1YK.jpg",
+						"first_air_date": "2010-03-22",
+						"softcore": false,
+						"name": "Jewel in the Crown",
+						"vote_average": 7.7,
+						"vote_count": 46
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/mxlmdZos8fNDinN1e1vHrp6gCiX.jpg",
+						"genre_ids": [
+							18
+						],
+						"id": 77652,
+						"origin_country": [
+							"PL"
+						],
+						"original_language": "pl",
+						"original_name": "Korona Królów",
+						"overview": "Piasts' reign is coming to end on Casimir the Great, who have no sons. Polish throne comes to Anjous. Thanks to the marriage of Saint Jadwiga of Poland with Lithuanian Grand Duke Jogaila, an alliance is made and a new dynasty - Jagiellons, who rule Poland for next two hundred years",
+						"popularity": 15.0331,
+						"poster_path": "/tPx4pZVi2SwWbq0apgpJwfAZqW6.jpg",
+						"first_air_date": "2018-01-01",
+						"softcore": false,
+						"name": "The Crown of the Kings",
+						"vote_average": 6.8,
+						"vote_count": 18
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/yjFeF5ouPHlxADibj7StHvImd0d.jpg",
+						"genre_ids": [
+							99
+						],
+						"id": 288106,
+						"origin_country": [
+							"GB"
+						],
+						"original_language": "en",
+						"original_name": "Race for the Crown",
+						"overview": "This rousing documentary series tails jockeys, trainers and owners as they chase titles and triumph in the Triple Crown of thoroughbred horse racing.",
+						"popularity": 1.7142,
+						"poster_path": "/o3eNtZVN6CjHgY7gJKjXZF79OSs.jpg",
+						"first_air_date": "2025-04-22",
+						"softcore": false,
+						"name": "Race for the Crown",
+						"vote_average": 8.0,
+						"vote_count": 1
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [
+							18
+						],
+						"id": 326322,
+						"origin_country": [
+							"US"
+						],
+						"original_language": "en",
+						"original_name": "The Crown",
+						"overview": "Emmaline Castro, the ambitious COO of a powerful pharmaceutical empire, is stunned when her father chooses her irresponsible brother as the future heir to the company. Determined to prove herself, she sets out to secure a billion-dollar business deal that could change the company’s future. But the key to her success lies with the mysterious investor behind the deal—a man she publicly humiliated years ago. As rivalry, family betrayal, and corporate power struggles intensify, Emmaline must confront her past while navigating an unexpected romance that could alter her future forever.",
+						"popularity": 0.4286,
+						"poster_path": "/2nLPQ00fa4OSiU8yII7bsgmSHhw.jpg",
+						"first_air_date": "",
+						"softcore": false,
+						"name": "The Crown",
+						"vote_average": 7.0,
+						"vote_count": 1
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/mmJNhw0jy5myd9dJQhCCP7dkT2y.jpg",
+						"genre_ids": [],
+						"id": 313609,
+						"origin_country": [
+							"KR"
+						],
+						"original_language": "ko",
+						"original_name": "Crown to the Throne",
+						"overview": "Five members, one crown.\n\nEXO will battle it out through a series of games to decide who takes the crown and claims the throne.",
+						"popularity": 2.1117,
+						"poster_path": "/chwaSzSbiYZy7OrAqOG3ObgAmpx.jpg",
+						"first_air_date": "2026-02-08",
+						"softcore": false,
+						"name": "Crown to the Throne",
+						"vote_average": 0.0,
+						"vote_count": 0
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/xPsVpCC1xi9PUfbClBhf0PoHRJp.jpg",
+						"genre_ids": [
+							18,
+							10766
+						],
+						"id": 79504,
+						"origin_country": [
+							"TH"
+						],
+						"original_language": "th",
+						"original_name": "ลิขิตรัก",
+						"overview": "The main heroine - a princess of a small country,  comes into danger after her coronation. To protect her they send her to Thailand, where the main hero - a navy man- becomes her bodyguard.",
+						"popularity": 4.9023,
+						"poster_path": "/xiD97qpHPljSdeNAUuN1aYJtQb8.jpg",
+						"first_air_date": "2018-05-14",
+						"softcore": false,
+						"name": "The Crown Princess",
+						"vote_average": 9.4,
+						"vote_count": 22
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/o6LDvoDWv79uckXWelQoDpvuENW.jpg",
+						"genre_ids": [
+							16
+						],
+						"id": 67720,
+						"origin_country": [
+							"ES"
+						],
+						"original_language": "es",
+						"original_name": "La corona magica",
+						"overview": "",
+						"popularity": 2.3763,
+						"poster_path": "/5sWhWL6gyDzY9LTPtswN5SFgSTx.jpg",
+						"first_air_date": "1989-10-21",
+						"softcore": false,
+						"name": "The Magic Crown",
+						"vote_average": 5.3,
+						"vote_count": 3
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/r8JTkMnOZqCNdQ7gw12Ld8aj8eM.jpg",
+						"genre_ids": [
+							10766,
+							10768
+						],
+						"id": 156239,
+						"origin_country": [
+							"PL"
+						],
+						"original_language": "pl",
+						"original_name": "Korona królów. Jagiellonowie",
+						"overview": "The story of the Jagiellonian Dynasty rulling XV-century Kingdom of Poland and Grand Duchy of Lithuania.",
+						"popularity": 4.685,
+						"poster_path": "/dzBuAa4ssdlkYnHex4SoTJpuSJ4.jpg",
+						"first_air_date": "2023-01-02",
+						"softcore": false,
+						"name": "The Crown of the Kings. The Jagiellons",
+						"vote_average": 6.5,
+						"vote_count": 2
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/yKifp8DCc0XjD5a6ngGJMEErQ3B.jpg",
+						"genre_ids": [
+							99
+						],
+						"id": 137902,
+						"origin_country": [
+							"GB"
+						],
+						"original_language": "en",
+						"original_name": "Royals: Keeping the Crown",
+						"overview": "Nothing quite captures the world’s attention like the rise, the fall, and the rebranding of royalty. From Queen Victoria’s attempts to unite Europe, to the end of Russia’s Romanovs, right up to Princes William and Harry, this series explores the survival strategies of royals through the ages.",
+						"popularity": 1.7516,
+						"poster_path": "/eXKhzPPO6YMKbVKXFPOPVFDDGHx.jpg",
+						"first_air_date": "2021-10-20",
+						"softcore": false,
+						"name": "Royals: Keeping the Crown",
+						"vote_average": 6.5,
+						"vote_count": 2
+					},
+					{
+						"adult": false,
+						"backdrop_path": "/1uRKQj2pBuKUctPVoteqJP9gizK.jpg",
+						"genre_ids": [
+							18
+						],
+						"id": 276357,
+						"origin_country": [
+							"CN"
+						],
+						"original_language": "zh",
+						"original_name": "上心",
+						"overview": "Betrayed by someone close to her, Yu Luo dies filled with resentment. After being reborn, she vows to take back control of her life, using memories from her past to make waves in the financial world. However, fate intervenes, and she finds herself once again entangled with Liao Youting—the same dark figure who haunted her previous life.",
+						"popularity": 1.3356,
+						"poster_path": "/raZv2y91gU6R9fBU9GDlwcX6FfJ.jpg",
+						"first_air_date": "2024-11-11",
+						"softcore": false,
+						"name": "The Dark Crown",
+						"vote_average": 8.0,
+						"vote_count": 2
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [
+							18,
+							10768
+						],
+						"id": 19078,
+						"origin_country": [
+							"GB"
+						],
+						"original_language": "en",
+						"original_name": "The Devil's Crown",
+						"overview": "The Devil's Crown was a BBC limited series which dramatised the reigns of three medieval Kings of England: Henry II and his sons Richard the Lionheart and John. It was broadcast in thirteen 55-minute episodes between 30 April and 23 July 1978.\n\nHenry Plantagenet (latterly Henry II), sees his opportunity to seize the crown of England and create a kingdom of law and order. He cuts a deal with King Stephen in which Stephen will name him his heir, excluding his sons Eustace and William in exchange for a fragile truce. Stephen's sudden death elevates Henry to the throne. He may have been King of England, but the bulk of the Angevin Empire was in France, and it was this that Henry regarded as the Jewel in his Crown, maintained through a series of political marriages and complex allegiances. Henry pays homage to Louis VII, King of the Franks, for these lands, but it is clear that Henry is the shrewder and more ambitious of the two kings, having married Louis' ex-wife Eleanor of Aquitaine.",
+						"popularity": 1.7653,
+						"poster_path": "/9IZ1t9lCrYPfaTRcGQYJEQb8ZZB.jpg",
+						"first_air_date": "1978-04-30",
+						"softcore": false,
+						"name": "The Devil's Crown",
+						"vote_average": 7.8,
+						"vote_count": 4
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [
+							18
+						],
+						"id": 43140,
+						"origin_country": [
+							"SE"
+						],
+						"original_language": "sv",
+						"original_name": "Kronjuvelerna",
+						"overview": "The Crown Jewels is a three-part Swedish drama starring Alicia Vikander, Bill Skarsgård and Björn Gustafsson.",
+						"popularity": 0.9816,
+						"poster_path": null,
+						"first_air_date": "2011-06-29",
+						"softcore": false,
+						"name": "The Crown Jewels",
+						"vote_average": 5.0,
+						"vote_count": 1
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [],
+						"id": 18423,
+						"origin_country": [
+							"US"
+						],
+						"original_language": "en",
+						"original_name": "Countdown to the Crown",
+						"overview": "Countdown to the Crown was a reality series that followed the Miss America beauty pageant contestants in the time period leading up to the 2009 pageant. It aired on the cable network TLC, part of the Discovery channel family of networks.",
+						"popularity": 0.4804,
+						"poster_path": null,
+						"first_air_date": "2008-01-04",
+						"softcore": false,
+						"name": "Countdown to the Crown",
+						"vote_average": 0.0,
+						"vote_count": 0
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [],
+						"id": 31145,
+						"origin_country": [
+							"US"
+						],
+						"original_language": "en",
+						"original_name": "King of the Crown",
+						"overview": "King of the Crown is an American reality television series that debuted on TLC in 2009. The show follows the life of pageant coach Cyrus Frakes and his assistants of Gowns and Crowns as they prepare beauty pageant contestants to compete.\n\nSeason 1 of King of the Crown premiered on September 30, 2009 and aired on Wednesdays at 9:00 PM. IMDB lists a single season of 8 episodes despite an initial order of 12 reported by Variety on August 30, 2009.",
+						"popularity": 0.4351,
+						"poster_path": null,
+						"first_air_date": "2009-09-30",
+						"softcore": false,
+						"name": "King of the Crown",
+						"vote_average": 0.0,
+						"vote_count": 0
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [],
+						"id": 24322,
+						"origin_country": [
+							"GB"
+						],
+						"original_language": "en",
+						"original_name": "If The Crown Fits...",
+						"overview": "",
+						"popularity": 0.4326,
+						"poster_path": null,
+						"first_air_date": "",
+						"softcore": false,
+						"name": "If The Crown Fits...",
+						"vote_average": 8.0,
+						"vote_count": 1
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [
+							99
+						],
+						"id": 236849,
+						"origin_country": [
+							"GB"
+						],
+						"original_language": "en",
+						"original_name": "The Crown: A Thousand Year Story",
+						"overview": "GB News releases landmark documentary telling the story of 1,000 years of Coronations",
+						"popularity": 1.4531,
+						"poster_path": null,
+						"first_air_date": "2023-05-05",
+						"softcore": false,
+						"name": "The Crown: A Thousand Year Story",
+						"vote_average": 0.0,
+						"vote_count": 0
+					},
+					{
+						"adult": false,
+						"backdrop_path": null,
+						"genre_ids": [
+							99
+						],
+						"id": 98864,
+						"origin_country": [
+							"GB"
+						],
+						"original_language": "en",
+						"original_name": "Inside the Crown: Secrets of the Royals",
+						"overview": "Since her glittering coronation, Queen Elizabeth II has become one of the most powerful and respected leaders on Earth and has been on the British throne for 67 years. Historians, royal insiders and the wider family provide fresh insight into who the Queen and her family really are, and how they have navigated the sometimes-turbulent seven decades of her record-breaking reign.",
+						"popularity": 1.0069,
+						"poster_path": "/4EfKeGSMTI2VTN5IKMVAkGmj6W5.jpg",
+						"first_air_date": "2020-01-23",
+						"softcore": false,
+						"name": "Inside the Crown: Secrets of the Royals",
+						"vote_average": 7.0,
+						"vote_count": 1
+					}
+				],
+				"total_pages": 3,
+				"total_results": 45
+			}
+		}
 	}
 ]

@@ -2726,20 +2726,21 @@ func (e Status) Valid() bool {
 
 // TVShow defines a model
 type TVShow struct {
-	Adult            *bool    `json:"adult,omitzero"`
-	BackdropPath     string   `json:"backdrop_path,omitzero"`
-	GenreIds         []int    `json:"genre_ids,omitzero"`
-	ID               int      `json:"id,omitzero"`
-	OriginCountry    []string `json:"origin_country,omitzero"`
-	OriginalLanguage string   `json:"original_language,omitzero"`
-	OriginalName     string   `json:"original_name,omitzero"`
-	Overview         string   `json:"overview,omitzero"`
-	Popularity       float64  `json:"popularity,omitzero"`
-	PosterPath       string   `json:"poster_path,omitzero"`
-	FirstAirDate     string   `json:"first_air_date,omitzero"`
-	Name             string   `json:"name,omitzero"`
-	VoteAverage      float64  `json:"vote_average,omitzero"`
-	VoteCount        int      `json:"vote_count,omitzero"`
+	ID               int        `json:"id"`
+	Name             string     `json:"name"`
+	FirstAirDate     civil.Date `json:"first_air_date"`
+	OriginalName     string     `json:"original_name"`
+	Overview         string     `json:"overview"`
+	OriginalLanguage string     `json:"original_language"`
+	OriginCountry    []string   `json:"origin_country"`
+	GenreIds         []int      `json:"genre_ids"`
+	Popularity       float64    `json:"popularity"`
+	VoteAverage      float64    `json:"vote_average"`
+	VoteCount        int        `json:"vote_count"`
+	PosterPath       string     `json:"poster_path,omitzero"`
+	BackdropPath     string     `json:"backdrop_path,omitzero"`
+	Adult            bool       `json:"adult"`
+	Softcore         bool       `json:"softcore"`
 }
 
 // TVShows defines a model
