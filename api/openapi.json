@@ -4455,6 +4455,37 @@
           }
         }
       },
+      "Companies": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Company"
+        }
+      },
+      "Company": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "default": 0,
+            "example": 3268
+          },
+          "logo_path": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "/tuomPhY2UtuPTqqFnKMVHvSb724.png"
+          },
+          "name": {
+            "type": "string",
+            "example": "HBO"
+          },
+          "origin_country": {
+            "type": "string",
+            "example": "US"
+          }
+        }
+      },
       "CompanyDetailsOk": {
         "type": "object",
         "properties": {
@@ -5851,7 +5882,7 @@
             }
           },
           "production_companies": {
-            "$ref": "#/components/schemas/SearchCompanyResults"
+            "$ref": "#/components/schemas/Companies"
           },
           "production_countries": {
             "$ref": "#/components/schemas/MovieDetailsProductionCountries"
@@ -8635,7 +8666,7 @@
             "example": 1
           },
           "results": {
-            "$ref": "#/components/schemas/SearchCompanyResults"
+            "$ref": "#/components/schemas/Companies"
           },
           "total_pages": {
             "type": "integer",
@@ -8646,37 +8677,6 @@
             "type": "integer",
             "default": 0,
             "example": 22
-          }
-        }
-      },
-      "SearchCompanyResults": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/SearchCompanyResultsItem"
-        }
-      },
-      "SearchCompanyResultsItem": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 3268
-          },
-          "logo_path": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "example": "/tuomPhY2UtuPTqqFnKMVHvSb724.png"
-          },
-          "name": {
-            "type": "string",
-            "example": "HBO"
-          },
-          "origin_country": {
-            "type": "string",
-            "example": "US"
           }
         }
       },
@@ -9585,7 +9585,7 @@
             "example": "Netflix Collections"
           },
           "network": {
-            "$ref": "#/components/schemas/SearchCompanyResultsItem"
+            "$ref": "#/components/schemas/Company"
           },
           "type": {
             "type": "integer",
@@ -10141,7 +10141,7 @@
             "example": "Season 1"
           },
           "networks": {
-            "$ref": "#/components/schemas/SearchCompanyResults"
+            "$ref": "#/components/schemas/Companies"
           },
           "overview": {
             "type": "string",
@@ -10927,7 +10927,7 @@
           },
           "next_episode_to_air": {},
           "networks": {
-            "$ref": "#/components/schemas/SearchCompanyResults"
+            "$ref": "#/components/schemas/Companies"
           },
           "number_of_episodes": {
             "type": "integer",
@@ -10968,7 +10968,7 @@
             "example": "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg"
           },
           "production_companies": {
-            "$ref": "#/components/schemas/SearchCompanyResults"
+            "$ref": "#/components/schemas/Companies"
           },
           "production_countries": {
             "$ref": "#/components/schemas/MovieDetailsProductionCountries"
@@ -11188,7 +11188,7 @@
             "example": "Aired Order"
           },
           "network": {
-            "$ref": "#/components/schemas/SearchCompanyResultsItem"
+            "$ref": "#/components/schemas/Company"
           },
           "type": {
             "type": "integer",

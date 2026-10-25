@@ -1155,6 +1155,17 @@ type CollectionTranslationsOkTranslationsItemData struct {
 	Homepage string `json:"homepage,omitzero"`
 }
 
+// Companies defines a model
+type Companies []Company
+
+// Company defines a model
+type Company struct {
+	ID            int    `json:"id,omitzero"`
+	LogoPath      string `json:"logo_path,omitzero"`
+	Name          string `json:"name,omitzero"`
+	OriginCountry string `json:"origin_country,omitzero"`
+}
+
 // CompanyDetailsOk defines a model
 type CompanyDetailsOk struct {
 	Description   string    `json:"description,omitzero"`
@@ -1723,7 +1734,7 @@ type MovieDetails struct {
 	Homepage            url.URL                         `json:"homepage,omitzero"`
 	ImdbID              string                          `json:"imdb_id,omitzero"`
 	OriginCountry       []string                        `json:"origin_country,omitzero"`
-	ProductionCompanies SearchCompanyResults            `json:"production_companies,omitzero"`
+	ProductionCompanies Companies                       `json:"production_companies,omitzero"`
 	ProductionCountries MovieDetailsProductionCountries `json:"production_countries,omitzero"`
 	Revenue             int                             `json:"revenue,omitzero"`
 	Runtime             int                             `json:"runtime,omitzero"`
@@ -2550,21 +2561,10 @@ type SearchCollectionOkResultsItem struct {
 
 // SearchCompanyOk defines a model
 type SearchCompanyOk struct {
-	Page         int                  `json:"page,omitzero"`
-	Results      SearchCompanyResults `json:"results,omitzero"`
-	TotalPages   int                  `json:"total_pages,omitzero"`
-	TotalResults int                  `json:"total_results,omitzero"`
-}
-
-// SearchCompanyResults defines a model
-type SearchCompanyResults []SearchCompanyResultsItem
-
-// SearchCompanyResultsItem defines a model
-type SearchCompanyResultsItem struct {
-	ID            int    `json:"id,omitzero"`
-	LogoPath      string `json:"logo_path,omitzero"`
-	Name          string `json:"name,omitzero"`
-	OriginCountry string `json:"origin_country,omitzero"`
+	Page         int       `json:"page,omitzero"`
+	Results      Companies `json:"results,omitzero"`
+	TotalPages   int       `json:"total_pages,omitzero"`
+	TotalResults int       `json:"total_results,omitzero"`
 }
 
 // SearchKeywordOk defines a model
@@ -2932,7 +2932,7 @@ type TvEpisodeGroupDetailsOk struct {
 	Groups       TvEpisodeGroupDetailsOkGroups `json:"groups,omitzero"`
 	ID           string                        `json:"id,omitzero"`
 	Name         string                        `json:"name,omitzero"`
-	Network      *SearchCompanyResultsItem     `json:"network,omitzero"`
+	Network      *Company                      `json:"network,omitzero"`
 	Type         int                           `json:"type,omitzero"`
 }
 
@@ -3133,7 +3133,7 @@ type TvSeasonDetailsOk struct {
 	AirDate      string                    `json:"air_date,omitzero"`
 	Episodes     TvSeasonDetailsOkEpisodes `json:"episodes,omitzero"`
 	Name         string                    `json:"name,omitzero"`
-	Networks     SearchCompanyResults      `json:"networks,omitzero"`
+	Networks     Companies                 `json:"networks,omitzero"`
 	Overview     string                    `json:"overview,omitzero"`
 	ID           int                       `json:"id,omitzero"`
 	PosterPath   string                    `json:"poster_path,omitzero"`
@@ -3414,7 +3414,7 @@ type TvSeriesDetailsOk struct {
 	LastEpisodeToAir    *TvSeriesDetailsOkLastEpisodeToAir `json:"last_episode_to_air,omitzero"`
 	Name                string                             `json:"name,omitzero"`
 	NextEpisodeToAir    *struct{}                          `json:"next_episode_to_air,omitzero"`
-	Networks            SearchCompanyResults               `json:"networks,omitzero"`
+	Networks            Companies                          `json:"networks,omitzero"`
 	NumberOfEpisodes    int                                `json:"number_of_episodes,omitzero"`
 	NumberOfSeasons     int                                `json:"number_of_seasons,omitzero"`
 	OriginCountry       []string                           `json:"origin_country,omitzero"`
@@ -3423,7 +3423,7 @@ type TvSeriesDetailsOk struct {
 	Overview            string                             `json:"overview,omitzero"`
 	Popularity          float64                            `json:"popularity,omitzero"`
 	PosterPath          string                             `json:"poster_path,omitzero"`
-	ProductionCompanies SearchCompanyResults               `json:"production_companies,omitzero"`
+	ProductionCompanies Companies                          `json:"production_companies,omitzero"`
 	ProductionCountries MovieDetailsProductionCountries    `json:"production_countries,omitzero"`
 	Seasons             TvSeriesDetailsOkSeasons           `json:"seasons,omitzero"`
 	SpokenLanguages     ConfigurationLanguages             `json:"spoken_languages,omitzero"`
@@ -3488,13 +3488,13 @@ type TvSeriesEpisodeGroupsOkResults []TvSeriesEpisodeGroupsOkResultsItem
 
 // TvSeriesEpisodeGroupsOkResultsItem defines a model
 type TvSeriesEpisodeGroupsOkResultsItem struct {
-	Description  string                    `json:"description,omitzero"`
-	EpisodeCount int                       `json:"episode_count,omitzero"`
-	GroupCount   int                       `json:"group_count,omitzero"`
-	ID           string                    `json:"id,omitzero"`
-	Name         string                    `json:"name,omitzero"`
-	Network      *SearchCompanyResultsItem `json:"network,omitzero"`
-	Type         int                       `json:"type,omitzero"`
+	Description  string   `json:"description,omitzero"`
+	EpisodeCount int      `json:"episode_count,omitzero"`
+	GroupCount   int      `json:"group_count,omitzero"`
+	ID           string   `json:"id,omitzero"`
+	Name         string   `json:"name,omitzero"`
+	Network      *Company `json:"network,omitzero"`
+	Type         int      `json:"type,omitzero"`
 }
 
 // TvSeriesExternalIdsOk defines a model
