@@ -3889,6 +3889,32 @@
           }
         }
       },
+      "Cast": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/CastMember"
+        }
+      },
+      "CastIDWrapper": {
+        "type": "object",
+        "properties": {
+          "cast_id": {
+            "type": "integer",
+            "default": 0,
+            "example": 4
+          }
+        }
+      },
+      "CastMember": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CastIDWrapper"
+          },
+          {
+            "$ref": "#/components/schemas/Person"
+          }
+        ]
+      },
       "Certification": {
         "type": "object",
         "properties": {
@@ -6174,75 +6200,10 @@
             "example": 550
           },
           "cast": {
-            "$ref": "#/components/schemas/MovieCreditsOkCast"
+            "$ref": "#/components/schemas/Cast"
           },
           "crew": {
             "$ref": "#/components/schemas/MovieCreditsCrew"
-          }
-        }
-      },
-      "MovieCreditsOkCast": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/MovieCreditsOkCastItem"
-        }
-      },
-      "MovieCreditsOkCastItem": {
-        "type": "object",
-        "properties": {
-          "adult": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 2
-          },
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 819
-          },
-          "known_for_department": {
-            "type": "string",
-            "example": "Acting"
-          },
-          "name": {
-            "type": "string",
-            "example": "Edward Norton"
-          },
-          "original_name": {
-            "type": "string",
-            "example": "Edward Norton"
-          },
-          "popularity": {
-            "type": "number",
-            "default": 0,
-            "example": 26.99
-          },
-          "profile_path": {
-            "type": "string",
-            "example": "/8nytsqL59SFJTVYVrN72k6qkGgJ.jpg"
-          },
-          "cast_id": {
-            "type": "integer",
-            "default": 0,
-            "example": 4
-          },
-          "character": {
-            "type": "string",
-            "example": "The Narrator"
-          },
-          "credit_id": {
-            "type": "string",
-            "example": "52fe4250c3a36847f80149f3"
-          },
-          "order": {
-            "type": "integer",
-            "default": 0,
-            "example": 0
           }
         }
       },
@@ -7462,6 +7423,157 @@
           }
         }
       },
+      "People": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Person"
+        }
+      },
+      "Person": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "default": 0,
+            "example": 22970
+          },
+          "name": {
+            "type": "string",
+            "example": "Peter Dinklage"
+          },
+          "original_name": {
+            "type": "string",
+            "example": "Peter Dinklage"
+          },
+          "adult": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          },
+          "gender": {
+            "type": "integer",
+            "default": 0,
+            "example": 2
+          },
+          "known_for_department": {
+            "type": "string",
+            "example": "Acting"
+          },
+          "popularity": {
+            "type": "number",
+            "default": 0,
+            "example": 30.6
+          },
+          "profile_path": {
+            "type": "string",
+            "example": "/lRsRgnksAhBRXwAB68MFjmTtLrk.jpg"
+          },
+          "character": {
+            "type": "string",
+            "example": "Tyrion Lannister"
+          },
+          "credit_id": {
+            "type": "string",
+            "example": "5256c8b219c2956ff6047cd8"
+          },
+          "order": {
+            "type": "integer",
+            "default": 0,
+            "example": 0
+          }
+        }
+      },
+      "PersonCast": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/PersonCastMember"
+        }
+      },
+      "PersonCastMember": {
+        "type": "object",
+        "properties": {
+          "adult": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          },
+          "backdrop_path": {
+            "type": "string",
+            "example": "/3h1JZGDhZ8nzxdgvkxha0qBqi05.jpg"
+          },
+          "genre_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "default": 0,
+              "example": 35
+            }
+          },
+          "id": {
+            "type": "integer",
+            "default": 0,
+            "example": 13
+          },
+          "original_language": {
+            "type": "string",
+            "example": "en"
+          },
+          "original_title": {
+            "type": "string",
+            "example": "Forrest Gump"
+          },
+          "overview": {
+            "type": "string",
+            "example": "A man with a low IQ has accomplished great things in his life and been present during significant historic events—in each case, far exceeding what anyone imagined he could do. But despite all he has achieved, his one true love eludes him."
+          },
+          "popularity": {
+            "type": "number",
+            "default": 0,
+            "example": 62.225
+          },
+          "poster_path": {
+            "type": "string",
+            "example": "/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg"
+          },
+          "release_date": {
+            "type": "string",
+            "format": "date",
+            "example": "1994-06-23"
+          },
+          "title": {
+            "type": "string",
+            "example": "Forrest Gump"
+          },
+          "video": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          },
+          "vote_average": {
+            "type": "number",
+            "default": 0,
+            "example": 8.481
+          },
+          "vote_count": {
+            "type": "integer",
+            "default": 0,
+            "example": 24535
+          },
+          "character": {
+            "type": "string",
+            "example": "Forrest Gump"
+          },
+          "credit_id": {
+            "type": "string",
+            "example": "52fe420ec3a36847f800074f"
+          },
+          "order": {
+            "type": "integer",
+            "default": 0,
+            "example": 0
+          }
+        }
+      },
       "PersonChangesOk": {
         "type": "object",
         "properties": {
@@ -7544,10 +7656,10 @@
       "PersonCombinedCreditsOkCast": {
         "type": "array",
         "items": {
-          "$ref": "#/components/schemas/PersonCombinedCreditsOkCastItem"
+          "$ref": "#/components/schemas/PersonCombinedCreditsOkCastMember"
         }
       },
-      "PersonCombinedCreditsOkCastItem": {
+      "PersonCombinedCreditsOkCastMember": {
         "type": "object",
         "properties": {
           "adult": {
@@ -7900,7 +8012,7 @@
         "type": "object",
         "properties": {
           "cast": {
-            "$ref": "#/components/schemas/PersonMovieCreditsOkCast"
+            "$ref": "#/components/schemas/PersonCast"
           },
           "crew": {
             "$ref": "#/components/schemas/PersonMovieCreditsOkCrew"
@@ -7909,97 +8021,6 @@
             "type": "integer",
             "default": 0,
             "example": 31
-          }
-        }
-      },
-      "PersonMovieCreditsOkCast": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/PersonMovieCreditsOkCastItem"
-        }
-      },
-      "PersonMovieCreditsOkCastItem": {
-        "type": "object",
-        "properties": {
-          "adult": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "backdrop_path": {
-            "type": "string",
-            "example": "/3h1JZGDhZ8nzxdgvkxha0qBqi05.jpg"
-          },
-          "genre_ids": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "default": 0,
-              "example": 35
-            }
-          },
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 13
-          },
-          "original_language": {
-            "type": "string",
-            "example": "en"
-          },
-          "original_title": {
-            "type": "string",
-            "example": "Forrest Gump"
-          },
-          "overview": {
-            "type": "string",
-            "example": "A man with a low IQ has accomplished great things in his life and been present during significant historic events—in each case, far exceeding what anyone imagined he could do. But despite all he has achieved, his one true love eludes him."
-          },
-          "popularity": {
-            "type": "number",
-            "default": 0,
-            "example": 62.225
-          },
-          "poster_path": {
-            "type": "string",
-            "example": "/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg"
-          },
-          "release_date": {
-            "type": "string",
-            "format": "date",
-            "example": "1994-06-23"
-          },
-          "title": {
-            "type": "string",
-            "example": "Forrest Gump"
-          },
-          "video": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "vote_average": {
-            "type": "number",
-            "default": 0,
-            "example": 8.481
-          },
-          "vote_count": {
-            "type": "integer",
-            "default": 0,
-            "example": 24535
-          },
-          "character": {
-            "type": "string",
-            "example": "Forrest Gump"
-          },
-          "credit_id": {
-            "type": "string",
-            "example": "52fe420ec3a36847f800074f"
-          },
-          "order": {
-            "type": "integer",
-            "default": 0,
-            "example": 0
           }
         }
       },
@@ -8346,10 +8367,10 @@
       "PersonTvCreditsOkCast": {
         "type": "array",
         "items": {
-          "$ref": "#/components/schemas/PersonTvCreditsOkCastItem"
+          "$ref": "#/components/schemas/PersonTvCreditsOkCastMember"
         }
       },
-      "PersonTvCreditsOkCastItem": {
+      "PersonTvCreditsOkCastMember": {
         "type": "object",
         "properties": {
           "adult": {
@@ -9029,7 +9050,7 @@
             "$ref": "#/components/schemas/MovieCreditsCrew"
           },
           "guest_stars": {
-            "$ref": "#/components/schemas/TvSeasonCreditsCast"
+            "$ref": "#/components/schemas/People"
           }
         }
       },
@@ -9627,13 +9648,13 @@
         "type": "object",
         "properties": {
           "cast": {
-            "$ref": "#/components/schemas/TvSeasonCreditsCast"
+            "$ref": "#/components/schemas/People"
           },
           "crew": {
             "$ref": "#/components/schemas/MovieCreditsCrew"
           },
           "guest_stars": {
-            "$ref": "#/components/schemas/TvSeasonCreditsCast"
+            "$ref": "#/components/schemas/People"
           },
           "id": {
             "type": "integer",
@@ -9658,7 +9679,7 @@
             "example": 1
           },
           "guest_stars": {
-            "$ref": "#/components/schemas/TvSeasonCreditsCast"
+            "$ref": "#/components/schemas/People"
           },
           "name": {
             "type": "string",
@@ -9929,10 +9950,10 @@
       "TvSeasonAggregateCreditsCast": {
         "type": "array",
         "items": {
-          "$ref": "#/components/schemas/TvSeasonAggregateCreditsCastItem"
+          "$ref": "#/components/schemas/TvSeasonAggregateCreditsCastMember"
         }
       },
-      "TvSeasonAggregateCreditsCastItem": {
+      "TvSeasonAggregateCreditsCastMember": {
         "type": "object",
         "properties": {
           "adult": {
@@ -9972,7 +9993,7 @@
             "example": "/lRsRgnksAhBRXwAB68MFjmTtLrk.jpg"
           },
           "roles": {
-            "$ref": "#/components/schemas/TvSeasonAggregateCreditsCastItemRoles"
+            "$ref": "#/components/schemas/TvSeasonAggregateCreditsCastMemberRoles"
           },
           "total_episode_count": {
             "type": "integer",
@@ -9986,13 +10007,13 @@
           }
         }
       },
-      "TvSeasonAggregateCreditsCastItemRoles": {
+      "TvSeasonAggregateCreditsCastMemberRoles": {
         "type": "array",
         "items": {
-          "$ref": "#/components/schemas/TvSeasonAggregateCreditsCastItemRolesItem"
+          "$ref": "#/components/schemas/TvSeasonAggregateCreditsCastMemberRolesItem"
         }
       },
-      "TvSeasonAggregateCreditsCastItemRolesItem": {
+      "TvSeasonAggregateCreditsCastMemberRolesItem": {
         "type": "object",
         "properties": {
           "credit_id": {
@@ -10173,71 +10194,11 @@
           }
         }
       },
-      "TvSeasonCreditsCast": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/TvSeasonCreditsCastItem"
-        }
-      },
-      "TvSeasonCreditsCastItem": {
-        "type": "object",
-        "properties": {
-          "adult": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "gender": {
-            "type": "integer",
-            "default": 0,
-            "example": 2
-          },
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 22970
-          },
-          "known_for_department": {
-            "type": "string",
-            "example": "Acting"
-          },
-          "name": {
-            "type": "string",
-            "example": "Peter Dinklage"
-          },
-          "original_name": {
-            "type": "string",
-            "example": "Peter Dinklage"
-          },
-          "popularity": {
-            "type": "number",
-            "default": 0,
-            "example": 30.6
-          },
-          "profile_path": {
-            "type": "string",
-            "example": "/lRsRgnksAhBRXwAB68MFjmTtLrk.jpg"
-          },
-          "character": {
-            "type": "string",
-            "example": "Tyrion Lannister"
-          },
-          "credit_id": {
-            "type": "string",
-            "example": "5256c8b219c2956ff6047cd8"
-          },
-          "order": {
-            "type": "integer",
-            "default": 0,
-            "example": 0
-          }
-        }
-      },
       "TvSeasonCreditsOk": {
         "type": "object",
         "properties": {
           "cast": {
-            "$ref": "#/components/schemas/TvSeasonCreditsCast"
+            "$ref": "#/components/schemas/People"
           },
           "crew": {
             "$ref": "#/components/schemas/TvSeasonCreditsOkCrew"
@@ -10918,7 +10879,7 @@
         "type": "object",
         "properties": {
           "cast": {
-            "$ref": "#/components/schemas/TvSeasonCreditsCast"
+            "$ref": "#/components/schemas/People"
           },
           "crew": {
             "$ref": "#/components/schemas/MovieCreditsCrew"
