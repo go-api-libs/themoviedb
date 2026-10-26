@@ -8869,7 +8869,7 @@ func (c *Client) TvSeriesTopRatedListWithResult[R any](ctx context.Context, para
 // Get the details of a TV show.
 //
 //	GET /tv/{series_id}
-func (c *Client) TvSeriesDetails(ctx context.Context, seriesID int32, params *TvSeriesDetailsParams) (*TvSeriesDetailsOk, error) {
+func (c *Client) TvSeriesDetails(ctx context.Context, seriesID SeriesID, params *TvSeriesDetailsParams) (*TvSeriesDetailsOk, error) {
 	return c.TvSeriesDetailsWithResult[TvSeriesDetailsOk](ctx, seriesID, params)
 }
 
@@ -8877,7 +8877,7 @@ func (c *Client) TvSeriesDetails(ctx context.Context, seriesID int32, params *Tv
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}
-func (c *Client) TvSeriesDetailsWithResult[R any](ctx context.Context, seriesID int32, params *TvSeriesDetailsParams) (*R, error) {
+func (c *Client) TvSeriesDetailsWithResult[R any](ctx context.Context, seriesID SeriesID, params *TvSeriesDetailsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10))
 	if params != nil {
 		q := make(url.Values, 2)
@@ -8952,7 +8952,7 @@ func (c *Client) TvSeriesDetailsWithResult[R any](ctx context.Context, seriesID 
 // Get the rating, watchlist and favourite status.
 //
 //	GET /tv/{series_id}/account_states
-func (c *Client) TvSeriesAccountStates(ctx context.Context, seriesID int32, params *TvSeriesAccountStatesParams) (*MovieAccountStates, error) {
+func (c *Client) TvSeriesAccountStates(ctx context.Context, seriesID SeriesID, params *TvSeriesAccountStatesParams) (*MovieAccountStates, error) {
 	return c.TvSeriesAccountStatesWithResult[MovieAccountStates](ctx, seriesID, params)
 }
 
@@ -8960,7 +8960,7 @@ func (c *Client) TvSeriesAccountStates(ctx context.Context, seriesID int32, para
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/account_states
-func (c *Client) TvSeriesAccountStatesWithResult[R any](ctx context.Context, seriesID int32, params *TvSeriesAccountStatesParams) (*R, error) {
+func (c *Client) TvSeriesAccountStatesWithResult[R any](ctx context.Context, seriesID SeriesID, params *TvSeriesAccountStatesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "account_states")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -9035,7 +9035,7 @@ func (c *Client) TvSeriesAccountStatesWithResult[R any](ctx context.Context, ser
 // Get the aggregate credits (cast and crew) that have been added to a TV show.
 //
 //	GET /tv/{series_id}/aggregate_credits
-func (c *Client) TvSeriesAggregateCredits(ctx context.Context, seriesID int32, params *TvSeriesAggregateCreditsParams) (*TvSeriesAggregateCreditsOk, error) {
+func (c *Client) TvSeriesAggregateCredits(ctx context.Context, seriesID SeriesID, params *TvSeriesAggregateCreditsParams) (*TvSeriesAggregateCreditsOk, error) {
 	return c.TvSeriesAggregateCreditsWithResult[TvSeriesAggregateCreditsOk](ctx, seriesID, params)
 }
 
@@ -9043,7 +9043,7 @@ func (c *Client) TvSeriesAggregateCredits(ctx context.Context, seriesID int32, p
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/aggregate_credits
-func (c *Client) TvSeriesAggregateCreditsWithResult[R any](ctx context.Context, seriesID int32, params *TvSeriesAggregateCreditsParams) (*R, error) {
+func (c *Client) TvSeriesAggregateCreditsWithResult[R any](ctx context.Context, seriesID SeriesID, params *TvSeriesAggregateCreditsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "aggregate_credits")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -9114,7 +9114,7 @@ func (c *Client) TvSeriesAggregateCreditsWithResult[R any](ctx context.Context, 
 // Get the alternative titles that have been added to a TV show.
 //
 //	GET /tv/{series_id}/alternative_titles
-func (c *Client) TvSeriesAlternativeTitles(ctx context.Context, seriesID int32) (*AlternativeTitlesWrapper, error) {
+func (c *Client) TvSeriesAlternativeTitles(ctx context.Context, seriesID SeriesID) (*AlternativeTitlesWrapper, error) {
 	return c.TvSeriesAlternativeTitlesWithResult[AlternativeTitlesWrapper](ctx, seriesID)
 }
 
@@ -9122,7 +9122,7 @@ func (c *Client) TvSeriesAlternativeTitles(ctx context.Context, seriesID int32) 
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/alternative_titles
-func (c *Client) TvSeriesAlternativeTitlesWithResult[R any](ctx context.Context, seriesID int32) (*R, error) {
+func (c *Client) TvSeriesAlternativeTitlesWithResult[R any](ctx context.Context, seriesID SeriesID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "alternative_titles")
 	req := (&http.Request{
 		Header: http.Header{
@@ -9183,7 +9183,7 @@ func (c *Client) TvSeriesAlternativeTitlesWithResult[R any](ctx context.Context,
 // Get the recent changes for a TV show.
 //
 //	GET /tv/{series_id}/changes
-func (c *Client) TvSeriesChanges(ctx context.Context, seriesID int32, params *TvSeriesChangesParams) (*TvSeriesChangesOk, error) {
+func (c *Client) TvSeriesChanges(ctx context.Context, seriesID SeriesID, params *TvSeriesChangesParams) (*TvSeriesChangesOk, error) {
 	return c.TvSeriesChangesWithResult[TvSeriesChangesOk](ctx, seriesID, params)
 }
 
@@ -9191,7 +9191,7 @@ func (c *Client) TvSeriesChanges(ctx context.Context, seriesID int32, params *Tv
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/changes
-func (c *Client) TvSeriesChangesWithResult[R any](ctx context.Context, seriesID int32, params *TvSeriesChangesParams) (*R, error) {
+func (c *Client) TvSeriesChangesWithResult[R any](ctx context.Context, seriesID SeriesID, params *TvSeriesChangesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "changes")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -9270,7 +9270,7 @@ func (c *Client) TvSeriesChangesWithResult[R any](ctx context.Context, seriesID 
 // Get the content ratings that have been added to a TV show.
 //
 //	GET /tv/{series_id}/content_ratings
-func (c *Client) TvSeriesContentRatings(ctx context.Context, seriesID int32) (*TvSeriesContentRatingsOk, error) {
+func (c *Client) TvSeriesContentRatings(ctx context.Context, seriesID SeriesID) (*TvSeriesContentRatingsOk, error) {
 	return c.TvSeriesContentRatingsWithResult[TvSeriesContentRatingsOk](ctx, seriesID)
 }
 
@@ -9278,7 +9278,7 @@ func (c *Client) TvSeriesContentRatings(ctx context.Context, seriesID int32) (*T
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/content_ratings
-func (c *Client) TvSeriesContentRatingsWithResult[R any](ctx context.Context, seriesID int32) (*R, error) {
+func (c *Client) TvSeriesContentRatingsWithResult[R any](ctx context.Context, seriesID SeriesID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "content_ratings")
 	req := (&http.Request{
 		Header: http.Header{
@@ -9339,7 +9339,7 @@ func (c *Client) TvSeriesContentRatingsWithResult[R any](ctx context.Context, se
 // Get the latest season credits of a TV show.
 //
 //	GET /tv/{series_id}/credits
-func (c *Client) TvSeriesCredits(ctx context.Context, seriesID int32, params *TvSeriesCreditsParams) (*TvSeriesCreditsOk, error) {
+func (c *Client) TvSeriesCredits(ctx context.Context, seriesID SeriesID, params *TvSeriesCreditsParams) (*TvSeriesCreditsOk, error) {
 	return c.TvSeriesCreditsWithResult[TvSeriesCreditsOk](ctx, seriesID, params)
 }
 
@@ -9347,7 +9347,7 @@ func (c *Client) TvSeriesCredits(ctx context.Context, seriesID int32, params *Tv
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/credits
-func (c *Client) TvSeriesCreditsWithResult[R any](ctx context.Context, seriesID int32, params *TvSeriesCreditsParams) (*R, error) {
+func (c *Client) TvSeriesCreditsWithResult[R any](ctx context.Context, seriesID SeriesID, params *TvSeriesCreditsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "credits")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -9418,7 +9418,7 @@ func (c *Client) TvSeriesCreditsWithResult[R any](ctx context.Context, seriesID 
 // Get the episode groups that have been added to a TV show.
 //
 //	GET /tv/{series_id}/episode_groups
-func (c *Client) TvSeriesEpisodeGroups(ctx context.Context, seriesID int32) (*TvSeriesEpisodeGroupsOk, error) {
+func (c *Client) TvSeriesEpisodeGroups(ctx context.Context, seriesID SeriesID) (*TvSeriesEpisodeGroupsOk, error) {
 	return c.TvSeriesEpisodeGroupsWithResult[TvSeriesEpisodeGroupsOk](ctx, seriesID)
 }
 
@@ -9426,7 +9426,7 @@ func (c *Client) TvSeriesEpisodeGroups(ctx context.Context, seriesID int32) (*Tv
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/episode_groups
-func (c *Client) TvSeriesEpisodeGroupsWithResult[R any](ctx context.Context, seriesID int32) (*R, error) {
+func (c *Client) TvSeriesEpisodeGroupsWithResult[R any](ctx context.Context, seriesID SeriesID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "episode_groups")
 	req := (&http.Request{
 		Header: http.Header{
@@ -9487,7 +9487,7 @@ func (c *Client) TvSeriesEpisodeGroupsWithResult[R any](ctx context.Context, ser
 // Get a list of external IDs that have been added to a TV show.
 //
 //	GET /tv/{series_id}/external_ids
-func (c *Client) TvSeriesExternalIds(ctx context.Context, seriesID int32) (*TvSeriesExternalIdsOk, error) {
+func (c *Client) TvSeriesExternalIds(ctx context.Context, seriesID SeriesID) (*TvSeriesExternalIdsOk, error) {
 	return c.TvSeriesExternalIdsWithResult[TvSeriesExternalIdsOk](ctx, seriesID)
 }
 
@@ -9495,7 +9495,7 @@ func (c *Client) TvSeriesExternalIds(ctx context.Context, seriesID int32) (*TvSe
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/external_ids
-func (c *Client) TvSeriesExternalIdsWithResult[R any](ctx context.Context, seriesID int32) (*R, error) {
+func (c *Client) TvSeriesExternalIdsWithResult[R any](ctx context.Context, seriesID SeriesID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "external_ids")
 	req := (&http.Request{
 		Header: http.Header{
@@ -9556,7 +9556,7 @@ func (c *Client) TvSeriesExternalIdsWithResult[R any](ctx context.Context, serie
 // Get the images that belong to a TV series.
 //
 //	GET /tv/{series_id}/images
-func (c *Client) TvSeriesImages(ctx context.Context, seriesID int32, params *TvSeriesImagesParams) (*MovieImages, error) {
+func (c *Client) TvSeriesImages(ctx context.Context, seriesID SeriesID, params *TvSeriesImagesParams) (*MovieImages, error) {
 	return c.TvSeriesImagesWithResult[MovieImages](ctx, seriesID, params)
 }
 
@@ -9564,7 +9564,7 @@ func (c *Client) TvSeriesImages(ctx context.Context, seriesID int32, params *TvS
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/images
-func (c *Client) TvSeriesImagesWithResult[R any](ctx context.Context, seriesID int32, params *TvSeriesImagesParams) (*R, error) {
+func (c *Client) TvSeriesImagesWithResult[R any](ctx context.Context, seriesID SeriesID, params *TvSeriesImagesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "images")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -9639,7 +9639,7 @@ func (c *Client) TvSeriesImagesWithResult[R any](ctx context.Context, seriesID i
 // Get a list of keywords that have been added to a TV show.
 //
 //	GET /tv/{series_id}/keywords
-func (c *Client) TvSeriesKeywords(ctx context.Context, seriesID int32) (*TvSeriesKeywordsOk, error) {
+func (c *Client) TvSeriesKeywords(ctx context.Context, seriesID SeriesID) (*TvSeriesKeywordsOk, error) {
 	return c.TvSeriesKeywordsWithResult[TvSeriesKeywordsOk](ctx, seriesID)
 }
 
@@ -9647,7 +9647,7 @@ func (c *Client) TvSeriesKeywords(ctx context.Context, seriesID int32) (*TvSerie
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/keywords
-func (c *Client) TvSeriesKeywordsWithResult[R any](ctx context.Context, seriesID int32) (*R, error) {
+func (c *Client) TvSeriesKeywordsWithResult[R any](ctx context.Context, seriesID SeriesID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "keywords")
 	req := (&http.Request{
 		Header: http.Header{
@@ -9777,7 +9777,7 @@ func (c *Client) TvSeriesLatestIDWithResult[R any](ctx context.Context) (*R, err
 // Get the lists that a TV series has been added to.
 //
 //	GET /tv/{series_id}/lists
-func (c *Client) ListsCopy(ctx context.Context, seriesID int32, params *ListsCopyParams) (*ListsCopyOk, error) {
+func (c *Client) ListsCopy(ctx context.Context, seriesID SeriesID, params *ListsCopyParams) (*ListsCopyOk, error) {
 	return c.ListsCopyWithResult[ListsCopyOk](ctx, seriesID, params)
 }
 
@@ -9785,7 +9785,7 @@ func (c *Client) ListsCopy(ctx context.Context, seriesID int32, params *ListsCop
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/lists
-func (c *Client) ListsCopyWithResult[R any](ctx context.Context, seriesID int32, params *ListsCopyParams) (*R, error) {
+func (c *Client) ListsCopyWithResult[R any](ctx context.Context, seriesID SeriesID, params *ListsCopyParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "lists")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -9860,7 +9860,7 @@ func (c *Client) ListsCopyWithResult[R any](ctx context.Context, seriesID int32,
 // Recommendations
 //
 //	GET /tv/{series_id}/recommendations
-func (c *Client) TvSeriesRecommendations(ctx context.Context, seriesID int32, params *TvSeriesRecommendationsParams) (*TrendingTv, error) {
+func (c *Client) TvSeriesRecommendations(ctx context.Context, seriesID SeriesID, params *TvSeriesRecommendationsParams) (*TrendingTv, error) {
 	return c.TvSeriesRecommendationsWithResult[TrendingTv](ctx, seriesID, params)
 }
 
@@ -9868,7 +9868,7 @@ func (c *Client) TvSeriesRecommendations(ctx context.Context, seriesID int32, pa
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/recommendations
-func (c *Client) TvSeriesRecommendationsWithResult[R any](ctx context.Context, seriesID int32, params *TvSeriesRecommendationsParams) (*R, error) {
+func (c *Client) TvSeriesRecommendationsWithResult[R any](ctx context.Context, seriesID SeriesID, params *TvSeriesRecommendationsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "recommendations")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -9943,7 +9943,7 @@ func (c *Client) TvSeriesRecommendationsWithResult[R any](ctx context.Context, s
 // Get the reviews that have been added to a TV show.
 //
 //	GET /tv/{series_id}/reviews
-func (c *Client) TvSeriesReviews(ctx context.Context, seriesID int32, params *TvSeriesReviewsParams) (*TvSeriesReviewsOk, error) {
+func (c *Client) TvSeriesReviews(ctx context.Context, seriesID SeriesID, params *TvSeriesReviewsParams) (*TvSeriesReviewsOk, error) {
 	return c.TvSeriesReviewsWithResult[TvSeriesReviewsOk](ctx, seriesID, params)
 }
 
@@ -9951,7 +9951,7 @@ func (c *Client) TvSeriesReviews(ctx context.Context, seriesID int32, params *Tv
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/reviews
-func (c *Client) TvSeriesReviewsWithResult[R any](ctx context.Context, seriesID int32, params *TvSeriesReviewsParams) (*R, error) {
+func (c *Client) TvSeriesReviewsWithResult[R any](ctx context.Context, seriesID SeriesID, params *TvSeriesReviewsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "reviews")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -10026,7 +10026,7 @@ func (c *Client) TvSeriesReviewsWithResult[R any](ctx context.Context, seriesID 
 // Get the seasons and episodes that have screened theatrically.
 //
 //	GET /tv/{series_id}/screened_theatrically
-func (c *Client) TvSeriesScreenedTheatrically(ctx context.Context, seriesID int32) (*TvSeriesScreenedTheatricallyOk, error) {
+func (c *Client) TvSeriesScreenedTheatrically(ctx context.Context, seriesID SeriesID) (*TvSeriesScreenedTheatricallyOk, error) {
 	return c.TvSeriesScreenedTheatricallyWithResult[TvSeriesScreenedTheatricallyOk](ctx, seriesID)
 }
 
@@ -10034,7 +10034,7 @@ func (c *Client) TvSeriesScreenedTheatrically(ctx context.Context, seriesID int3
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/screened_theatrically
-func (c *Client) TvSeriesScreenedTheatricallyWithResult[R any](ctx context.Context, seriesID int32) (*R, error) {
+func (c *Client) TvSeriesScreenedTheatricallyWithResult[R any](ctx context.Context, seriesID SeriesID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "screened_theatrically")
 	req := (&http.Request{
 		Header: http.Header{
@@ -10095,7 +10095,7 @@ func (c *Client) TvSeriesScreenedTheatricallyWithResult[R any](ctx context.Conte
 // Get the similar TV shows.
 //
 //	GET /tv/{series_id}/similar
-func (c *Client) TvSeriesSimilar(ctx context.Context, seriesID string, params *TvSeriesSimilarParams) (*TvSeriesSimilarOk, error) {
+func (c *Client) TvSeriesSimilar(ctx context.Context, seriesID SeriesID, params *TvSeriesSimilarParams) (*TvSeriesSimilarOk, error) {
 	return c.TvSeriesSimilarWithResult[TvSeriesSimilarOk](ctx, seriesID, params)
 }
 
@@ -10103,8 +10103,8 @@ func (c *Client) TvSeriesSimilar(ctx context.Context, seriesID string, params *T
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/similar
-func (c *Client) TvSeriesSimilarWithResult[R any](ctx context.Context, seriesID string, params *TvSeriesSimilarParams) (*R, error) {
-	u := c.baseURL.JoinPath("tv", seriesID, "similar")
+func (c *Client) TvSeriesSimilarWithResult[R any](ctx context.Context, seriesID SeriesID, params *TvSeriesSimilarParams) (*R, error) {
+	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "similar")
 	if params != nil {
 		q := make(url.Values, 2)
 
@@ -10178,7 +10178,7 @@ func (c *Client) TvSeriesSimilarWithResult[R any](ctx context.Context, seriesID 
 // Get the translations that have been added to a TV show.
 //
 //	GET /tv/{series_id}/translations
-func (c *Client) TvSeriesTranslations(ctx context.Context, seriesID int32) (*TvSeriesTranslationsOk, error) {
+func (c *Client) TvSeriesTranslations(ctx context.Context, seriesID SeriesID) (*TvSeriesTranslationsOk, error) {
 	return c.TvSeriesTranslationsWithResult[TvSeriesTranslationsOk](ctx, seriesID)
 }
 
@@ -10186,7 +10186,7 @@ func (c *Client) TvSeriesTranslations(ctx context.Context, seriesID int32) (*TvS
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/translations
-func (c *Client) TvSeriesTranslationsWithResult[R any](ctx context.Context, seriesID int32) (*R, error) {
+func (c *Client) TvSeriesTranslationsWithResult[R any](ctx context.Context, seriesID SeriesID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
@@ -10247,7 +10247,7 @@ func (c *Client) TvSeriesTranslationsWithResult[R any](ctx context.Context, seri
 // Get the videos that belong to a TV show.
 //
 //	GET /tv/{series_id}/videos
-func (c *Client) TvSeriesVideos(ctx context.Context, seriesID int32, params *TvSeriesVideosParams) (*MovieVideos, error) {
+func (c *Client) TvSeriesVideos(ctx context.Context, seriesID SeriesID, params *TvSeriesVideosParams) (*MovieVideos, error) {
 	return c.TvSeriesVideosWithResult[MovieVideos](ctx, seriesID, params)
 }
 
@@ -10255,7 +10255,7 @@ func (c *Client) TvSeriesVideos(ctx context.Context, seriesID int32, params *TvS
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/videos
-func (c *Client) TvSeriesVideosWithResult[R any](ctx context.Context, seriesID int32, params *TvSeriesVideosParams) (*R, error) {
+func (c *Client) TvSeriesVideosWithResult[R any](ctx context.Context, seriesID SeriesID, params *TvSeriesVideosParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "videos")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -10330,7 +10330,7 @@ func (c *Client) TvSeriesVideosWithResult[R any](ctx context.Context, seriesID i
 // Get the list of streaming providers we have for a TV show.
 //
 //	GET /tv/{series_id}/watch/providers
-func (c *Client) TvSeriesWatchProviders(ctx context.Context, seriesID int32) (*TvSeriesWatchProvidersOk, error) {
+func (c *Client) TvSeriesWatchProviders(ctx context.Context, seriesID SeriesID) (*TvSeriesWatchProvidersOk, error) {
 	return c.TvSeriesWatchProvidersWithResult[TvSeriesWatchProvidersOk](ctx, seriesID)
 }
 
@@ -10338,7 +10338,7 @@ func (c *Client) TvSeriesWatchProviders(ctx context.Context, seriesID int32) (*T
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/watch/providers
-func (c *Client) TvSeriesWatchProvidersWithResult[R any](ctx context.Context, seriesID int32) (*R, error) {
+func (c *Client) TvSeriesWatchProvidersWithResult[R any](ctx context.Context, seriesID SeriesID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "watch", "providers")
 	req := (&http.Request{
 		Header: http.Header{
@@ -10399,7 +10399,7 @@ func (c *Client) TvSeriesWatchProvidersWithResult[R any](ctx context.Context, se
 // Rate a TV show and save it to your rated list.
 //
 //	POST /tv/{series_id}/rating
-func (c *Client) TvSeriesAddRating(ctx context.Context, seriesID int32, params *TvSeriesAddRatingParams, body *ListCreate) (*ListClear, error) {
+func (c *Client) TvSeriesAddRating(ctx context.Context, seriesID SeriesID, params *TvSeriesAddRatingParams, body *ListCreate) (*ListClear, error) {
 	return c.TvSeriesAddRatingWithResult[ListClear](ctx, seriesID, params, body)
 }
 
@@ -10407,7 +10407,7 @@ func (c *Client) TvSeriesAddRating(ctx context.Context, seriesID int32, params *
 // You can define a custom result to unmarshal the response into.
 //
 //	POST /tv/{series_id}/rating
-func (c *Client) TvSeriesAddRatingWithResult[R any](ctx context.Context, seriesID int32, params *TvSeriesAddRatingParams, body *ListCreate) (*R, error) {
+func (c *Client) TvSeriesAddRatingWithResult[R any](ctx context.Context, seriesID SeriesID, params *TvSeriesAddRatingParams, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "rating")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -10489,7 +10489,7 @@ func (c *Client) TvSeriesAddRatingWithResult[R any](ctx context.Context, seriesI
 // Delete Rating
 //
 //	DELETE /tv/{series_id}/rating
-func (c *Client) TvSeriesDeleteRating(ctx context.Context, seriesID int32, params *TvSeriesDeleteRatingParams) (*ListClear, error) {
+func (c *Client) TvSeriesDeleteRating(ctx context.Context, seriesID SeriesID, params *TvSeriesDeleteRatingParams) (*ListClear, error) {
 	return c.TvSeriesDeleteRatingWithResult[ListClear](ctx, seriesID, params)
 }
 
@@ -10497,7 +10497,7 @@ func (c *Client) TvSeriesDeleteRating(ctx context.Context, seriesID int32, param
 // You can define a custom result to unmarshal the response into.
 //
 //	DELETE /tv/{series_id}/rating
-func (c *Client) TvSeriesDeleteRatingWithResult[R any](ctx context.Context, seriesID int32, params *TvSeriesDeleteRatingParams) (*R, error) {
+func (c *Client) TvSeriesDeleteRatingWithResult[R any](ctx context.Context, seriesID SeriesID, params *TvSeriesDeleteRatingParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "rating")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -10572,7 +10572,7 @@ func (c *Client) TvSeriesDeleteRatingWithResult[R any](ctx context.Context, seri
 // Query the details of a TV season.
 //
 //	GET /tv/{series_id}/season/{season_number}
-func (c *Client) GetTvShowSeason(ctx context.Context, seriesID int32, seasonNumber int32, params *GetTvShowSeasonParams) (*Season, error) {
+func (c *Client) GetTvShowSeason(ctx context.Context, seriesID SeriesID, seasonNumber int32, params *GetTvShowSeasonParams) (*Season, error) {
 	return c.GetTvShowSeasonWithResult[Season](ctx, seriesID, seasonNumber, params)
 }
 
@@ -10580,7 +10580,7 @@ func (c *Client) GetTvShowSeason(ctx context.Context, seriesID int32, seasonNumb
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}
-func (c *Client) GetTvShowSeasonWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, params *GetTvShowSeasonParams) (*R, error) {
+func (c *Client) GetTvShowSeasonWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, params *GetTvShowSeasonParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10))
 	if params != nil {
 		q := make(url.Values, 2)
@@ -10655,7 +10655,7 @@ func (c *Client) GetTvShowSeasonWithResult[R any](ctx context.Context, seriesID 
 // Get the rating, watchlist and favourite status.
 //
 //	GET /tv/{series_id}/season/{season_number}/account_states
-func (c *Client) TvSeasonAccountStates(ctx context.Context, seriesID int32, seasonNumber int32, params *TvSeasonAccountStatesParams) (*TvSeasonAccountStatesOk, error) {
+func (c *Client) TvSeasonAccountStates(ctx context.Context, seriesID SeriesID, seasonNumber int32, params *TvSeasonAccountStatesParams) (*TvSeasonAccountStatesOk, error) {
 	return c.TvSeasonAccountStatesWithResult[TvSeasonAccountStatesOk](ctx, seriesID, seasonNumber, params)
 }
 
@@ -10663,7 +10663,7 @@ func (c *Client) TvSeasonAccountStates(ctx context.Context, seriesID int32, seas
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/account_states
-func (c *Client) TvSeasonAccountStatesWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, params *TvSeasonAccountStatesParams) (*R, error) {
+func (c *Client) TvSeasonAccountStatesWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, params *TvSeasonAccountStatesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "account_states")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -10738,7 +10738,7 @@ func (c *Client) TvSeasonAccountStatesWithResult[R any](ctx context.Context, ser
 // Get the aggregate credits (cast and crew) that have been added to a TV season.
 //
 //	GET /tv/{series_id}/season/{season_number}/aggregate_credits
-func (c *Client) TvSeasonAggregateCredits(ctx context.Context, seriesID int32, seasonNumber int32, params *TvSeasonAggregateCreditsParams) (*TvSeasonAggregateCreditsOk, error) {
+func (c *Client) TvSeasonAggregateCredits(ctx context.Context, seriesID SeriesID, seasonNumber int32, params *TvSeasonAggregateCreditsParams) (*TvSeasonAggregateCreditsOk, error) {
 	return c.TvSeasonAggregateCreditsWithResult[TvSeasonAggregateCreditsOk](ctx, seriesID, seasonNumber, params)
 }
 
@@ -10746,7 +10746,7 @@ func (c *Client) TvSeasonAggregateCredits(ctx context.Context, seriesID int32, s
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/aggregate_credits
-func (c *Client) TvSeasonAggregateCreditsWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, params *TvSeasonAggregateCreditsParams) (*R, error) {
+func (c *Client) TvSeasonAggregateCreditsWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, params *TvSeasonAggregateCreditsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "aggregate_credits")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -10904,7 +10904,7 @@ func (c *Client) TvSeasonChangesByIDWithResult[R any](ctx context.Context, seaso
 // Credits
 //
 //	GET /tv/{series_id}/season/{season_number}/credits
-func (c *Client) TvSeasonCredits(ctx context.Context, seriesID int32, seasonNumber int32, params *TvSeasonCreditsParams) (*TvSeasonCreditsOk, error) {
+func (c *Client) TvSeasonCredits(ctx context.Context, seriesID SeriesID, seasonNumber int32, params *TvSeasonCreditsParams) (*TvSeasonCreditsOk, error) {
 	return c.TvSeasonCreditsWithResult[TvSeasonCreditsOk](ctx, seriesID, seasonNumber, params)
 }
 
@@ -10912,7 +10912,7 @@ func (c *Client) TvSeasonCredits(ctx context.Context, seriesID int32, seasonNumb
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/credits
-func (c *Client) TvSeasonCreditsWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, params *TvSeasonCreditsParams) (*R, error) {
+func (c *Client) TvSeasonCreditsWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, params *TvSeasonCreditsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "credits")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -10983,7 +10983,7 @@ func (c *Client) TvSeasonCreditsWithResult[R any](ctx context.Context, seriesID 
 // Get a list of external IDs that have been added to a TV season.
 //
 //	GET /tv/{series_id}/season/{season_number}/external_ids
-func (c *Client) TvSeasonExternalIds(ctx context.Context, seriesID int32, seasonNumber int32) (*TvSeasonExternalIdsOk, error) {
+func (c *Client) TvSeasonExternalIds(ctx context.Context, seriesID SeriesID, seasonNumber int32) (*TvSeasonExternalIdsOk, error) {
 	return c.TvSeasonExternalIdsWithResult[TvSeasonExternalIdsOk](ctx, seriesID, seasonNumber)
 }
 
@@ -10991,7 +10991,7 @@ func (c *Client) TvSeasonExternalIds(ctx context.Context, seriesID int32, season
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/external_ids
-func (c *Client) TvSeasonExternalIdsWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32) (*R, error) {
+func (c *Client) TvSeasonExternalIdsWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "external_ids")
 	req := (&http.Request{
 		Header: http.Header{
@@ -11052,7 +11052,7 @@ func (c *Client) TvSeasonExternalIdsWithResult[R any](ctx context.Context, serie
 // Get the images that belong to a TV season.
 //
 //	GET /tv/{series_id}/season/{season_number}/images
-func (c *Client) TvSeasonImages(ctx context.Context, seriesID int32, seasonNumber int32, params *TvSeasonImagesParams) (*TvSeasonImagesOk, error) {
+func (c *Client) TvSeasonImages(ctx context.Context, seriesID SeriesID, seasonNumber int32, params *TvSeasonImagesParams) (*TvSeasonImagesOk, error) {
 	return c.TvSeasonImagesWithResult[TvSeasonImagesOk](ctx, seriesID, seasonNumber, params)
 }
 
@@ -11060,7 +11060,7 @@ func (c *Client) TvSeasonImages(ctx context.Context, seriesID int32, seasonNumbe
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/images
-func (c *Client) TvSeasonImagesWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, params *TvSeasonImagesParams) (*R, error) {
+func (c *Client) TvSeasonImagesWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, params *TvSeasonImagesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "images")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -11135,7 +11135,7 @@ func (c *Client) TvSeasonImagesWithResult[R any](ctx context.Context, seriesID i
 // Get the translations for a TV season.
 //
 //	GET /tv/{series_id}/season/{season_number}/translations
-func (c *Client) TvSeasonTranslations(ctx context.Context, seriesID int32, seasonNumber int32) (*TvSeasonTranslations, error) {
+func (c *Client) TvSeasonTranslations(ctx context.Context, seriesID SeriesID, seasonNumber int32) (*TvSeasonTranslations, error) {
 	return c.TvSeasonTranslationsWithResult[TvSeasonTranslations](ctx, seriesID, seasonNumber)
 }
 
@@ -11143,7 +11143,7 @@ func (c *Client) TvSeasonTranslations(ctx context.Context, seriesID int32, seaso
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/translations
-func (c *Client) TvSeasonTranslationsWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32) (*R, error) {
+func (c *Client) TvSeasonTranslationsWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
@@ -11204,7 +11204,7 @@ func (c *Client) TvSeasonTranslationsWithResult[R any](ctx context.Context, seri
 // Get the videos that belong to a TV season.
 //
 //	GET /tv/{series_id}/season/{season_number}/videos
-func (c *Client) TvSeasonVideos(ctx context.Context, seriesID int32, seasonNumber int32, params *TvSeasonVideosParams) (*MovieVideos, error) {
+func (c *Client) TvSeasonVideos(ctx context.Context, seriesID SeriesID, seasonNumber int32, params *TvSeasonVideosParams) (*MovieVideos, error) {
 	return c.TvSeasonVideosWithResult[MovieVideos](ctx, seriesID, seasonNumber, params)
 }
 
@@ -11212,7 +11212,7 @@ func (c *Client) TvSeasonVideos(ctx context.Context, seriesID int32, seasonNumbe
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/videos
-func (c *Client) TvSeasonVideosWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, params *TvSeasonVideosParams) (*R, error) {
+func (c *Client) TvSeasonVideosWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, params *TvSeasonVideosParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "videos")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -11287,7 +11287,7 @@ func (c *Client) TvSeasonVideosWithResult[R any](ctx context.Context, seriesID i
 // Get the list of streaming providers we have for a TV season.
 //
 //	GET /tv/{series_id}/season/{season_number}/watch/providers
-func (c *Client) TvSeasonWatchProviders(ctx context.Context, seriesID int32, seasonNumber int32, params *TvSeasonWatchProvidersParams) (*TvSeasonWatchProvidersOk, error) {
+func (c *Client) TvSeasonWatchProviders(ctx context.Context, seriesID SeriesID, seasonNumber int32, params *TvSeasonWatchProvidersParams) (*TvSeasonWatchProvidersOk, error) {
 	return c.TvSeasonWatchProvidersWithResult[TvSeasonWatchProvidersOk](ctx, seriesID, seasonNumber, params)
 }
 
@@ -11295,7 +11295,7 @@ func (c *Client) TvSeasonWatchProviders(ctx context.Context, seriesID int32, sea
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/watch/providers
-func (c *Client) TvSeasonWatchProvidersWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, params *TvSeasonWatchProvidersParams) (*R, error) {
+func (c *Client) TvSeasonWatchProvidersWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, params *TvSeasonWatchProvidersParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "watch", "providers")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -11366,7 +11366,7 @@ func (c *Client) TvSeasonWatchProvidersWithResult[R any](ctx context.Context, se
 // Query the details of a TV episode.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}
-func (c *Client) TvEpisodeDetails(ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeDetailsParams) (*TvEpisodeDetailsOk, error) {
+func (c *Client) TvEpisodeDetails(ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeDetailsParams) (*TvEpisodeDetailsOk, error) {
 	return c.TvEpisodeDetailsWithResult[TvEpisodeDetailsOk](ctx, seriesID, seasonNumber, episodeNumber, params)
 }
 
@@ -11374,7 +11374,7 @@ func (c *Client) TvEpisodeDetails(ctx context.Context, seriesID int32, seasonNum
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}
-func (c *Client) TvEpisodeDetailsWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeDetailsParams) (*R, error) {
+func (c *Client) TvEpisodeDetailsWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeDetailsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10))
 	if params != nil {
 		q := make(url.Values, 2)
@@ -11449,7 +11449,7 @@ func (c *Client) TvEpisodeDetailsWithResult[R any](ctx context.Context, seriesID
 // Get the rating, watchlist and favourite status.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/account_states
-func (c *Client) TvEpisodeAccountStates(ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeAccountStatesParams) (*MovieAccountStates, error) {
+func (c *Client) TvEpisodeAccountStates(ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeAccountStatesParams) (*MovieAccountStates, error) {
 	return c.TvEpisodeAccountStatesWithResult[MovieAccountStates](ctx, seriesID, seasonNumber, episodeNumber, params)
 }
 
@@ -11457,7 +11457,7 @@ func (c *Client) TvEpisodeAccountStates(ctx context.Context, seriesID int32, sea
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/account_states
-func (c *Client) TvEpisodeAccountStatesWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeAccountStatesParams) (*R, error) {
+func (c *Client) TvEpisodeAccountStatesWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeAccountStatesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "account_states")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -11601,7 +11601,7 @@ func (c *Client) TvEpisodeChangesByIDWithResult[R any](ctx context.Context, epis
 // Credits
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/credits
-func (c *Client) TvEpisodeCredits(ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeCreditsParams) (*TvEpisodeCreditsOk, error) {
+func (c *Client) TvEpisodeCredits(ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeCreditsParams) (*TvEpisodeCreditsOk, error) {
 	return c.TvEpisodeCreditsWithResult[TvEpisodeCreditsOk](ctx, seriesID, seasonNumber, episodeNumber, params)
 }
 
@@ -11609,7 +11609,7 @@ func (c *Client) TvEpisodeCredits(ctx context.Context, seriesID int32, seasonNum
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/credits
-func (c *Client) TvEpisodeCreditsWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeCreditsParams) (*R, error) {
+func (c *Client) TvEpisodeCreditsWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeCreditsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "credits")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -11680,7 +11680,7 @@ func (c *Client) TvEpisodeCreditsWithResult[R any](ctx context.Context, seriesID
 // Get a list of external IDs that have been added to a TV episode.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/external_ids
-func (c *Client) TvEpisodeExternalIds(ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber string) (*TvEpisodeExternalIdsOk, error) {
+func (c *Client) TvEpisodeExternalIds(ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber string) (*TvEpisodeExternalIdsOk, error) {
 	return c.TvEpisodeExternalIdsWithResult[TvEpisodeExternalIdsOk](ctx, seriesID, seasonNumber, episodeNumber)
 }
 
@@ -11688,7 +11688,7 @@ func (c *Client) TvEpisodeExternalIds(ctx context.Context, seriesID int32, seaso
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/external_ids
-func (c *Client) TvEpisodeExternalIdsWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber string) (*R, error) {
+func (c *Client) TvEpisodeExternalIdsWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber string) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", episodeNumber, "external_ids")
 	req := (&http.Request{
 		Header: http.Header{
@@ -11749,7 +11749,7 @@ func (c *Client) TvEpisodeExternalIdsWithResult[R any](ctx context.Context, seri
 // Get the images that belong to a TV episode.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/images
-func (c *Client) TvEpisodeImages(ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeImagesParams) (*TvEpisodeImagesOk, error) {
+func (c *Client) TvEpisodeImages(ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeImagesParams) (*TvEpisodeImagesOk, error) {
 	return c.TvEpisodeImagesWithResult[TvEpisodeImagesOk](ctx, seriesID, seasonNumber, episodeNumber, params)
 }
 
@@ -11757,7 +11757,7 @@ func (c *Client) TvEpisodeImages(ctx context.Context, seriesID int32, seasonNumb
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/images
-func (c *Client) TvEpisodeImagesWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeImagesParams) (*R, error) {
+func (c *Client) TvEpisodeImagesWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeImagesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "images")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -11832,7 +11832,7 @@ func (c *Client) TvEpisodeImagesWithResult[R any](ctx context.Context, seriesID 
 // Get the translations that have been added to a TV episode.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/translations
-func (c *Client) TvEpisodeTranslations(ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32) (*TvSeasonTranslations, error) {
+func (c *Client) TvEpisodeTranslations(ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32) (*TvSeasonTranslations, error) {
 	return c.TvEpisodeTranslationsWithResult[TvSeasonTranslations](ctx, seriesID, seasonNumber, episodeNumber)
 }
 
@@ -11840,7 +11840,7 @@ func (c *Client) TvEpisodeTranslations(ctx context.Context, seriesID int32, seas
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/translations
-func (c *Client) TvEpisodeTranslationsWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32) (*R, error) {
+func (c *Client) TvEpisodeTranslationsWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
@@ -11901,7 +11901,7 @@ func (c *Client) TvEpisodeTranslationsWithResult[R any](ctx context.Context, ser
 // Get the videos that belong to a TV episode.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/videos
-func (c *Client) TvEpisodeVideos(ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeVideosParams) (*MovieVideos, error) {
+func (c *Client) TvEpisodeVideos(ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeVideosParams) (*MovieVideos, error) {
 	return c.TvEpisodeVideosWithResult[MovieVideos](ctx, seriesID, seasonNumber, episodeNumber, params)
 }
 
@@ -11909,7 +11909,7 @@ func (c *Client) TvEpisodeVideos(ctx context.Context, seriesID int32, seasonNumb
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/videos
-func (c *Client) TvEpisodeVideosWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeVideosParams) (*R, error) {
+func (c *Client) TvEpisodeVideosWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeVideosParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "videos")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -11984,7 +11984,7 @@ func (c *Client) TvEpisodeVideosWithResult[R any](ctx context.Context, seriesID 
 // Rate a TV episode and save it to your rated list.
 //
 //	POST /tv/{series_id}/season/{season_number}/episode/{episode_number}/rating
-func (c *Client) TvEpisodeAddRating(ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeAddRatingParams, body *ListCreate) (*ListClear, error) {
+func (c *Client) TvEpisodeAddRating(ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeAddRatingParams, body *ListCreate) (*ListClear, error) {
 	return c.TvEpisodeAddRatingWithResult[ListClear](ctx, seriesID, seasonNumber, episodeNumber, params, body)
 }
 
@@ -11992,7 +11992,7 @@ func (c *Client) TvEpisodeAddRating(ctx context.Context, seriesID int32, seasonN
 // You can define a custom result to unmarshal the response into.
 //
 //	POST /tv/{series_id}/season/{season_number}/episode/{episode_number}/rating
-func (c *Client) TvEpisodeAddRatingWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeAddRatingParams, body *ListCreate) (*R, error) {
+func (c *Client) TvEpisodeAddRatingWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeAddRatingParams, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "rating")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -12074,7 +12074,7 @@ func (c *Client) TvEpisodeAddRatingWithResult[R any](ctx context.Context, series
 // Delete your rating on a TV episode.
 //
 //	DELETE /tv/{series_id}/season/{season_number}/episode/{episode_number}/rating
-func (c *Client) TvEpisodeDeleteRating(ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeDeleteRatingParams) (*ListClear, error) {
+func (c *Client) TvEpisodeDeleteRating(ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeDeleteRatingParams) (*ListClear, error) {
 	return c.TvEpisodeDeleteRatingWithResult[ListClear](ctx, seriesID, seasonNumber, episodeNumber, params)
 }
 
@@ -12082,7 +12082,7 @@ func (c *Client) TvEpisodeDeleteRating(ctx context.Context, seriesID int32, seas
 // You can define a custom result to unmarshal the response into.
 //
 //	DELETE /tv/{series_id}/season/{season_number}/episode/{episode_number}/rating
-func (c *Client) TvEpisodeDeleteRatingWithResult[R any](ctx context.Context, seriesID int32, seasonNumber int32, episodeNumber int32, params *TvEpisodeDeleteRatingParams) (*R, error) {
+func (c *Client) TvEpisodeDeleteRatingWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeDeleteRatingParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "rating")
 	if params != nil {
 		q := make(url.Values, 2)

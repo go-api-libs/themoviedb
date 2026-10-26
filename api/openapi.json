@@ -2691,7 +2691,7 @@
     "/tv/{series_id}/similar": {
       "parameters": [
         {
-          "$ref": "#/components/parameters/series_id16"
+          "$ref": "#/components/parameters/series_id"
         },
         {
           "$ref": "#/components/parameters/language"
@@ -9081,6 +9081,13 @@
           }
         }
       },
+      "SeriesID": {
+        "description": "The ID of a series, i.e. a TV Show.",
+        "type": "integer",
+        "format": "int32",
+        "example": 1396,
+        "x-go-type-name": "SeriesID"
+      },
       "SortBy": {
         "type": "string",
         "enum": [
@@ -9138,10 +9145,7 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "format": "int32",
-            "default": 0,
-            "example": 1396
+            "$ref": "#/components/schemas/SeriesID"
           },
           "name": {
             "type": "string",
@@ -17432,16 +17436,7 @@
         "in": "path",
         "required": true,
         "schema": {
-          "type": "integer",
-          "format": "int32"
-        }
-      },
-      "series_id16": {
-        "name": "series_id",
-        "in": "path",
-        "required": true,
-        "schema": {
-          "type": "string"
+          "$ref": "#/components/schemas/SeriesID"
         }
       },
       "session_id": {

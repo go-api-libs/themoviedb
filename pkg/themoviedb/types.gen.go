@@ -2763,6 +2763,9 @@ type Season struct {
 	VoteAverage  float64    `json:"vote_average,omitzero"`
 }
 
+// The ID of a series, i.e. a TV Show.
+type SeriesID int32
+
 // SortBy defines a model
 type SortBy string
 
@@ -2858,7 +2861,8 @@ func (e Status) Valid() bool {
 
 // TVShow defines a model
 type TVShow struct {
-	ID               int32      `json:"id"`
+	// The ID of a series, i.e. a TV Show.
+	ID               SeriesID   `json:"id"`
 	Name             string     `json:"name"`
 	FirstAirDate     civil.Date `json:"first_air_date"`
 	OriginalName     string     `json:"original_name"`
