@@ -720,8 +720,8 @@ type TvSeasonWatchProvidersParams struct {
 	Language string
 }
 
-// TvEpisodeDetailsParams holds the query parameters for TvEpisodeDetails.
-type TvEpisodeDetailsParams struct {
+// GetTvEpisodeDetailsParams holds the query parameters for GetTvEpisodeDetails.
+type GetTvEpisodeDetailsParams struct {
 	// comma separated list of endpoints within this namespace, 20 items max
 	AppendToResponse string
 	Language         string
@@ -2859,6 +2859,23 @@ func (e Status) Valid() bool {
 	}
 }
 
+// TVEpisodeDetails defines a model
+type TVEpisodeDetails struct {
+	AirDate        civil.Date `json:"air_date,omitzero"`
+	Crew           Crew       `json:"crew,omitzero"`
+	EpisodeNumber  int        `json:"episode_number,omitzero"`
+	GuestStars     Actors     `json:"guest_stars,omitzero"`
+	Name           string     `json:"name,omitzero"`
+	Overview       string     `json:"overview,omitzero"`
+	ID             int        `json:"id,omitzero"`
+	ProductionCode string     `json:"production_code,omitzero"`
+	Runtime        int        `json:"runtime,omitzero"`
+	SeasonNumber   int        `json:"season_number,omitzero"`
+	StillPath      string     `json:"still_path,omitzero"`
+	VoteAverage    float64    `json:"vote_average,omitzero"`
+	VoteCount      int        `json:"vote_count,omitzero"`
+}
+
 // TVShow defines a model
 type TVShow struct {
 	// The ID of a series, i.e. a TV Show.
@@ -3046,23 +3063,6 @@ type TvEpisodeCreditsOk struct {
 	Crew       Crew   `json:"crew,omitzero"`
 	GuestStars Actors `json:"guest_stars,omitzero"`
 	ID         int    `json:"id,omitzero"`
-}
-
-// TvEpisodeDetailsOk defines a model
-type TvEpisodeDetailsOk struct {
-	AirDate        civil.Date `json:"air_date,omitzero"`
-	Crew           Crew       `json:"crew,omitzero"`
-	EpisodeNumber  int        `json:"episode_number,omitzero"`
-	GuestStars     Actors     `json:"guest_stars,omitzero"`
-	Name           string     `json:"name,omitzero"`
-	Overview       string     `json:"overview,omitzero"`
-	ID             int        `json:"id,omitzero"`
-	ProductionCode string     `json:"production_code,omitzero"`
-	Runtime        int        `json:"runtime,omitzero"`
-	SeasonNumber   int        `json:"season_number,omitzero"`
-	StillPath      string     `json:"still_path,omitzero"`
-	VoteAverage    float64    `json:"vote_average,omitzero"`
-	VoteCount      int        `json:"vote_count,omitzero"`
 }
 
 // TvEpisodeExternalIdsOk defines a model

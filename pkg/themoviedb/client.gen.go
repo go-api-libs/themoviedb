@@ -11366,15 +11366,15 @@ func (c *Client) TvSeasonWatchProvidersWithResult[R any](ctx context.Context, se
 // Query the details of a TV episode.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}
-func (c *Client) TvEpisodeDetails(ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeDetailsParams) (*TvEpisodeDetailsOk, error) {
-	return c.TvEpisodeDetailsWithResult[TvEpisodeDetailsOk](ctx, seriesID, seasonNumber, episodeNumber, params)
+func (c *Client) GetTvEpisodeDetails(ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *GetTvEpisodeDetailsParams) (*TVEpisodeDetails, error) {
+	return c.GetTvEpisodeDetailsWithResult[TVEpisodeDetails](ctx, seriesID, seasonNumber, episodeNumber, params)
 }
 
 // Query the details of a TV episode.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}
-func (c *Client) TvEpisodeDetailsWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *TvEpisodeDetailsParams) (*R, error) {
+func (c *Client) GetTvEpisodeDetailsWithResult[R any](ctx context.Context, seriesID SeriesID, seasonNumber int32, episodeNumber int32, params *GetTvEpisodeDetailsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10))
 	if params != nil {
 		q := make(url.Values, 2)
@@ -11418,7 +11418,7 @@ func (c *Client) TvEpisodeDetailsWithResult[R any](ctx context.Context, seriesID
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvEpisodeDetailsOk); ok {
+			if _, ok := any(&out).(*TVEpisodeDetails); ok {
 				opts = jsonOpts
 			}
 
