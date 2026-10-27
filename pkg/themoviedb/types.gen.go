@@ -720,8 +720,8 @@ type TvSeasonWatchProvidersParams struct {
 	Language string
 }
 
-// GetTvEpisodeDetailsParams holds the query parameters for GetTvEpisodeDetails.
-type GetTvEpisodeDetailsParams struct {
+// GetEpisodeDetailsParams holds the query parameters for GetEpisodeDetails.
+type GetEpisodeDetailsParams struct {
 	// comma separated list of endpoints within this namespace, 20 items max
 	AppendToResponse string
 	Language         string
@@ -1381,7 +1381,7 @@ type EpisodeBase struct {
 	// The ID of the episode
 	ID             EpisodeID  `json:"id"`
 	SeasonNumber   int32      `json:"season_number"`
-	EpisodeNumber  int        `json:"episode_number"`
+	EpisodeNumber  int32      `json:"episode_number"`
 	Name           string     `json:"name"`
 	Overview       string     `json:"overview"`
 	AirDate        civil.Date `json:"air_date"`
@@ -1424,6 +1424,23 @@ type EpisodeDetails struct {
 	EpisodeTypeWrapper
 	Crew       Crew   `json:"crew,omitzero"`
 	GuestStars Actors `json:"guest_stars,omitzero"`
+}
+
+// EpisodeDetails2 defines a model
+type EpisodeDetails2 struct {
+	AirDate        civil.Date `json:"air_date,omitzero"`
+	Crew           Crew       `json:"crew,omitzero"`
+	EpisodeNumber  int32      `json:"episode_number,omitzero"`
+	GuestStars     Actors     `json:"guest_stars,omitzero"`
+	Name           string     `json:"name,omitzero"`
+	Overview       string     `json:"overview,omitzero"`
+	ID             int        `json:"id,omitzero"`
+	ProductionCode string     `json:"production_code,omitzero"`
+	Runtime        int        `json:"runtime,omitzero"`
+	SeasonNumber   int32      `json:"season_number,omitzero"`
+	StillPath      string     `json:"still_path,omitzero"`
+	VoteAverage    float64    `json:"vote_average,omitzero"`
+	VoteCount      int        `json:"vote_count,omitzero"`
 }
 
 // The ID of an episode
@@ -1569,7 +1586,7 @@ type GuestSessionRatedTvEpisodesOkResults []GuestSessionRatedTvEpisodesOkResults
 // GuestSessionRatedTvEpisodesOkResultsItem defines a model
 type GuestSessionRatedTvEpisodesOkResultsItem struct {
 	AirDate        civil.Date `json:"air_date,omitzero"`
-	EpisodeNumber  int        `json:"episode_number,omitzero"`
+	EpisodeNumber  int32      `json:"episode_number,omitzero"`
 	ID             int        `json:"id,omitzero"`
 	Name           string     `json:"name,omitzero"`
 	Overview       string     `json:"overview,omitzero"`
@@ -2855,7 +2872,7 @@ type SeasonChangeItemsItem struct {
 type SeasonChangeItemsItemValue struct {
 	// The ID of the episode
 	EpisodeID     *EpisodeID `json:"episode_id,omitzero"`
-	EpisodeNumber int        `json:"episode_number,omitzero"`
+	EpisodeNumber int32      `json:"episode_number,omitzero"`
 }
 
 // SeasonChanges defines a model
@@ -3062,23 +3079,6 @@ func (e Status) Valid() bool {
 	}
 }
 
-// TVEpisodeDetails defines a model
-type TVEpisodeDetails struct {
-	AirDate        civil.Date `json:"air_date,omitzero"`
-	Crew           Crew       `json:"crew,omitzero"`
-	EpisodeNumber  int        `json:"episode_number,omitzero"`
-	GuestStars     Actors     `json:"guest_stars,omitzero"`
-	Name           string     `json:"name,omitzero"`
-	Overview       string     `json:"overview,omitzero"`
-	ID             int        `json:"id,omitzero"`
-	ProductionCode string     `json:"production_code,omitzero"`
-	Runtime        int        `json:"runtime,omitzero"`
-	SeasonNumber   int32      `json:"season_number,omitzero"`
-	StillPath      string     `json:"still_path,omitzero"`
-	VoteAverage    float64    `json:"vote_average,omitzero"`
-	VoteCount      int        `json:"vote_count,omitzero"`
-}
-
 // TimeWindow defines a model
 type TimeWindow string
 
@@ -3255,7 +3255,7 @@ type TvEpisodeGroupDetailsOkGroupsItemEpisodes []TvEpisodeGroupDetailsOkGroupsIt
 // TvEpisodeGroupDetailsOkGroupsItemEpisodesItem defines a model
 type TvEpisodeGroupDetailsOkGroupsItemEpisodesItem struct {
 	AirDate        civil.Date `json:"air_date,omitzero"`
-	EpisodeNumber  int        `json:"episode_number,omitzero"`
+	EpisodeNumber  int32      `json:"episode_number,omitzero"`
 	ID             int        `json:"id,omitzero"`
 	Name           string     `json:"name,omitzero"`
 	Overview       string     `json:"overview,omitzero"`
@@ -3287,7 +3287,7 @@ type TvSeasonAccountStatesOkResults []TvSeasonAccountStatesOkResultsItem
 // TvSeasonAccountStatesOkResultsItem defines a model
 type TvSeasonAccountStatesOkResultsItem struct {
 	ID            int     `json:"id,omitzero"`
-	EpisodeNumber int     `json:"episode_number,omitzero"`
+	EpisodeNumber int32   `json:"episode_number,omitzero"`
 	Rated         *Rating `json:"rated,omitzero"`
 }
 
@@ -3670,7 +3670,7 @@ type TvSeriesLatestIDOkLastEpisodeToAir struct {
 	VoteAverage    int        `json:"vote_average,omitzero"`
 	VoteCount      int        `json:"vote_count,omitzero"`
 	AirDate        civil.Date `json:"air_date,omitzero"`
-	EpisodeNumber  int        `json:"episode_number,omitzero"`
+	EpisodeNumber  int32      `json:"episode_number,omitzero"`
 	ProductionCode string     `json:"production_code,omitzero"`
 	Runtime        *struct{}  `json:"runtime,omitzero"`
 	SeasonNumber   int32      `json:"season_number,omitzero"`
@@ -3727,7 +3727,7 @@ type TvSeriesScreenedTheatricallyOkResults []TvSeriesScreenedTheatricallyOkResul
 // TvSeriesScreenedTheatricallyOkResultsItem defines a model
 type TvSeriesScreenedTheatricallyOkResultsItem struct {
 	ID            int   `json:"id,omitzero"`
-	EpisodeNumber int   `json:"episode_number,omitzero"`
+	EpisodeNumber int32 `json:"episode_number,omitzero"`
 	SeasonNumber  int32 `json:"season_number,omitzero"`
 }
 
