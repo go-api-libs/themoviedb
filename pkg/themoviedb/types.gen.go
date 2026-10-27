@@ -2285,12 +2285,13 @@ type PaginatedResponse struct {
 
 // Person defines a model
 type Person struct {
-	ID           int    `json:"id,omitzero"`
-	CreditID     string `json:"credit_id,omitzero"`
-	Name         string `json:"name,omitzero"`
-	Gender       Gender `json:"gender,omitzero"`
-	ProfilePath  string `json:"profile_path,omitzero"`
-	OriginalName string `json:"original_name,omitzero"`
+	// The ID of the person
+	ID           PersonID `json:"id"`
+	Name         string   `json:"name"`
+	OriginalName string   `json:"original_name"`
+	Gender       Gender   `json:"gender"`
+	ProfilePath  string   `json:"profile_path,omitzero"`
+	CreditID     string   `json:"credit_id"`
 }
 
 // PersonCast defines a model
