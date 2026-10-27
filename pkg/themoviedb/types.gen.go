@@ -878,7 +878,7 @@ type AccountRatedTvOkResultsItem struct {
 
 // Actor defines a model
 type Actor struct {
-	Person
+	PersonDetails
 	Character string `json:"character"`
 	Order     int    `json:"order"`
 }
@@ -1229,18 +1229,8 @@ type Country struct {
 	Name         string `json:"name,omitzero"`
 }
 
-// Creator defines a model
-type Creator struct {
-	ID           int    `json:"id,omitzero"`
-	CreditID     string `json:"credit_id,omitzero"`
-	Name         string `json:"name,omitzero"`
-	Gender       Gender `json:"gender,omitzero"`
-	ProfilePath  string `json:"profile_path,omitzero"`
-	OriginalName string `json:"original_name,omitzero"`
-}
-
 // Creators defines a model
-type Creators []Creator
+type Creators []Person
 
 // CreditDetailsOk defines a model
 type CreditDetailsOk struct {
@@ -1308,7 +1298,7 @@ type Crew []CrewMember
 
 // CrewMember defines a model
 type CrewMember struct {
-	Person
+	PersonDetails
 	Department Department `json:"department,omitzero"`
 	Job        Job        `json:"job,omitzero"`
 }
@@ -2295,15 +2285,12 @@ type PaginatedResponse struct {
 
 // Person defines a model
 type Person struct {
-	ID                 int        `json:"id"`
-	Name               string     `json:"name"`
-	OriginalName       string     `json:"original_name"`
-	Adult              bool       `json:"adult"`
-	Gender             Gender     `json:"gender"`
-	KnownForDepartment Department `json:"known_for_department"`
-	Popularity         float64    `json:"popularity"`
-	ProfilePath        string     `json:"profile_path"`
-	CreditID           string     `json:"credit_id"`
+	ID           int    `json:"id,omitzero"`
+	CreditID     string `json:"credit_id,omitzero"`
+	Name         string `json:"name,omitzero"`
+	Gender       Gender `json:"gender,omitzero"`
+	ProfilePath  string `json:"profile_path,omitzero"`
+	OriginalName string `json:"original_name,omitzero"`
 }
 
 // PersonCast defines a model
@@ -2414,6 +2401,19 @@ type PersonCombinedCreditsOkCrewItem struct {
 	MediaType        string     `json:"media_type,omitzero"`
 }
 
+// PersonDetails defines a model
+type PersonDetails struct {
+	ID                 int        `json:"id"`
+	Name               string     `json:"name"`
+	OriginalName       string     `json:"original_name"`
+	Adult              bool       `json:"adult"`
+	Gender             Gender     `json:"gender"`
+	KnownForDepartment Department `json:"known_for_department"`
+	Popularity         float64    `json:"popularity"`
+	ProfilePath        string     `json:"profile_path"`
+	CreditID           string     `json:"credit_id"`
+}
+
 // PersonDetailsOk defines a model
 type PersonDetailsOk struct {
 	Adult              *bool      `json:"adult,omitzero"`
@@ -2446,6 +2446,9 @@ type PersonExternalIdsOk struct {
 	TwitterID   string    `json:"twitter_id,omitzero"`
 	YoutubeID   *struct{} `json:"youtube_id,omitzero"`
 }
+
+// The ID of a person
+type PersonID int32
 
 // PersonImagesOk defines a model
 type PersonImagesOk struct {

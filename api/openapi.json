@@ -3689,7 +3689,7 @@
       "Actor": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/Person"
+            "$ref": "#/components/schemas/PersonDetails"
           },
           {
             "$ref": "#/components/schemas/CharacterBase"
@@ -4659,39 +4659,10 @@
           }
         }
       },
-      "Creator": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 9813
-          },
-          "credit_id": {
-            "type": "string",
-            "example": "5256c8c219c2956ff604858a"
-          },
-          "name": {
-            "type": "string",
-            "example": "David Benioff"
-          },
-          "gender": {
-            "$ref": "#/components/schemas/Gender"
-          },
-          "profile_path": {
-            "type": "string",
-            "example": "/xvNN5huL0X8yJ7h3IZfGG4O2zBD.jpg"
-          },
-          "original_name": {
-            "type": "string",
-            "example": "Peter Morgan"
-          }
-        }
-      },
       "Creators": {
         "type": "array",
         "items": {
-          "$ref": "#/components/schemas/Creator"
+          "$ref": "#/components/schemas/Person"
         }
       },
       "CreditDetailsOk": {
@@ -4910,7 +4881,7 @@
       "CrewMember": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/Person"
+            "$ref": "#/components/schemas/PersonDetails"
           },
           {
             "$ref": "#/components/schemas/CrewMemberBase"
@@ -7547,56 +7518,28 @@
           "id": {
             "type": "integer",
             "default": 0,
-            "example": 22970
+            "example": 9813
+          },
+          "credit_id": {
+            "type": "string",
+            "example": "5256c8c219c2956ff604858a"
           },
           "name": {
             "type": "string",
-            "example": "Peter Dinklage"
-          },
-          "original_name": {
-            "type": "string",
-            "example": "Peter Dinklage"
-          },
-          "adult": {
-            "type": "boolean",
-            "default": true,
-            "example": false
+            "example": "David Benioff"
           },
           "gender": {
             "$ref": "#/components/schemas/Gender"
           },
-          "known_for_department": {
-            "$ref": "#/components/schemas/Department"
-          },
-          "popularity": {
-            "type": "number",
-            "format": "double",
-            "default": 0,
-            "example": 30.6
-          },
           "profile_path": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "example": "/lRsRgnksAhBRXwAB68MFjmTtLrk.jpg"
-          },
-          "credit_id": {
             "type": "string",
-            "example": "5256c8b219c2956ff6047cd8"
+            "example": "/xvNN5huL0X8yJ7h3IZfGG4O2zBD.jpg"
+          },
+          "original_name": {
+            "type": "string",
+            "example": "Peter Morgan"
           }
-        },
-        "required": [
-          "id",
-          "name",
-          "original_name",
-          "adult",
-          "gender",
-          "known_for_department",
-          "popularity",
-          "profile_path",
-          "credit_id"
-        ]
+        }
       },
       "PersonCast": {
         "type": "array",
@@ -7955,6 +7898,63 @@
           }
         }
       },
+      "PersonDetails": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "default": 0,
+            "example": 22970
+          },
+          "name": {
+            "type": "string",
+            "example": "Peter Dinklage"
+          },
+          "original_name": {
+            "type": "string",
+            "example": "Peter Dinklage"
+          },
+          "adult": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          },
+          "gender": {
+            "$ref": "#/components/schemas/Gender"
+          },
+          "known_for_department": {
+            "$ref": "#/components/schemas/Department"
+          },
+          "popularity": {
+            "type": "number",
+            "format": "double",
+            "default": 0,
+            "example": 30.6
+          },
+          "profile_path": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "/lRsRgnksAhBRXwAB68MFjmTtLrk.jpg"
+          },
+          "credit_id": {
+            "type": "string",
+            "example": "5256c8b219c2956ff6047cd8"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "original_name",
+          "adult",
+          "gender",
+          "known_for_department",
+          "popularity",
+          "profile_path",
+          "credit_id"
+        ]
+      },
       "PersonDetailsOk": {
         "type": "object",
         "properties": {
@@ -8061,6 +8061,13 @@
           },
           "youtube_id": {}
         }
+      },
+      "PersonID": {
+        "description": "The ID of a person",
+        "type": "integer",
+        "format": "int32",
+        "example": 22970,
+        "x-go-type-name": "PersonID"
       },
       "PersonImagesOk": {
         "type": "object",
