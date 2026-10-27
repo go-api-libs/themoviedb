@@ -4662,12 +4662,6 @@
           }
         }
       },
-      "Creators": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/Person"
-        }
-      },
       "CreditDetailsOk": {
         "type": "object",
         "properties": {
@@ -7518,6 +7512,12 @@
           }
         }
       },
+      "People": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Person"
+        }
+      },
       "Person": {
         "type": "object",
         "properties": {
@@ -9384,7 +9384,7 @@
         "type": "object",
         "properties": {
           "created_by": {
-            "$ref": "#/components/schemas/Creators"
+            "$ref": "#/components/schemas/People"
           },
           "episode_run_time": {
             "type": "array",

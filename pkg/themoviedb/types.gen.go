@@ -1230,9 +1230,6 @@ type Country struct {
 	Name         string `json:"name,omitzero"`
 }
 
-// Creators defines a model
-type Creators []Person
-
 // CreditDetailsOk defines a model
 type CreditDetailsOk struct {
 	CreditType string                 `json:"credit_type,omitzero"`
@@ -2285,6 +2282,9 @@ type PaginatedResponse struct {
 	TotalResults int `json:"total_results,omitzero"`
 }
 
+// People defines a model
+type People []Person
+
 // Person defines a model
 type Person struct {
 	// The ID of the person
@@ -2821,7 +2821,7 @@ type ShowBase struct {
 // ShowDetails defines a model
 type ShowDetails struct {
 	ShowBase
-	CreatedBy           Creators                    `json:"created_by"`
+	CreatedBy           People                      `json:"created_by"`
 	EpisodeRunTime      []int                       `json:"episode_run_time"`
 	Genres              Keywords                    `json:"genres"`
 	Homepage            url.URL                     `json:"homepage"`
