@@ -1473,6 +1473,11 @@ func (e Gender) Valid() bool {
 	}
 }
 
+// GenreIDsWrapper defines a model
+type GenreIDsWrapper struct {
+	GenreIDs []int `json:"genre_ids"`
+}
+
 // GenreTvList defines a model
 type GenreTvList struct {
 	Genres Keywords `json:"genres,omitzero"`
@@ -1742,7 +1747,7 @@ type ListsCopyOkResultsItem struct {
 // Movie defines a model
 type Movie struct {
 	MovieCommon
-	GenreIds []int `json:"genre_ids"`
+	GenreIDsWrapper
 }
 
 // MovieAccountStates defines a model
@@ -2772,11 +2777,10 @@ type Show struct {
 	ID               SeriesID   `json:"id"`
 	Name             string     `json:"name"`
 	FirstAirDate     civil.Date `json:"first_air_date"`
-	OriginalName     string     `json:"original_name"`
 	Overview         string     `json:"overview"`
+	OriginalName     string     `json:"original_name"`
 	OriginalLanguage string     `json:"original_language"`
 	OriginCountry    []string   `json:"origin_country"`
-	GenreIds         []int      `json:"genre_ids"`
 	Popularity       float64    `json:"popularity"`
 	VoteAverage      float64    `json:"vote_average"`
 	VoteCount        int        `json:"vote_count"`
@@ -2784,6 +2788,7 @@ type Show struct {
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
 	Adult            bool       `json:"adult"`
 	Softcore         bool       `json:"softcore"`
+	GenreIDsWrapper
 }
 
 // ShowDetails defines a model

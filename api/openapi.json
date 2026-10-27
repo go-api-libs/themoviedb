@@ -5217,7 +5217,8 @@
               "type": "integer",
               "default": 0,
               "example": 18
-            }
+            },
+            "x-go-name": "GenreIDs"
           }
         },
         "required": [
@@ -9090,6 +9091,16 @@
         "x-go-type-name": "SeriesID"
       },
       "Show": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ShowBase"
+          },
+          {
+            "$ref": "#/components/schemas/GenreIDsWrapper"
+          }
+        ]
+      },
+      "ShowBase": {
         "type": "object",
         "properties": {
           "id": {
@@ -9104,13 +9115,13 @@
             "format": "date",
             "example": "2008-01-20"
           },
-          "original_name": {
-            "type": "string",
-            "example": "Breaking Bad"
-          },
           "overview": {
             "type": "string",
             "example": "When Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer and given a prognosis of only two years left to live. He becomes filled with a sense of fearlessness and an unrelenting desire to secure his family's financial future at any cost as he enters the dangerous world of drugs and crime."
+          },
+          "original_name": {
+            "type": "string",
+            "example": "Breaking Bad"
           },
           "original_language": {
             "type": "string",
@@ -9121,14 +9132,6 @@
             "items": {
               "type": "string",
               "example": "US"
-            }
-          },
-          "genre_ids": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "default": 0,
-              "example": 18
             }
           },
           "popularity": {
@@ -9172,15 +9175,14 @@
           }
         },
         "required": [
-          "genre_ids",
           "id",
+          "name",
+          "first_air_date",
+          "overview",
           "origin_country",
           "original_language",
           "original_name",
-          "overview",
           "popularity",
-          "first_air_date",
-          "name",
           "vote_average",
           "vote_count",
           "adult",
