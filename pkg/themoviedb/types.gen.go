@@ -611,7 +611,7 @@ type TvSeriesAggregateCreditsParams struct {
 
 // TvSeriesChangesParams holds the query parameters for TvSeriesChanges.
 type TvSeriesChangesParams struct {
-	EndDate   string
+	EndDate   civil.Date
 	Page      int32
 	StartDate string
 }
@@ -689,9 +689,9 @@ type TvSeasonAggregateCreditsParams struct {
 	Language string
 }
 
-// TvSeasonChangesByIDParams holds the query parameters for TvSeasonChangesByID.
-type TvSeasonChangesByIDParams struct {
-	EndDate   string
+// GetSeasonChangesByIDParams holds the query parameters for GetSeasonChangesByID.
+type GetSeasonChangesByIDParams struct {
+	EndDate   civil.Date
 	Page      int32
 	StartDate string
 }
@@ -2789,17 +2789,64 @@ type SearchPersonOkResultsItem struct {
 
 // Season defines a model
 type Season struct {
-	UnderscoreID string     `json:"_id,omitzero"`
+	UnderscoreID string     `json:"_id"`
+	AirDate      civil.Date `json:"air_date"`
+	Episodes     Episodes   `json:"episodes"`
+	Name         string     `json:"name"`
+	Networks     Companies  `json:"networks"`
+	Overview     string     `json:"overview"`
+	// The ID of the season
+	ID           SeasonID `json:"id"`
+	PosterPath   string   `json:"poster_path,omitzero"`
+	SeasonNumber int      `json:"season_number"`
+	VoteAverage  float64  `json:"vote_average"`
+}
+
+// Season2 defines a model
+type Season2 struct {
 	AirDate      civil.Date `json:"air_date,omitzero"`
-	Episodes     Episodes   `json:"episodes,omitzero"`
-	Name         string     `json:"name,omitzero"`
-	Networks     Companies  `json:"networks,omitzero"`
-	Overview     string     `json:"overview,omitzero"`
+	EpisodeCount int        `json:"episode_count,omitzero"`
 	ID           int        `json:"id,omitzero"`
+	Name         string     `json:"name,omitzero"`
+	Overview     string     `json:"overview,omitzero"`
 	PosterPath   string     `json:"poster_path,omitzero"`
 	SeasonNumber int        `json:"season_number,omitzero"`
-	VoteAverage  float64    `json:"vote_average,omitzero"`
+	VoteAverage  *float64   `json:"vote_average,omitzero"`
 }
+
+// SeasonChange defines a model
+type SeasonChange struct {
+	Key   string            `json:"key,omitzero"`
+	Items SeasonChangeItems `json:"items,omitzero"`
+}
+
+// SeasonChangeItems defines a model
+type SeasonChangeItems []SeasonChangeItemsItem
+
+// SeasonChangeItemsItem defines a model
+type SeasonChangeItemsItem struct {
+	ID     string                      `json:"id,omitzero"`
+	Action string                      `json:"action,omitzero"`
+	Time   string                      `json:"time,omitzero"`
+	Value  *SeasonChangeItemsItemValue `json:"value,omitzero"`
+}
+
+// SeasonChangeItemsItemValue defines a model
+type SeasonChangeItemsItemValue struct {
+	EpisodeID     int `json:"episode_id,omitzero"`
+	EpisodeNumber int `json:"episode_number,omitzero"`
+}
+
+// SeasonChanges defines a model
+type SeasonChanges []SeasonChange
+
+// SeasonChangesWrapper defines a model
+type SeasonChangesWrapper struct {
+	Changes SeasonChanges `json:"changes,omitzero"`
+}
+
+// The ID of a season
+type SeasonID int32
 
 // The ID of a series, i.e. a TV Show.
 type SeriesID int32
@@ -2854,19 +2901,7 @@ type ShowDetails struct {
 }
 
 // ShowDetailsSeasons defines a model
-type ShowDetailsSeasons []ShowDetailsSeasonsItem
-
-// ShowDetailsSeasonsItem defines a model
-type ShowDetailsSeasonsItem struct {
-	AirDate      civil.Date `json:"air_date,omitzero"`
-	EpisodeCount int        `json:"episode_count,omitzero"`
-	ID           int        `json:"id,omitzero"`
-	Name         string     `json:"name,omitzero"`
-	Overview     string     `json:"overview,omitzero"`
-	PosterPath   string     `json:"poster_path,omitzero"`
-	SeasonNumber int        `json:"season_number,omitzero"`
-	VoteAverage  *float64   `json:"vote_average,omitzero"`
-}
+type ShowDetailsSeasons []Season2
 
 // Shows defines a model
 type Shows []Show
@@ -3285,37 +3320,6 @@ type TvSeasonAggregateCreditsOkCrewItem struct {
 	Jobs               TvSeasonAggregateCreditsCrewItemJobs `json:"jobs,omitzero"`
 	Department         Department                           `json:"department,omitzero"`
 	TotalEpisodeCount  int                                  `json:"total_episode_count,omitzero"`
-}
-
-// TvSeasonChangesByIDOk defines a model
-type TvSeasonChangesByIDOk struct {
-	Changes TvSeasonChangesByIDOkChanges `json:"changes,omitzero"`
-}
-
-// TvSeasonChangesByIDOkChanges defines a model
-type TvSeasonChangesByIDOkChanges []TvSeasonChangesByIDOkChangesItem
-
-// TvSeasonChangesByIDOkChangesItem defines a model
-type TvSeasonChangesByIDOkChangesItem struct {
-	Key   string                                `json:"key,omitzero"`
-	Items TvSeasonChangesByIDOkChangesItemItems `json:"items,omitzero"`
-}
-
-// TvSeasonChangesByIDOkChangesItemItems defines a model
-type TvSeasonChangesByIDOkChangesItemItems []TvSeasonChangesByIDOkChangesItemItemsItem
-
-// TvSeasonChangesByIDOkChangesItemItemsItem defines a model
-type TvSeasonChangesByIDOkChangesItemItemsItem struct {
-	ID     string                                          `json:"id,omitzero"`
-	Action string                                          `json:"action,omitzero"`
-	Time   string                                          `json:"time,omitzero"`
-	Value  *TvSeasonChangesByIDOkChangesItemItemsItemValue `json:"value,omitzero"`
-}
-
-// TvSeasonChangesByIDOkChangesItemItemsItemValue defines a model
-type TvSeasonChangesByIDOkChangesItemItemsItemValue struct {
-	EpisodeID     int `json:"episode_id,omitzero"`
-	EpisodeNumber int `json:"episode_number,omitzero"`
 }
 
 // TvSeasonCreditsOk defines a model

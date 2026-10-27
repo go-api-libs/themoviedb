@@ -9196,8 +9196,8 @@ func (c *Client) TvSeriesChangesWithResult[R any](ctx context.Context, seriesID 
 	if params != nil {
 		q := make(url.Values, 3)
 
-		if params.EndDate != "" {
-			q["end_date"] = []string{params.EndDate}
+		if params.EndDate != (civil.Date{}) {
+			q["end_date"] = []string{params.EndDate.String()}
 		}
 
 		if params.Page != 0 {
@@ -10817,21 +10817,21 @@ func (c *Client) TvSeasonAggregateCreditsWithResult[R any](ctx context.Context, 
 // Get the recent changes for a TV season.
 //
 //	GET /tv/season/{season_id}/changes
-func (c *Client) TvSeasonChangesByID(ctx context.Context, seasonID int32, params *TvSeasonChangesByIDParams) (*TvSeasonChangesByIDOk, error) {
-	return c.TvSeasonChangesByIDWithResult[TvSeasonChangesByIDOk](ctx, seasonID, params)
+func (c *Client) GetSeasonChangesByID(ctx context.Context, seasonID SeasonID, params *GetSeasonChangesByIDParams) (*SeasonChangesWrapper, error) {
+	return c.GetSeasonChangesByIDWithResult[SeasonChangesWrapper](ctx, seasonID, params)
 }
 
 // Get the recent changes for a TV season.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/season/{season_id}/changes
-func (c *Client) TvSeasonChangesByIDWithResult[R any](ctx context.Context, seasonID int32, params *TvSeasonChangesByIDParams) (*R, error) {
+func (c *Client) GetSeasonChangesByIDWithResult[R any](ctx context.Context, seasonID SeasonID, params *GetSeasonChangesByIDParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", "season", strconv.FormatInt(int64(seasonID), 10), "changes")
 	if params != nil {
 		q := make(url.Values, 3)
 
-		if params.EndDate != "" {
-			q["end_date"] = []string{params.EndDate}
+		if params.EndDate != (civil.Date{}) {
+			q["end_date"] = []string{params.EndDate.String()}
 		}
 
 		if params.Page != 0 {
@@ -10873,7 +10873,7 @@ func (c *Client) TvSeasonChangesByIDWithResult[R any](ctx context.Context, seaso
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeasonChangesByIDOk); ok {
+			if _, ok := any(&out).(*SeasonChangesWrapper); ok {
 				opts = jsonOpts
 			}
 
