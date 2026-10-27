@@ -33,7 +33,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := s.SearchTVShows(ctx); err != nil {
+	if err := s.SearchShows(ctx); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -63,8 +63,8 @@ func (s *Service) SearchMovies(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) SearchTVShows(ctx context.Context) error {
-	res, err := s.cli.SearchTvShows(ctx, themoviedb.SearchTvShowsParams{Query: "The Crown"})
+func (s *Service) SearchShows(ctx context.Context) error {
+	res, err := s.cli.SearchShows(ctx, themoviedb.SearchShowsParams{Query: "The Crown"})
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (s *Service) SearchTVShows(ctx context.Context) error {
 			}
 		}
 
-		season1, err := s.cli.GetTvShowSeason(ctx, show.ID, 1, &themoviedb.GetTvShowSeasonParams{})
+		season1, err := s.cli.GetShowSeason(ctx, show.ID, 1, &themoviedb.GetShowSeasonParams{})
 		if err != nil {
 			return err
 		}

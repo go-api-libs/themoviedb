@@ -9101,7 +9101,7 @@ func TestClient_Error(t *testing.T) {
 		})
 	})
 
-	t.Run("SearchTvShows", func(t *testing.T) {
+	t.Run("SearchShows", func(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
@@ -9112,7 +9112,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.SearchTvShows(t.Context(), SearchTvShowsParams{}); err == nil {
+			if _, err := c.SearchShows(t.Context(), SearchShowsParams{}); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, io.EOF) {
 				t.Fatalf("want: %v, got: %v", io.EOF, err)
@@ -9132,7 +9132,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.SearchTvShows(t.Context(), SearchTvShowsParams{}); err == nil {
+			if _, err := c.SearchShows(t.Context(), SearchShowsParams{}); err == nil {
 				t.Fatal("expected error")
 			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
 				t.Fatalf("got: %T, want: *api.Error", err)
@@ -9160,7 +9160,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.SearchTvShows(t.Context(), SearchTvShowsParams{}); err == nil {
+			if _, err := c.SearchShows(t.Context(), SearchShowsParams{}); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
@@ -9185,7 +9185,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.SearchTvShows(t.Context(), SearchTvShowsParams{}); err == nil {
+			if _, err := c.SearchShows(t.Context(), SearchShowsParams{}); err == nil {
 				t.Fatal("expected error")
 			} else if decErr, ok := errors.AsType[*api.DecodingError](err); !ok {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
@@ -9947,7 +9947,7 @@ func TestClient_Error(t *testing.T) {
 		})
 	})
 
-	t.Run("TvSeriesDetails", func(t *testing.T) {
+	t.Run("GetShow", func(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
@@ -9958,7 +9958,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.TvSeriesDetails(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetShow(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, io.EOF) {
 				t.Fatalf("want: %v, got: %v", io.EOF, err)
@@ -9978,7 +9978,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.TvSeriesDetails(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetShow(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
 				t.Fatalf("got: %T, want: *api.Error", err)
@@ -10006,7 +10006,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.TvSeriesDetails(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetShow(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
@@ -10031,7 +10031,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.TvSeriesDetails(t.Context(), 0, nil); err == nil {
+			if _, err := c.GetShow(t.Context(), 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if decErr, ok := errors.AsType[*api.DecodingError](err); !ok {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
@@ -12015,7 +12015,7 @@ func TestClient_Error(t *testing.T) {
 		})
 	})
 
-	t.Run("GetTvShowSeason", func(t *testing.T) {
+	t.Run("GetShowSeason", func(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
@@ -12026,7 +12026,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.GetTvShowSeason(t.Context(), 0, 0, nil); err == nil {
+			if _, err := c.GetShowSeason(t.Context(), 0, 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, io.EOF) {
 				t.Fatalf("want: %v, got: %v", io.EOF, err)
@@ -12046,7 +12046,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.GetTvShowSeason(t.Context(), 0, 0, nil); err == nil {
+			if _, err := c.GetShowSeason(t.Context(), 0, 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
 				t.Fatalf("got: %T, want: *api.Error", err)
@@ -12074,7 +12074,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.GetTvShowSeason(t.Context(), 0, 0, nil); err == nil {
+			if _, err := c.GetShowSeason(t.Context(), 0, 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
@@ -12099,7 +12099,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if _, err := c.GetTvShowSeason(t.Context(), 0, 0, nil); err == nil {
+			if _, err := c.GetShowSeason(t.Context(), 0, 0, nil); err == nil {
 				t.Fatal("expected error")
 			} else if decErr, ok := errors.AsType[*api.DecodingError](err); !ok {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
@@ -14319,13 +14319,13 @@ func TestClient_Interactions(t *testing.T) {
 		t.Fatalf("GetMovie: %v", err)
 	}
 
-	if _, err := c.SearchTvShows(ctx, SearchTvShowsParams{
+	if _, err := c.SearchShows(ctx, SearchShowsParams{
 		Query: "The Crown",
 	}); err != nil {
-		t.Fatalf("SearchTvShows: %v", err)
+		t.Fatalf("SearchShows: %v", err)
 	}
 
-	if _, err := c.GetTvShowSeason(ctx, 65494, 1, &GetTvShowSeasonParams{}); err != nil {
-		t.Fatalf("GetTvShowSeason: %v", err)
+	if _, err := c.GetShowSeason(ctx, 65494, 1, &GetShowSeasonParams{}); err != nil {
+		t.Fatalf("GetShowSeason: %v", err)
 	}
 }

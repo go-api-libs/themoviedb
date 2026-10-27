@@ -312,7 +312,7 @@
         "operationId": "account-watchlist-tv",
         "responses": {
           "200": {
-            "$ref": "#/components/responses/TVShows"
+            "$ref": "#/components/responses/Shows"
           }
         }
       }
@@ -2197,10 +2197,10 @@
       "get": {
         "summary": "TV",
         "description": "Search for TV shows by their original, translated and also known as names.",
-        "operationId": "SearchTVShows",
+        "operationId": "SearchShows",
         "responses": {
           "200": {
-            "$ref": "#/components/responses/TVShowsResultPage"
+            "$ref": "#/components/responses/ShowsResultPage"
           }
         }
       }
@@ -2385,11 +2385,11 @@
       ],
       "get": {
         "summary": "Details",
-        "description": "Get the details of a TV show.",
-        "operationId": "tv-series-details",
+        "description": "Get the details of a show.",
+        "operationId": "GetShow",
         "responses": {
           "200": {
-            "$ref": "#/components/responses/TvSeriesDetailsOk"
+            "$ref": "#/components/responses/ShowDetails"
           }
         }
       }
@@ -2831,7 +2831,7 @@
       "get": {
         "summary": "Details",
         "description": "Query the details of a TV season.",
-        "operationId": "GetTVShowSeason",
+        "operationId": "GetShowSeason",
         "responses": {
           "200": {
             "$ref": "#/components/responses/Season"
@@ -9089,6 +9089,410 @@
         "example": 1396,
         "x-go-type-name": "SeriesID"
       },
+      "Show": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/SeriesID"
+          },
+          "name": {
+            "type": "string",
+            "example": "Breaking Bad"
+          },
+          "first_air_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2008-01-20"
+          },
+          "original_name": {
+            "type": "string",
+            "example": "Breaking Bad"
+          },
+          "overview": {
+            "type": "string",
+            "example": "When Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer and given a prognosis of only two years left to live. He becomes filled with a sense of fearlessness and an unrelenting desire to secure his family's financial future at any cost as he enters the dangerous world of drugs and crime."
+          },
+          "original_language": {
+            "type": "string",
+            "example": "en"
+          },
+          "origin_country": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "US"
+            }
+          },
+          "genre_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "default": 0,
+              "example": 18
+            }
+          },
+          "popularity": {
+            "type": "number",
+            "format": "double",
+            "default": 0,
+            "example": 298.884
+          },
+          "vote_average": {
+            "type": "number",
+            "format": "double",
+            "default": 0,
+            "example": 8.879
+          },
+          "vote_count": {
+            "type": "integer",
+            "default": 0,
+            "example": 11536
+          },
+          "poster_path": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg"
+          },
+          "backdrop_path": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "/bsNm9z2TJfe0WO3RedPGWQ8mG1X.jpg"
+          },
+          "adult": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          },
+          "softcore": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "genre_ids",
+          "id",
+          "origin_country",
+          "original_language",
+          "original_name",
+          "overview",
+          "popularity",
+          "first_air_date",
+          "name",
+          "vote_average",
+          "vote_count",
+          "adult",
+          "softcore"
+        ]
+      },
+      "ShowDetails": {
+        "type": "object",
+        "properties": {
+          "adult": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          },
+          "backdrop_path": {
+            "type": "string",
+            "example": "/6LWy0jvMpmjoS9fojNgHIKoWL05.jpg"
+          },
+          "created_by": {
+            "$ref": "#/components/schemas/ShowDetailsCreatedBy"
+          },
+          "episode_run_time": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "default": 0,
+              "example": 60
+            }
+          },
+          "first_air_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2011-04-17"
+          },
+          "genres": {
+            "$ref": "#/components/schemas/Keywords"
+          },
+          "homepage": {
+            "type": "string",
+            "example": "http://www.hbo.com/game-of-thrones"
+          },
+          "id": {
+            "type": "integer",
+            "default": 0,
+            "example": 1399
+          },
+          "in_production": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "en"
+            }
+          },
+          "last_air_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2019-05-19"
+          },
+          "last_episode_to_air": {
+            "$ref": "#/components/schemas/ShowDetailsLastEpisodeToAir"
+          },
+          "name": {
+            "type": "string",
+            "example": "Game of Thrones"
+          },
+          "next_episode_to_air": {},
+          "networks": {
+            "$ref": "#/components/schemas/Companies"
+          },
+          "number_of_episodes": {
+            "type": "integer",
+            "default": 0,
+            "example": 73
+          },
+          "number_of_seasons": {
+            "type": "integer",
+            "default": 0,
+            "example": 8
+          },
+          "origin_country": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "US"
+            }
+          },
+          "original_language": {
+            "type": "string",
+            "example": "en"
+          },
+          "original_name": {
+            "type": "string",
+            "example": "Game of Thrones"
+          },
+          "overview": {
+            "type": "string",
+            "example": "Seven noble families fight for control of the mythical land of Westeros. Friction between the houses leads to full-scale war. All while a very ancient evil awakens in the farthest north. Amidst the war, a neglected military order of misfits, the Night's Watch, is all that stands between the realms of men and icy horrors beyond."
+          },
+          "popularity": {
+            "type": "number",
+            "default": 0,
+            "example": 346.098
+          },
+          "poster_path": {
+            "type": "string",
+            "example": "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg"
+          },
+          "production_companies": {
+            "$ref": "#/components/schemas/Companies"
+          },
+          "production_countries": {
+            "$ref": "#/components/schemas/Countries"
+          },
+          "seasons": {
+            "$ref": "#/components/schemas/ShowDetailsSeasons"
+          },
+          "spoken_languages": {
+            "$ref": "#/components/schemas/Languages"
+          },
+          "status": {
+            "type": "string",
+            "example": "Ended"
+          },
+          "tagline": {
+            "type": "string",
+            "example": "Winter Is Coming"
+          },
+          "type": {
+            "type": "string",
+            "example": "Scripted"
+          },
+          "vote_average": {
+            "type": "number",
+            "default": 0,
+            "example": 8.438
+          },
+          "vote_count": {
+            "type": "integer",
+            "default": 0,
+            "example": 21390
+          }
+        }
+      },
+      "ShowDetailsCreatedBy": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ShowDetailsCreatedByItem"
+        }
+      },
+      "ShowDetailsCreatedByItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "default": 0,
+            "example": 9813
+          },
+          "credit_id": {
+            "type": "string",
+            "example": "5256c8c219c2956ff604858a"
+          },
+          "name": {
+            "type": "string",
+            "example": "David Benioff"
+          },
+          "gender": {
+            "$ref": "#/components/schemas/Gender"
+          },
+          "profile_path": {
+            "type": "string",
+            "example": "/xvNN5huL0X8yJ7h3IZfGG4O2zBD.jpg"
+          }
+        }
+      },
+      "ShowDetailsLastEpisodeToAir": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "default": 0,
+            "example": 1551830
+          },
+          "name": {
+            "type": "string",
+            "example": "The Iron Throne"
+          },
+          "overview": {
+            "type": "string",
+            "example": "In the aftermath of the devastating attack on King's Landing, Daenerys must face the survivors."
+          },
+          "vote_average": {
+            "type": "number",
+            "default": 0,
+            "example": 4.809
+          },
+          "vote_count": {
+            "type": "integer",
+            "default": 0,
+            "example": 241
+          },
+          "air_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2019-05-19"
+          },
+          "episode_number": {
+            "type": "integer",
+            "default": 0,
+            "example": 6
+          },
+          "production_code": {
+            "type": "string",
+            "example": "806"
+          },
+          "runtime": {
+            "type": "integer",
+            "default": 0,
+            "example": 80
+          },
+          "season_number": {
+            "type": "integer",
+            "default": 0,
+            "example": 8
+          },
+          "show_id": {
+            "type": "integer",
+            "default": 0,
+            "example": 1399
+          },
+          "still_path": {
+            "type": "string",
+            "example": "/zBi2O5EJfgTS6Ae0HdAYLm9o2nf.jpg"
+          }
+        }
+      },
+      "ShowDetailsSeasons": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ShowDetailsSeasonsItem"
+        }
+      },
+      "ShowDetailsSeasonsItem": {
+        "type": "object",
+        "properties": {
+          "air_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2010-12-05"
+          },
+          "episode_count": {
+            "type": "integer",
+            "default": 0,
+            "example": 272
+          },
+          "id": {
+            "type": "integer",
+            "default": 0,
+            "example": 3627
+          },
+          "name": {
+            "type": "string",
+            "example": "Specials"
+          },
+          "overview": {
+            "type": "string",
+            "example": ""
+          },
+          "poster_path": {
+            "type": "string",
+            "example": "/kMTcwNRfFKCZ0O2OaBZS0nZ2AIe.jpg"
+          },
+          "season_number": {
+            "type": "integer",
+            "default": 0,
+            "example": 0
+          },
+          "vote_average": {
+            "type": "integer",
+            "default": 0,
+            "example": 0
+          }
+        }
+      },
+      "Shows": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Show"
+        }
+      },
+      "ShowsResultPage": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginatedResponse"
+          },
+          {
+            "$ref": "#/components/schemas/ShowsResultWrapper"
+          }
+        ]
+      },
+      "ShowsResultWrapper": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "$ref": "#/components/schemas/Shows"
+          }
+        }
+      },
       "SortBy": {
         "type": "string",
         "enum": [
@@ -9201,128 +9605,6 @@
             "type": "integer",
             "default": 0,
             "example": 286
-          }
-        }
-      },
-      "TVShow": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "$ref": "#/components/schemas/SeriesID"
-          },
-          "name": {
-            "type": "string",
-            "example": "Breaking Bad"
-          },
-          "first_air_date": {
-            "type": "string",
-            "format": "date",
-            "example": "2008-01-20"
-          },
-          "original_name": {
-            "type": "string",
-            "example": "Breaking Bad"
-          },
-          "overview": {
-            "type": "string",
-            "example": "When Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer and given a prognosis of only two years left to live. He becomes filled with a sense of fearlessness and an unrelenting desire to secure his family's financial future at any cost as he enters the dangerous world of drugs and crime."
-          },
-          "original_language": {
-            "type": "string",
-            "example": "en"
-          },
-          "origin_country": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "example": "US"
-            }
-          },
-          "genre_ids": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "default": 0,
-              "example": 18
-            }
-          },
-          "popularity": {
-            "type": "number",
-            "format": "double",
-            "default": 0,
-            "example": 298.884
-          },
-          "vote_average": {
-            "type": "number",
-            "format": "double",
-            "default": 0,
-            "example": 8.879
-          },
-          "vote_count": {
-            "type": "integer",
-            "default": 0,
-            "example": 11536
-          },
-          "poster_path": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "example": "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg"
-          },
-          "backdrop_path": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "example": "/bsNm9z2TJfe0WO3RedPGWQ8mG1X.jpg"
-          },
-          "adult": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "softcore": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "genre_ids",
-          "id",
-          "origin_country",
-          "original_language",
-          "original_name",
-          "overview",
-          "popularity",
-          "first_air_date",
-          "name",
-          "vote_average",
-          "vote_count",
-          "adult",
-          "softcore"
-        ]
-      },
-      "TVShows": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/TVShow"
-        }
-      },
-      "TVShowsResultPage": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/PaginatedResponse"
-          },
-          {
-            "$ref": "#/components/schemas/TVShowsResultWrapper"
-          }
-        ]
-      },
-      "TVShowsResultWrapper": {
-        "type": "object",
-        "properties": {
-          "results": {
-            "$ref": "#/components/schemas/TVShows"
           }
         }
       },
@@ -10901,288 +11183,6 @@
           }
         }
       },
-      "TvSeriesDetailsOk": {
-        "type": "object",
-        "properties": {
-          "adult": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "backdrop_path": {
-            "type": "string",
-            "example": "/6LWy0jvMpmjoS9fojNgHIKoWL05.jpg"
-          },
-          "created_by": {
-            "$ref": "#/components/schemas/TvSeriesDetailsOkCreatedBy"
-          },
-          "episode_run_time": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "default": 0,
-              "example": 60
-            }
-          },
-          "first_air_date": {
-            "type": "string",
-            "format": "date",
-            "example": "2011-04-17"
-          },
-          "genres": {
-            "$ref": "#/components/schemas/Keywords"
-          },
-          "homepage": {
-            "type": "string",
-            "example": "http://www.hbo.com/game-of-thrones"
-          },
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 1399
-          },
-          "in_production": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "languages": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "example": "en"
-            }
-          },
-          "last_air_date": {
-            "type": "string",
-            "format": "date",
-            "example": "2019-05-19"
-          },
-          "last_episode_to_air": {
-            "$ref": "#/components/schemas/TvSeriesDetailsOkLastEpisodeToAir"
-          },
-          "name": {
-            "type": "string",
-            "example": "Game of Thrones"
-          },
-          "next_episode_to_air": {},
-          "networks": {
-            "$ref": "#/components/schemas/Companies"
-          },
-          "number_of_episodes": {
-            "type": "integer",
-            "default": 0,
-            "example": 73
-          },
-          "number_of_seasons": {
-            "type": "integer",
-            "default": 0,
-            "example": 8
-          },
-          "origin_country": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "example": "US"
-            }
-          },
-          "original_language": {
-            "type": "string",
-            "example": "en"
-          },
-          "original_name": {
-            "type": "string",
-            "example": "Game of Thrones"
-          },
-          "overview": {
-            "type": "string",
-            "example": "Seven noble families fight for control of the mythical land of Westeros. Friction between the houses leads to full-scale war. All while a very ancient evil awakens in the farthest north. Amidst the war, a neglected military order of misfits, the Night's Watch, is all that stands between the realms of men and icy horrors beyond."
-          },
-          "popularity": {
-            "type": "number",
-            "default": 0,
-            "example": 346.098
-          },
-          "poster_path": {
-            "type": "string",
-            "example": "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg"
-          },
-          "production_companies": {
-            "$ref": "#/components/schemas/Companies"
-          },
-          "production_countries": {
-            "$ref": "#/components/schemas/Countries"
-          },
-          "seasons": {
-            "$ref": "#/components/schemas/TvSeriesDetailsOkSeasons"
-          },
-          "spoken_languages": {
-            "$ref": "#/components/schemas/Languages"
-          },
-          "status": {
-            "type": "string",
-            "example": "Ended"
-          },
-          "tagline": {
-            "type": "string",
-            "example": "Winter Is Coming"
-          },
-          "type": {
-            "type": "string",
-            "example": "Scripted"
-          },
-          "vote_average": {
-            "type": "number",
-            "default": 0,
-            "example": 8.438
-          },
-          "vote_count": {
-            "type": "integer",
-            "default": 0,
-            "example": 21390
-          }
-        }
-      },
-      "TvSeriesDetailsOkCreatedBy": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/TvSeriesDetailsOkCreatedByItem"
-        }
-      },
-      "TvSeriesDetailsOkCreatedByItem": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 9813
-          },
-          "credit_id": {
-            "type": "string",
-            "example": "5256c8c219c2956ff604858a"
-          },
-          "name": {
-            "type": "string",
-            "example": "David Benioff"
-          },
-          "gender": {
-            "$ref": "#/components/schemas/Gender"
-          },
-          "profile_path": {
-            "type": "string",
-            "example": "/xvNN5huL0X8yJ7h3IZfGG4O2zBD.jpg"
-          }
-        }
-      },
-      "TvSeriesDetailsOkLastEpisodeToAir": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 1551830
-          },
-          "name": {
-            "type": "string",
-            "example": "The Iron Throne"
-          },
-          "overview": {
-            "type": "string",
-            "example": "In the aftermath of the devastating attack on King's Landing, Daenerys must face the survivors."
-          },
-          "vote_average": {
-            "type": "number",
-            "default": 0,
-            "example": 4.809
-          },
-          "vote_count": {
-            "type": "integer",
-            "default": 0,
-            "example": 241
-          },
-          "air_date": {
-            "type": "string",
-            "format": "date",
-            "example": "2019-05-19"
-          },
-          "episode_number": {
-            "type": "integer",
-            "default": 0,
-            "example": 6
-          },
-          "production_code": {
-            "type": "string",
-            "example": "806"
-          },
-          "runtime": {
-            "type": "integer",
-            "default": 0,
-            "example": 80
-          },
-          "season_number": {
-            "type": "integer",
-            "default": 0,
-            "example": 8
-          },
-          "show_id": {
-            "type": "integer",
-            "default": 0,
-            "example": 1399
-          },
-          "still_path": {
-            "type": "string",
-            "example": "/zBi2O5EJfgTS6Ae0HdAYLm9o2nf.jpg"
-          }
-        }
-      },
-      "TvSeriesDetailsOkSeasons": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/TvSeriesDetailsOkSeasonsItem"
-        }
-      },
-      "TvSeriesDetailsOkSeasonsItem": {
-        "type": "object",
-        "properties": {
-          "air_date": {
-            "type": "string",
-            "format": "date",
-            "example": "2010-12-05"
-          },
-          "episode_count": {
-            "type": "integer",
-            "default": 0,
-            "example": 272
-          },
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 3627
-          },
-          "name": {
-            "type": "string",
-            "example": "Specials"
-          },
-          "overview": {
-            "type": "string",
-            "example": ""
-          },
-          "poster_path": {
-            "type": "string",
-            "example": "/kMTcwNRfFKCZ0O2OaBZS0nZ2AIe.jpg"
-          },
-          "season_number": {
-            "type": "integer",
-            "default": 0,
-            "example": 0
-          },
-          "vote_average": {
-            "type": "integer",
-            "default": 0,
-            "example": 0
-          }
-        }
-      },
       "TvSeriesEpisodeGroupsOk": {
         "type": "object",
         "properties": {
@@ -12653,7 +12653,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/TVShowsResultPage"
+              "$ref": "#/components/schemas/ShowsResultPage"
             },
             "examples": {
               "Result": {
@@ -14577,6 +14577,51 @@
           }
         }
       },
+      "ShowDetails": {
+        "description": "200",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ShowDetails"
+            },
+            "examples": {
+              "Result": {
+                "value": "{\n  \"adult\": false,\n  \"backdrop_path\": \"/6LWy0jvMpmjoS9fojNgHIKoWL05.jpg\",\n  \"created_by\": [\n    {\n      \"id\": 9813,\n      \"credit_id\": \"5256c8c219c2956ff604858a\",\n      \"name\": \"David Benioff\",\n      \"gender\": 2,\n      \"profile_path\": \"/xvNN5huL0X8yJ7h3IZfGG4O2zBD.jpg\"\n    },\n    {\n      \"id\": 228068,\n      \"credit_id\": \"552e611e9251413fea000901\",\n      \"name\": \"D.B. Weiss\",\n      \"gender\": 2,\n      \"profile_path\": \"/2RMejaT793U9KRk2IEbFfteQntE.jpg\"\n    }\n  ],\n  \"episode_run_time\": [\n    60\n  ],\n  \"first_air_date\": \"2011-04-17\",\n  \"genres\": [\n    {\n      \"id\": 10765,\n      \"name\": \"Sci-Fi & Fantasy\"\n    },\n    {\n      \"id\": 18,\n      \"name\": \"Drama\"\n    },\n    {\n      \"id\": 10759,\n      \"name\": \"Action & Adventure\"\n    }\n  ],\n  \"homepage\": \"http://www.hbo.com/game-of-thrones\",\n  \"id\": 1399,\n  \"in_production\": false,\n  \"languages\": [\n    \"en\"\n  ],\n  \"last_air_date\": \"2019-05-19\",\n  \"last_episode_to_air\": {\n    \"id\": 1551830,\n    \"name\": \"The Iron Throne\",\n    \"overview\": \"In the aftermath of the devastating attack on King's Landing, Daenerys must face the survivors.\",\n    \"vote_average\": 4.809,\n    \"vote_count\": 241,\n    \"air_date\": \"2019-05-19\",\n    \"episode_number\": 6,\n    \"production_code\": \"806\",\n    \"runtime\": 80,\n    \"season_number\": 8,\n    \"show_id\": 1399,\n    \"still_path\": \"/zBi2O5EJfgTS6Ae0HdAYLm9o2nf.jpg\"\n  },\n  \"name\": \"Game of Thrones\",\n  \"next_episode_to_air\": null,\n  \"networks\": [\n    {\n      \"id\": 49,\n      \"logo_path\": \"/tuomPhY2UtuPTqqFnKMVHvSb724.png\",\n      \"name\": \"HBO\",\n      \"origin_country\": \"US\"\n    }\n  ],\n  \"number_of_episodes\": 73,\n  \"number_of_seasons\": 8,\n  \"origin_country\": [\n    \"US\"\n  ],\n  \"original_language\": \"en\",\n  \"original_name\": \"Game of Thrones\",\n  \"overview\": \"Seven noble families fight for control of the mythical land of Westeros. Friction between the houses leads to full-scale war. All while a very ancient evil awakens in the farthest north. Amidst the war, a neglected military order of misfits, the Night's Watch, is all that stands between the realms of men and icy horrors beyond.\",\n  \"popularity\": 346.098,\n  \"poster_path\": \"/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg\",\n  \"production_companies\": [\n    {\n      \"id\": 76043,\n      \"logo_path\": \"/9RO2vbQ67otPrBLXCaC8UMp3Qat.png\",\n      \"name\": \"Revolution Sun Studios\",\n      \"origin_country\": \"US\"\n    },\n    {\n      \"id\": 12525,\n      \"logo_path\": null,\n      \"name\": \"Television 360\",\n      \"origin_country\": \"\"\n    },\n    {\n      \"id\": 5820,\n      \"logo_path\": null,\n      \"name\": \"Generator Entertainment\",\n      \"origin_country\": \"GB\"\n    },\n    {\n      \"id\": 12526,\n      \"logo_path\": null,\n      \"name\": \"Bighead Littlehead\",\n      \"origin_country\": \"\"\n    }\n  ],\n  \"production_countries\": [\n    {\n      \"iso_3166_1\": \"GB\",\n      \"name\": \"United Kingdom\"\n    },\n    {\n      \"iso_3166_1\": \"US\",\n      \"name\": \"United States of America\"\n    }\n  ],\n  \"seasons\": [\n    {\n      \"air_date\": \"2010-12-05\",\n      \"episode_count\": 272,\n      \"id\": 3627,\n      \"name\": \"Specials\",\n      \"overview\": \"\",\n      \"poster_path\": \"/kMTcwNRfFKCZ0O2OaBZS0nZ2AIe.jpg\",\n      \"season_number\": 0,\n      \"vote_average\": 0\n    },\n    {\n      \"air_date\": \"2011-04-17\",\n      \"episode_count\": 10,\n      \"id\": 3624,\n      \"name\": \"Season 1\",\n      \"overview\": \"Trouble is brewing in the Seven Kingdoms of Westeros. For the driven inhabitants of this visionary world, control of Westeros' Iron Throne holds the lure of great power. But in a land where the seasons can last a lifetime, winter is coming...and beyond the Great Wall that protects them, an ancient evil has returned. In Season One, the story centers on three primary areas: the Stark and the Lannister families, whose designs on controlling the throne threaten a tenuous peace; the dragon princess Daenerys, heir to the former dynasty, who waits just over the Narrow Sea with her malevolent brother Viserys; and the Great Wall--a massive barrier of ice where a forgotten danger is stirring.\",\n      \"poster_path\": \"/wgfKiqzuMrFIkU1M68DDDY8kGC1.jpg\",\n      \"season_number\": 1,\n      \"vote_average\": 8.3\n    },\n    {\n      \"air_date\": \"2012-04-01\",\n      \"episode_count\": 10,\n      \"id\": 3625,\n      \"name\": \"Season 2\",\n      \"overview\": \"The cold winds of winter are rising in Westeros...war is coming...and five kings continue their savage quest for control of the all-powerful Iron Throne. With winter fast approaching, the coveted Iron Throne is occupied by the cruel Joffrey, counseled by his conniving mother Cersei and uncle Tyrion. But the Lannister hold on the Throne is under assault on many fronts. Meanwhile, a new leader is rising among the wildings outside the Great Wall, adding new perils for Jon Snow and the order of the Night's Watch.\",\n      \"poster_path\": \"/9xfNkPwDOqyeUvfNhs1XlWA0esP.jpg\",\n      \"season_number\": 2,\n      \"vote_average\": 8.2\n    },\n    {\n      \"air_date\": \"2013-03-31\",\n      \"episode_count\": 10,\n      \"id\": 3626,\n      \"name\": \"Season 3\",\n      \"overview\": \"Duplicity and treachery...nobility and honor...conquest and triumph...and, of course, dragons. In Season 3, family and loyalty are the overarching themes as many critical storylines from the first two seasons come to a brutal head. Meanwhile, the Lannisters maintain their hold on King's Landing, though stirrings in the North threaten to alter the balance of power; Robb Stark, King of the North, faces a major calamity as he tries to build on his victories; a massive army of wildlings led by Mance Rayder march for the Wall; and Daenerys Targaryen--reunited with her dragons--attempts to raise an army in her quest for the Iron Throne.\",\n      \"poster_path\": \"/5MkZjRnCKiIGn3bkXrXfndEzqOU.jpg\",\n      \"season_number\": 3,\n      \"vote_average\": 8.2\n    },\n    {\n      \"air_date\": \"2014-04-06\",\n      \"episode_count\": 10,\n      \"id\": 3628,\n      \"name\": \"Season 4\",\n      \"overview\": \"The War of the Five Kings is drawing to a close, but new intrigues and plots are in motion, and the surviving factions must contend with enemies not only outside their ranks, but within.\",\n      \"poster_path\": \"/jXIMScXE4J4EVHUba1JgxZnWbo4.jpg\",\n      \"season_number\": 4,\n      \"vote_average\": 8.4\n    },\n    {\n      \"air_date\": \"2015-04-12\",\n      \"episode_count\": 10,\n      \"id\": 62090,\n      \"name\": \"Season 5\",\n      \"overview\": \"The War of the Five Kings, once thought to be drawing to a close, is instead entering a new and more chaotic phase. Westeros is on the brink of collapse, and many are seizing what they can while the realm implodes, like a corpse making a feast for crows.\",\n      \"poster_path\": \"/7Q1Hy1AHxAzA2lsmzEMBvuWTX0x.jpg\",\n      \"season_number\": 5,\n      \"vote_average\": 8.2\n    },\n    {\n      \"air_date\": \"2016-04-24\",\n      \"episode_count\": 10,\n      \"id\": 71881,\n      \"name\": \"Season 6\",\n      \"overview\": \"Following the shocking developments at the conclusion of season five, survivors from all parts of Westeros and Essos regroup to press forward, inexorably, towards their uncertain individual fates. Familiar faces will forge new alliances to bolster their strategic chances at survival, while new characters will emerge to challenge the balance of power in the east, west, north and south.\",\n      \"poster_path\": \"/p1udLh0gfqyZFmXBGa393gk8go5.jpg\",\n      \"season_number\": 6,\n      \"vote_average\": 8.3\n    },\n    {\n      \"air_date\": \"2017-07-16\",\n      \"episode_count\": 7,\n      \"id\": 81266,\n      \"name\": \"Season 7\",\n      \"overview\": \"The long winter is here. And with it comes a convergence of armies and attitudes that have been brewing for years.\",\n      \"poster_path\": \"/oX51n32QyHeFP5kErksemJsJljL.jpg\",\n      \"season_number\": 7,\n      \"vote_average\": 8.2\n    },\n    {\n      \"air_date\": \"2019-04-14\",\n      \"episode_count\": 6,\n      \"id\": 107971,\n      \"name\": \"Season 8\",\n      \"overview\": \"The Great War has come, the Wall has fallen and the Night King's army of the dead marches towards Westeros. The end is here, but who will take the Iron Throne?\",\n      \"poster_path\": \"/3OcQhbrecf4F4pYss2gSirTGPvD.jpg\",\n      \"season_number\": 8,\n      \"vote_average\": 6.5\n    }\n  ],\n  \"spoken_languages\": [\n    {\n      \"english_name\": \"English\",\n      \"iso_639_1\": \"en\",\n      \"name\": \"English\"\n    }\n  ],\n  \"status\": \"Ended\",\n  \"tagline\": \"Winter Is Coming\",\n  \"type\": \"Scripted\",\n  \"vote_average\": 8.438,\n  \"vote_count\": 21390\n}"
+              }
+            }
+          }
+        }
+      },
+      "Shows": {
+        "description": "200",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ShowsResultPage"
+            },
+            "examples": {
+              "Result": {
+                "value": "{\"page\":1,\"results\":[{\"adult\":false,\"backdrop_path\":\"/7phlGHRupo38EnuwmkAHdNUqov3.jpg\",\"genre_ids\":[35],\"id\":58932,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"The Crazy Ones\",\"overview\":\"The Crazy Ones is an American situation comedy series created by David E. Kelley that stars Robin Williams and Sarah Michelle Gellar. The single-camera project premiered on CBS on September 26, 2013, as part of the 2013–14 American television season as a Thursday night 9 pm entry. Bill D'Elia, Dean Lorey, Jason Winer, John Montgomery and Mark Teitelbaum serve as executive producers for 20th Century Fox Television.\",\"popularity\":8.939,\"poster_path\":\"/s2e7hTrdmNUaJDf0yDP5b4AHvrD.jpg\",\"first_air_date\":\"2013-09-26\",\"name\":\"The Crazy Ones\",\"vote_average\":6.176,\"vote_count\":94},{\"adult\":false,\"backdrop_path\":\"/hmLTIRtVyTHShJl2Wb8LHmvUgJm.jpg\",\"genre_ids\":[80,18,9648],\"id\":19885,\"origin_country\":[\"GB\"],\"original_language\":\"en\",\"original_name\":\"Sherlock\",\"overview\":\"A modern update finds the famous sleuth and his doctor partner solving crime in 21st century London.\",\"popularity\":82.572,\"poster_path\":\"/7WTsnHkbA0FaG6R9twfFde0I9hl.jpg\",\"first_air_date\":\"2010-07-25\",\"name\":\"Sherlock\",\"vote_average\":8.534,\"vote_count\":4425},{\"adult\":false,\"backdrop_path\":\"/dDPwCyZG8arYwMDoQl0sm4xccCE.jpg\",\"genre_ids\":[18,80,9648],\"id\":46952,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"The Blacklist\",\"overview\":\"Raymond \\\"Red\\\" Reddington, one of the FBI's most wanted fugitives, surrenders in person at FBI Headquarters in Washington, D.C. He claims that he and the FBI have the same interests: bringing down dangerous criminals and terrorists. In the last two decades, he's made a list of criminals and terrorists that matter the most but the FBI cannot find because it does not know they exist. Reddington calls this \\\"The Blacklist\\\". Reddington will co-operate, but insists that he will speak only to Elizabeth Keen, a rookie FBI profiler.\",\"popularity\":404.036,\"poster_path\":\"/htJzeRcYI2ewMm4PTrg98UMXShe.jpg\",\"first_air_date\":\"2013-09-23\",\"name\":\"The Blacklist\",\"vote_average\":7.586,\"vote_count\":2656},{\"adult\":false,\"backdrop_path\":\"/o6ixncGLOtRPz78vEIy9p1cOn9J.jpg\",\"genre_ids\":[18],\"id\":688,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"The West Wing\",\"overview\":\"The West Wing provides a glimpse into presidential politics in the nation's capital as it tells the stories of the members of a fictional presidential administration. These interesting characters have humor and dedication that touches the heart while the politics that they discuss touch on everyday life.\",\"popularity\":47.271,\"poster_path\":\"/yqDWr5NAE7m1IWrygYwLyEB6pN0.jpg\",\"first_air_date\":\"1999-09-22\",\"name\":\"The West Wing\",\"vote_average\":8.289,\"vote_count\":388},{\"adult\":false,\"backdrop_path\":\"/o1kYeMsqlVs9xTjJTOnYnoHfMiD.jpg\",\"genre_ids\":[18,9648,10765],\"id\":50825,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"Sleepy Hollow\",\"overview\":\"Ichabod Crane is resurrected and pulled two and a half centuries through time to unravel a mystery that dates all the way back to the founding fathers.\",\"popularity\":40.923,\"poster_path\":\"/ooDWFmGR5foBvLNsX1t30Kv6Dlc.jpg\",\"first_air_date\":\"2013-09-16\",\"name\":\"Sleepy Hollow\",\"vote_average\":7.421,\"vote_count\":899},{\"adult\":false,\"backdrop_path\":\"/rFndH81vGRQeQHEhQFkFRqXB0tK.jpg\",\"genre_ids\":[18],\"id\":58928,\"origin_country\":[\"US\",\"GB\"],\"original_language\":\"en\",\"original_name\":\"Dracula\",\"overview\":\"It's the late 19th century, and the mysterious Dracula has arrived in London, posing as an American entrepreneur who wants to bring modern science to Victorian society. He's especially interested in the new technology of electricity, which promises to brighten the night - useful for someone who avoids the sun. But he has another reason for his travels: he hopes to take revenge on those who cursed him with immortality centuries earlier. Everything seems to be going according to plan... until he becomes infatuated with a woman who appears to be a reincarnation of his dead wife.\",\"popularity\":17.511,\"poster_path\":\"/oQUU8LKVl10ejpxJC0qfsSuPZeF.jpg\",\"first_air_date\":\"2013-10-25\",\"name\":\"Dracula\",\"vote_average\":7.143,\"vote_count\":343},{\"adult\":false,\"backdrop_path\":\"/pe4B3OYBb7qYCdkAz7nKWordbls.jpg\",\"genre_ids\":[16,35,10765],\"id\":15260,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"Adventure Time\",\"overview\":\"Hook up with Finn and Jake as they travel the Land of Ooo searching for adventure. But remember, adventure isn’t always easy. Sometimes you’ve got to battle fire gnomes that torture old ladies, save a smelly hot dog princess from the Ice King, and thaw out a bunch of frozen businessmen. What the cabbage?!\",\"popularity\":151.011,\"poster_path\":\"/qk3eQ8jW4opJ48gFWYUXWaMT4l.jpg\",\"first_air_date\":\"2010-04-05\",\"name\":\"Adventure Time\",\"vote_average\":8.5,\"vote_count\":2285},{\"adult\":false,\"backdrop_path\":\"/5BMwFwNzSidVYArn561acqtktxv.jpg\",\"genre_ids\":[35],\"id\":1100,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"How I Met Your Mother\",\"overview\":\"A father recounts to his children - through a series of flashbacks - the journey he and his four best friends took leading up to him meeting their mother.\",\"popularity\":151.34,\"poster_path\":\"/b34jPzmB0wZy7EjUZoleXOl2RRI.jpg\",\"first_air_date\":\"2005-09-19\",\"name\":\"How I Met Your Mother\",\"vote_average\":8.165,\"vote_count\":4142},{\"adult\":false,\"backdrop_path\":\"/sRfl6vyzGWutgG0cmXmbChC4iN6.jpg\",\"genre_ids\":[10759,18,10765],\"id\":57243,\"origin_country\":[\"GB\"],\"original_language\":\"en\",\"original_name\":\"Doctor Who\",\"overview\":\"The Doctor is a Time Lord: a 900 year old alien with 2 hearts, part of a gifted civilization who mastered time travel. The Doctor saves planets for a living—more of a hobby actually, and the Doctor's very, very good at it.\",\"popularity\":183.542,\"poster_path\":\"/sz4zF5z9zyFh8Z6g5IQPNq91cI7.jpg\",\"first_air_date\":\"2005-03-26\",\"name\":\"Doctor Who\",\"vote_average\":7.4,\"vote_count\":2553},{\"adult\":false,\"backdrop_path\":\"/f8jrTem5NQnWAgQBBOg2vbh6gzm.jpg\",\"genre_ids\":[10759,18],\"id\":2046,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"Alias\",\"overview\":\"Sydney Bristow, an agent who has been tricked to believe she is working for the U.S. government, is actually working for a criminal organization named the Alliance of Twelve. Upon learning this, Sydney becomes a double agent for the real CIA.\",\"popularity\":10.621,\"poster_path\":\"/Dl3KIxWlSEvnXogNHxdXA4pbAk.jpg\",\"first_air_date\":\"2001-09-30\",\"name\":\"Alias\",\"vote_average\":6.672,\"vote_count\":527},{\"adult\":false,\"backdrop_path\":\"/vNnLAKmoczRlNarxyGrrw0KSOeX.jpg\",\"genre_ids\":[80,18,9648,10759],\"id\":1412,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"Arrow\",\"overview\":\"Spoiled billionaire playboy Oliver Queen is missing and presumed dead when his yacht is lost at sea. He returns five years later a changed man, determined to clean up the city as a hooded vigilante armed with a bow.\",\"popularity\":170.647,\"poster_path\":\"/gKG5QGz5Ngf8fgWpBsWtlg5L2SF.jpg\",\"first_air_date\":\"2012-10-10\",\"name\":\"Arrow\",\"vote_average\":6.8,\"vote_count\":5418},{\"adult\":false,\"backdrop_path\":null,\"genre_ids\":[99,35],\"id\":35383,\"origin_country\":[\"GB\"],\"original_language\":\"en\",\"original_name\":\"How TV Ruined Your Life\",\"overview\":\"How TV Ruined Your Life is a six-episode BBC Two television series written and presented by Charlie Brooker. Charlie Brooker, whose earlier TV-related programmes include How to Watch Television, Charlie Brooker's Screenwipe and You Have Been Watching, examines how the medium has bent reality to fit its own ends. Produced by Zeppotron, the series aired its first episode in January 2011.\",\"popularity\":2.487,\"poster_path\":\"/7Jf1O7Hna6nPjBpfu1biqpMsDjI.jpg\",\"first_air_date\":\"2011-01-25\",\"name\":\"How TV Ruined Your Life\",\"vote_average\":7.6,\"vote_count\":19},{\"adult\":false,\"backdrop_path\":\"/iWDs7D8PSRcstLFuQf7uwGjBB89.jpg\",\"genre_ids\":[80,18,9648],\"id\":21510,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"White Collar\",\"overview\":\"Neal Caffrey, a con man, forger and thief, is captured after a three-year game of cat and mouse with the FBI. With only months left serving a four-year sentence, he escapes to look for Kate, his girlfriend. Peter Burke, the FBI agent who initially captured Caffrey, finds and returns him to prison. This time, Caffrey proposes a deal with the FBI, as part of a work-release program. After some hesitation, Burke agrees, and thus begins this unconventional arrangement where Caffrey helps Burke apprehend white collar criminals.\",\"popularity\":72.635,\"poster_path\":\"/417XNiGvdzCsG9kDnnQJYaBsIrx.jpg\",\"first_air_date\":\"2009-10-23\",\"name\":\"White Collar\",\"vote_average\":8.308,\"vote_count\":1148},{\"adult\":false,\"backdrop_path\":\"/9hnNK78pwhTJjNygIFW4t2OcfZv.jpg\",\"genre_ids\":[35],\"id\":32406,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"The Big C\",\"overview\":\"A suburban mother faces her cancer diagnosis while trying to find humor and happiness as well.\",\"popularity\":12.656,\"poster_path\":\"/72M9N5bONawkSifdfjNlryWZ2uM.jpg\",\"first_air_date\":\"2010-08-16\",\"name\":\"The Big C\",\"vote_average\":7.18,\"vote_count\":75},{\"adult\":false,\"backdrop_path\":\"/sqtSI7uHhFSCvTx60pdqPXGhYCF.jpg\",\"genre_ids\":[35,80,18,9648],\"id\":1695,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"Monk\",\"overview\":\"Adrian Monk was once a rising star with the San Francisco Police Department, legendary for using unconventional means to solve the department's most baffling cases. But after the tragic (and still unsolved) murder of his wife Trudy, he developed an extreme case of obsessive-compulsive disorder. Now working as a private consultant, Monk continues to investigate cases in the most unconventional ways.\",\"popularity\":152.501,\"poster_path\":\"/3axGMbUecXXOPSeG47v2i9wK5y5.jpg\",\"first_air_date\":\"2002-07-12\",\"name\":\"Monk\",\"vote_average\":7.904,\"vote_count\":842},{\"adult\":false,\"backdrop_path\":\"/aGCq8HHRg65MUmP9Gb6MeoJDXrD.jpg\",\"genre_ids\":[35],\"id\":58942,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"The Michael J. Fox Show\",\"overview\":\"Look who’s making the news again! One of NY’s most beloved news anchors, Mike Henry (Michael J. Fox), put his career on hold to spend more time with his family and focus on his health after he was diagnosed with Parkinson’s. But now five years later, with the kids busy growing up and Mike growing restless, it just might be time for him to get back to work. Having never wanted Mike to leave in the first place, his old boss Harris Green jumped at the chance to get him back on TV. The trick, as it’s always been, was to make Mike think it was his idea. After several – okay, many - failed attempts, Mike’s family, anxious to see him out of the house, finally succeeded in getting him to “run into” Green. Now their plan is in motion. He’ll be back to juggling home, family, and career, just like the old days – only better.\",\"popularity\":6.79,\"poster_path\":\"/vHFM0GjFlqi8GpLECq2mF47V0LL.jpg\",\"first_air_date\":\"2013-09-26\",\"name\":\"The Michael J. Fox Show\",\"vote_average\":5.8,\"vote_count\":47},{\"adult\":false,\"backdrop_path\":\"/qzBaQAhGk5Rp08KX7EUTSVia6bZ.jpg\",\"genre_ids\":[35],\"id\":51320,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"The Millers\",\"overview\":\"A divorced reporter, looking forward to the single life, finds his parents' marital problems derail his plans.\",\"popularity\":7.507,\"poster_path\":\"/y3d7thiGCbYfFCJfKNyVX9GrqQo.jpg\",\"first_air_date\":\"2013-10-03\",\"name\":\"The Millers\",\"vote_average\":5.817,\"vote_count\":30},{\"adult\":false,\"backdrop_path\":\"/nywPcsxgt1PdEG7BqUYBIUTPNGx.jpg\",\"genre_ids\":[18],\"id\":44840,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"Mob City\",\"overview\":\"The true story of a decades-long conflict between the Los Angeles Police Department, under the determined leadership of Police Chief William Parker, and ruthless criminal elements led by Mickey Cohen, a one-time boxer who rose to the top of L.A.'s criminal world. The series is a fast-paced crime drama set in Los Angeles during the 1940s and '50s. It's a world of glamorous movie stars, powerful studio heads, returning war heroes, a powerful and corrupt police force and an even more dangerous criminal network determined to make L.A. its West Coast base.\",\"popularity\":6.096,\"poster_path\":\"/6W6Xhj1KOIcBtASHHhmpyySoUik.jpg\",\"first_air_date\":\"2013-12-04\",\"name\":\"Mob City\",\"vote_average\":6.934,\"vote_count\":61},{\"adult\":false,\"backdrop_path\":\"/g61rFsbIVoN8tb08nChex1FERQu.jpg\",\"genre_ids\":[18],\"id\":32940,\"origin_country\":[\"GB\"],\"original_language\":\"en\",\"original_name\":\"Accused\",\"overview\":\"Accused is a British television anthology series created by Jimmy McGovern. The drama series first aired on 15 November 2010 on BBC One and has run for two series. Each episode follows a different character as they await their verdict in court, and tells the story behind how they find themselves accused. The series has featured actors and actresses such as Christopher Eccleston, Benjamin Smith, Juliet Stevenson, Andy Serkis, Marc Warren, Naomie Harris, Sean Bean and Anne-Marie Duff as the accused in each episode.\\n\\nThe series follows previous drama series by McGovern, including anthology series The Street and Moving On. After the cancellation of The Street in 2009 by Granada Television, McGovern formed RSJ Films to produce independent drama programmes and consequently devised the Accused anthology series. Accused is written by McGovern, Danny Brocklehurst and Alice Nutter and is filmed in Manchester. In 2011 it won an International Emmy for best drama series.\",\"popularity\":11.661,\"poster_path\":\"/nfeqQPO2hpw0NYG6xiK0gWUC2l0.jpg\",\"first_air_date\":\"2010-11-15\",\"name\":\"Accused\",\"vote_average\":8.529,\"vote_count\":35},{\"adult\":false,\"backdrop_path\":\"/qPvvbMIe8pOHGQ0e8bq1Ely7qGL.jpg\",\"genre_ids\":[18,10759],\"id\":32573,\"origin_country\":[\"GB\"],\"original_language\":\"en\",\"original_name\":\"Strike Back\",\"overview\":\"The series follows John Porter, a former British Special Forces soldier, who is drafted back into service by Section 20, a fictional branch of the Secret Intelligence Service.\",\"popularity\":45.283,\"poster_path\":\"/rFy3EOZrRymjkalih7W3v8kSVWr.jpg\",\"first_air_date\":\"2010-05-05\",\"name\":\"Strike Back\",\"vote_average\":7.396,\"vote_count\":293}],\"total_pages\":17,\"total_results\":325}"
+              }
+            }
+          }
+        }
+      },
+      "ShowsResultPage": {
+        "description": "200",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ShowsResultPage"
+            },
+            "examples": {
+              "Result": {
+                "value": "{\"page\":1,\"results\":[{\"adult\":false,\"backdrop_path\":\"/bsNm9z2TJfe0WO3RedPGWQ8mG1X.jpg\",\"genre_ids\":[18,80],\"id\":1396,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"Breaking Bad\",\"overview\":\"When Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer and given a prognosis of only two years left to live. He becomes filled with a sense of fearlessness and an unrelenting desire to secure his family's financial future at any cost as he enters the dangerous world of drugs and crime.\",\"popularity\":298.884,\"poster_path\":\"/ggFHVNu6YYI5L9pCfOacjizRGt.jpg\",\"first_air_date\":\"2008-01-20\",\"name\":\"Breaking Bad\",\"vote_average\":8.879,\"vote_count\":11536}],\"total_pages\":1,\"total_results\":1}"
+              }
+            }
+          }
+        }
+      },
       "TVEpisodeDetails": {
         "description": "200",
         "content": {
@@ -14587,36 +14632,6 @@
             "examples": {
               "Result": {
                 "value": "{\"air_date\":\"2011-04-17\",\"crew\":[{\"department\":\"Directing\",\"job\":\"Director\",\"credit_id\":\"5256c8a219c2956ff6046e77\",\"adult\":false,\"gender\":2,\"id\":44797,\"known_for_department\":\"Directing\",\"name\":\"Timothy Van Patten\",\"original_name\":\"Timothy Van Patten\",\"popularity\":7.775,\"profile_path\":\"/MzSOFrd99HRdr6pkSRSctk3kBR.jpg\"},{\"job\":\"Director of Photography\",\"department\":\"Camera\",\"credit_id\":\"54eef2429251417974005cb6\",\"adult\":false,\"gender\":2,\"id\":1318704,\"known_for_department\":\"Directing\",\"name\":\"Alik Sakharov\",\"original_name\":\"Alik Sakharov\",\"popularity\":1.347,\"profile_path\":null},{\"job\":\"Editor\",\"department\":\"Editing\",\"credit_id\":\"54eef2ab925141795f005d4f\",\"adult\":false,\"gender\":2,\"id\":18077,\"known_for_department\":\"Editing\",\"name\":\"Oral Norrie Ottey\",\"original_name\":\"Oral Norrie Ottey\",\"popularity\":1.4,\"profile_path\":null},{\"job\":\"Writer\",\"department\":\"Writing\",\"credit_id\":\"5256c8a219c2956ff6046e4b\",\"adult\":false,\"gender\":2,\"id\":228068,\"known_for_department\":\"Writing\",\"name\":\"D.B. Weiss\",\"original_name\":\"D.B. Weiss\",\"popularity\":3.838,\"profile_path\":\"/2RMejaT793U9KRk2IEbFfteQntE.jpg\"},{\"job\":\"Writer\",\"department\":\"Writing\",\"credit_id\":\"5256c8a019c2956ff6046e2b\",\"adult\":false,\"gender\":2,\"id\":9813,\"known_for_department\":\"Writing\",\"name\":\"David Benioff\",\"original_name\":\"David Benioff\",\"popularity\":6.729,\"profile_path\":\"/xvNN5huL0X8yJ7h3IZfGG4O2zBD.jpg\"}],\"episode_number\":1,\"guest_stars\":[{\"character\":\"Benjen Stark\",\"credit_id\":\"5256c8b919c2956ff604836a\",\"order\":62,\"adult\":false,\"gender\":2,\"id\":119783,\"known_for_department\":\"Acting\",\"name\":\"Joseph Mawle\",\"original_name\":\"Joseph Mawle\",\"popularity\":6.758,\"profile_path\":\"/1Ocb9v3h54beGVoJMm4w50UQhLf.jpg\"},{\"character\":\"Khal Drogo\",\"credit_id\":\"5256c8a219c2956ff6046f40\",\"order\":63,\"adult\":false,\"gender\":2,\"id\":117642,\"known_for_department\":\"Acting\",\"name\":\"Jason Momoa\",\"original_name\":\"Jason Momoa\",\"popularity\":72.117,\"profile_path\":\"/6dEFBpZH8C8OijsynkSajQT99Pb.jpg\"},{\"character\":\"Rickon Stark\",\"credit_id\":\"566a83bcc3a3683f56003604\",\"order\":83,\"adult\":false,\"gender\":2,\"id\":1050248,\"known_for_department\":\"Acting\",\"name\":\"Art Parkinson\",\"original_name\":\"Art Parkinson\",\"popularity\":8.666,\"profile_path\":\"/ejAKOJME1DsvHECLWdQ7dEtXyyc.jpg\"},{\"character\":\"Hodor\",\"credit_id\":\"5256c8be19c2956ff6048446\",\"order\":84,\"adult\":false,\"gender\":2,\"id\":1223792,\"known_for_department\":\"Acting\",\"name\":\"Kristian Nairn\",\"original_name\":\"Kristian Nairn\",\"popularity\":4.073,\"profile_path\":\"/dlbq6cCW0xdpFY15q6flP6lDXWV.jpg\"},{\"character\":\"Will\",\"credit_id\":\"6176291c924ce50044219a23\",\"order\":809,\"adult\":false,\"gender\":2,\"id\":75076,\"known_for_department\":\"Acting\",\"name\":\"Bronson Webb\",\"original_name\":\"Bronson Webb\",\"popularity\":4.772,\"profile_path\":\"/foMvmr6ch16GGM1L413KA9UQKIO.jpg\"},{\"character\":\"Jon Arryn\",\"credit_id\":\"6176293a172d7f009254e782\",\"order\":810,\"adult\":false,\"gender\":2,\"id\":11282,\"known_for_department\":\"Acting\",\"name\":\"John Standing\",\"original_name\":\"John Standing\",\"popularity\":3.88,\"profile_path\":\"/4jxM3KYsykVd2IPUaGAv3KYgDUT.jpg\"},{\"character\":\"Waymar Royce\",\"credit_id\":\"61774bcd71f0950042d37204\",\"order\":811,\"adult\":false,\"gender\":2,\"id\":1864916,\"known_for_department\":\"Acting\",\"name\":\"Rob Ostlere\",\"original_name\":\"Rob Ostlere\",\"popularity\":2.043,\"profile_path\":\"/wwsP4vXDWbClGiGOznSR4dJjim2.jpg\"},{\"character\":\"Pentoshi Servant\",\"credit_id\":\"61774d0965e0a200448c7445\",\"order\":812,\"adult\":false,\"gender\":1,\"id\":1864921,\"known_for_department\":\"Acting\",\"name\":\"Rania Zouari\",\"original_name\":\"Rania Zouari\",\"popularity\":1.38,\"profile_path\":\"/vwV5Dp6rX38FjjgIBRNxPtmn8Ma.jpg\"},{\"character\":\"Gared\",\"credit_id\":\"57b72bcc925141389d002188\",\"order\":813,\"adult\":false,\"gender\":2,\"id\":191751,\"known_for_department\":\"Acting\",\"name\":\"Dermot Keaney\",\"original_name\":\"Dermot Keaney\",\"popularity\":2.268,\"profile_path\":\"/nvXkSjiw3cgpGRmeKRwQkgdprb5.jpg\"},{\"character\":\"White Walker #1\",\"credit_id\":\"61774d6fb458b8006a123cd5\",\"order\":814,\"adult\":false,\"gender\":2,\"id\":946696,\"known_for_department\":\"Acting\",\"name\":\"Ian Whyte\",\"original_name\":\"Ian Whyte\",\"popularity\":3.36,\"profile_path\":\"/svlJyDgPbTHoGjbQKU4S2J6g5hi.jpg\"},{\"character\":\"White Walker #2\",\"credit_id\":\"61774da4e9da69002b9ba63c\",\"order\":815,\"adult\":false,\"gender\":2,\"id\":25451,\"known_for_department\":\"Acting\",\"name\":\"Spencer Wilding\",\"original_name\":\"Spencer Wilding\",\"popularity\":9.248,\"profile_path\":\"/4NMcve4Nckpi653znyYOnoS4Mci.jpg\"},{\"character\":\"Wight Wildling Girl\",\"credit_id\":\"61774e0ae9da69002b9ba6f5\",\"order\":816,\"adult\":false,\"gender\":0,\"id\":3284663,\"known_for_department\":\"Acting\",\"name\":\"Claire Wright\",\"original_name\":\"Claire Wright\",\"popularity\":0.6,\"profile_path\":\"/rx6NoCpwoYQUy4VzMyYGA0R6k5V.jpg\"},{\"character\":\"Jory Cassel\",\"credit_id\":\"5752136f9251414c510001a0\",\"order\":828,\"adult\":false,\"gender\":2,\"id\":1833,\"known_for_department\":\"Acting\",\"name\":\"Jamie Sives\",\"original_name\":\"Jamie Sives\",\"popularity\":6.226,\"profile_path\":\"/bdEyp4f1VUEepihC6vyqCGP6k2s.jpg\"},{\"character\":\"Septa Mordane\",\"credit_id\":\"57520bc19251414c470000de\",\"order\":868,\"adult\":false,\"gender\":1,\"id\":438859,\"known_for_department\":\"Acting\",\"name\":\"Susan Brown\",\"original_name\":\"Susan Brown\",\"popularity\":1.18,\"profile_path\":\"/rbi81V4GUsOqjUfLvnoHj4lIAMf.jpg\"},{\"character\":\"Illyrio Mopatis\",\"credit_id\":\"575216bdc3a36851fe0001d8\",\"order\":869,\"adult\":false,\"gender\":2,\"id\":11279,\"known_for_department\":\"Acting\",\"name\":\"Roger Allam\",\"original_name\":\"Roger Allam\",\"popularity\":13.129,\"profile_path\":\"/ngugVF69GFcgb5ljt4OQSjd2rGR.jpg\"},{\"character\":\"Qotho\",\"credit_id\":\"5752158b9251414c470001c0\",\"order\":909,\"adult\":false,\"gender\":2,\"id\":234907,\"known_for_department\":\"Acting\",\"name\":\"Dar Salim\",\"original_name\":\"Dar Salim\",\"popularity\":36.897,\"profile_path\":\"/oTYCqdF6nfZTsvt1fbypi54ydI.jpg\"},{\"character\":\"Maester Luwin\",\"credit_id\":\"5987d310c3a3681e2a014bfe\",\"order\":932,\"adult\":false,\"gender\":2,\"id\":20425,\"known_for_department\":\"Acting\",\"name\":\"Donald Sumpter\",\"original_name\":\"Donald Sumpter\",\"popularity\":10.539,\"profile_path\":\"/jCxD84Vr9TTM5am0Ij3pCsNcted.jpg\"},{\"character\":\"Rodrik Cassel\",\"credit_id\":\"5987d342c3a3681df0012c76\",\"order\":947,\"adult\":false,\"gender\":2,\"id\":63141,\"known_for_department\":\"Acting\",\"name\":\"Ron Donachie\",\"original_name\":\"Ron Donachie\",\"popularity\":3.952,\"profile_path\":\"/vnBM7idgiyXoat1E8IBKGekx2GS.jpg\"},{\"character\":\"Myrcella Baratheon\",\"credit_id\":\"57521d4cc3a3685215000344\",\"order\":972,\"adult\":false,\"gender\":1,\"id\":1600544,\"known_for_department\":\"Acting\",\"name\":\"Aimee Richardson\",\"original_name\":\"Aimee Richardson\",\"popularity\":1.038,\"profile_path\":\"/97wwITEknXx7MbQda71NegQvJtz.jpg\"},{\"character\":\"Ros\",\"credit_id\":\"5987d3909251415244014acc\",\"order\":999,\"adult\":false,\"gender\":1,\"id\":1014921,\"known_for_department\":\"Acting\",\"name\":\"Esmé Bianco\",\"original_name\":\"Esmé Bianco\",\"popularity\":4.099,\"profile_path\":\"/mcbQdFHVEbGypOdDiNMCcqHgNaX.jpg\"},{\"character\":\"Tommen Baratheon\",\"credit_id\":\"57521fafc3a368521500041d\",\"order\":1010,\"adult\":false,\"gender\":2,\"id\":1600543,\"known_for_department\":\"Acting\",\"name\":\"Callum Wharry\",\"original_name\":\"Callum Wharry\",\"popularity\":5.363,\"profile_path\":\"/sQzCLoiWniQPYyseG0wvGEf3flo.jpg\"}],\"name\":\"Winter Is Coming\",\"overview\":\"Jon Arryn, the Hand of the King, is dead. King Robert Baratheon plans to ask his oldest friend, Eddard Stark, to take Jon's place. Across the sea, Viserys Targaryen plans to wed his sister to a nomadic warlord in exchange for an army.\",\"id\":63056,\"production_code\":\"101\",\"runtime\":62,\"season_number\":1,\"still_path\":\"/9hGF3WUkBf7cSjMg0cdMDHJkByd.jpg\",\"vote_average\":7.8,\"vote_count\":286}"
-              }
-            }
-          }
-        }
-      },
-      "TVShows": {
-        "description": "200",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/TVShowsResultPage"
-            },
-            "examples": {
-              "Result": {
-                "value": "{\"page\":1,\"results\":[{\"adult\":false,\"backdrop_path\":\"/7phlGHRupo38EnuwmkAHdNUqov3.jpg\",\"genre_ids\":[35],\"id\":58932,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"The Crazy Ones\",\"overview\":\"The Crazy Ones is an American situation comedy series created by David E. Kelley that stars Robin Williams and Sarah Michelle Gellar. The single-camera project premiered on CBS on September 26, 2013, as part of the 2013–14 American television season as a Thursday night 9 pm entry. Bill D'Elia, Dean Lorey, Jason Winer, John Montgomery and Mark Teitelbaum serve as executive producers for 20th Century Fox Television.\",\"popularity\":8.939,\"poster_path\":\"/s2e7hTrdmNUaJDf0yDP5b4AHvrD.jpg\",\"first_air_date\":\"2013-09-26\",\"name\":\"The Crazy Ones\",\"vote_average\":6.176,\"vote_count\":94},{\"adult\":false,\"backdrop_path\":\"/hmLTIRtVyTHShJl2Wb8LHmvUgJm.jpg\",\"genre_ids\":[80,18,9648],\"id\":19885,\"origin_country\":[\"GB\"],\"original_language\":\"en\",\"original_name\":\"Sherlock\",\"overview\":\"A modern update finds the famous sleuth and his doctor partner solving crime in 21st century London.\",\"popularity\":82.572,\"poster_path\":\"/7WTsnHkbA0FaG6R9twfFde0I9hl.jpg\",\"first_air_date\":\"2010-07-25\",\"name\":\"Sherlock\",\"vote_average\":8.534,\"vote_count\":4425},{\"adult\":false,\"backdrop_path\":\"/dDPwCyZG8arYwMDoQl0sm4xccCE.jpg\",\"genre_ids\":[18,80,9648],\"id\":46952,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"The Blacklist\",\"overview\":\"Raymond \\\"Red\\\" Reddington, one of the FBI's most wanted fugitives, surrenders in person at FBI Headquarters in Washington, D.C. He claims that he and the FBI have the same interests: bringing down dangerous criminals and terrorists. In the last two decades, he's made a list of criminals and terrorists that matter the most but the FBI cannot find because it does not know they exist. Reddington calls this \\\"The Blacklist\\\". Reddington will co-operate, but insists that he will speak only to Elizabeth Keen, a rookie FBI profiler.\",\"popularity\":404.036,\"poster_path\":\"/htJzeRcYI2ewMm4PTrg98UMXShe.jpg\",\"first_air_date\":\"2013-09-23\",\"name\":\"The Blacklist\",\"vote_average\":7.586,\"vote_count\":2656},{\"adult\":false,\"backdrop_path\":\"/o6ixncGLOtRPz78vEIy9p1cOn9J.jpg\",\"genre_ids\":[18],\"id\":688,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"The West Wing\",\"overview\":\"The West Wing provides a glimpse into presidential politics in the nation's capital as it tells the stories of the members of a fictional presidential administration. These interesting characters have humor and dedication that touches the heart while the politics that they discuss touch on everyday life.\",\"popularity\":47.271,\"poster_path\":\"/yqDWr5NAE7m1IWrygYwLyEB6pN0.jpg\",\"first_air_date\":\"1999-09-22\",\"name\":\"The West Wing\",\"vote_average\":8.289,\"vote_count\":388},{\"adult\":false,\"backdrop_path\":\"/o1kYeMsqlVs9xTjJTOnYnoHfMiD.jpg\",\"genre_ids\":[18,9648,10765],\"id\":50825,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"Sleepy Hollow\",\"overview\":\"Ichabod Crane is resurrected and pulled two and a half centuries through time to unravel a mystery that dates all the way back to the founding fathers.\",\"popularity\":40.923,\"poster_path\":\"/ooDWFmGR5foBvLNsX1t30Kv6Dlc.jpg\",\"first_air_date\":\"2013-09-16\",\"name\":\"Sleepy Hollow\",\"vote_average\":7.421,\"vote_count\":899},{\"adult\":false,\"backdrop_path\":\"/rFndH81vGRQeQHEhQFkFRqXB0tK.jpg\",\"genre_ids\":[18],\"id\":58928,\"origin_country\":[\"US\",\"GB\"],\"original_language\":\"en\",\"original_name\":\"Dracula\",\"overview\":\"It's the late 19th century, and the mysterious Dracula has arrived in London, posing as an American entrepreneur who wants to bring modern science to Victorian society. He's especially interested in the new technology of electricity, which promises to brighten the night - useful for someone who avoids the sun. But he has another reason for his travels: he hopes to take revenge on those who cursed him with immortality centuries earlier. Everything seems to be going according to plan... until he becomes infatuated with a woman who appears to be a reincarnation of his dead wife.\",\"popularity\":17.511,\"poster_path\":\"/oQUU8LKVl10ejpxJC0qfsSuPZeF.jpg\",\"first_air_date\":\"2013-10-25\",\"name\":\"Dracula\",\"vote_average\":7.143,\"vote_count\":343},{\"adult\":false,\"backdrop_path\":\"/pe4B3OYBb7qYCdkAz7nKWordbls.jpg\",\"genre_ids\":[16,35,10765],\"id\":15260,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"Adventure Time\",\"overview\":\"Hook up with Finn and Jake as they travel the Land of Ooo searching for adventure. But remember, adventure isn’t always easy. Sometimes you’ve got to battle fire gnomes that torture old ladies, save a smelly hot dog princess from the Ice King, and thaw out a bunch of frozen businessmen. What the cabbage?!\",\"popularity\":151.011,\"poster_path\":\"/qk3eQ8jW4opJ48gFWYUXWaMT4l.jpg\",\"first_air_date\":\"2010-04-05\",\"name\":\"Adventure Time\",\"vote_average\":8.5,\"vote_count\":2285},{\"adult\":false,\"backdrop_path\":\"/5BMwFwNzSidVYArn561acqtktxv.jpg\",\"genre_ids\":[35],\"id\":1100,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"How I Met Your Mother\",\"overview\":\"A father recounts to his children - through a series of flashbacks - the journey he and his four best friends took leading up to him meeting their mother.\",\"popularity\":151.34,\"poster_path\":\"/b34jPzmB0wZy7EjUZoleXOl2RRI.jpg\",\"first_air_date\":\"2005-09-19\",\"name\":\"How I Met Your Mother\",\"vote_average\":8.165,\"vote_count\":4142},{\"adult\":false,\"backdrop_path\":\"/sRfl6vyzGWutgG0cmXmbChC4iN6.jpg\",\"genre_ids\":[10759,18,10765],\"id\":57243,\"origin_country\":[\"GB\"],\"original_language\":\"en\",\"original_name\":\"Doctor Who\",\"overview\":\"The Doctor is a Time Lord: a 900 year old alien with 2 hearts, part of a gifted civilization who mastered time travel. The Doctor saves planets for a living—more of a hobby actually, and the Doctor's very, very good at it.\",\"popularity\":183.542,\"poster_path\":\"/sz4zF5z9zyFh8Z6g5IQPNq91cI7.jpg\",\"first_air_date\":\"2005-03-26\",\"name\":\"Doctor Who\",\"vote_average\":7.4,\"vote_count\":2553},{\"adult\":false,\"backdrop_path\":\"/f8jrTem5NQnWAgQBBOg2vbh6gzm.jpg\",\"genre_ids\":[10759,18],\"id\":2046,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"Alias\",\"overview\":\"Sydney Bristow, an agent who has been tricked to believe she is working for the U.S. government, is actually working for a criminal organization named the Alliance of Twelve. Upon learning this, Sydney becomes a double agent for the real CIA.\",\"popularity\":10.621,\"poster_path\":\"/Dl3KIxWlSEvnXogNHxdXA4pbAk.jpg\",\"first_air_date\":\"2001-09-30\",\"name\":\"Alias\",\"vote_average\":6.672,\"vote_count\":527},{\"adult\":false,\"backdrop_path\":\"/vNnLAKmoczRlNarxyGrrw0KSOeX.jpg\",\"genre_ids\":[80,18,9648,10759],\"id\":1412,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"Arrow\",\"overview\":\"Spoiled billionaire playboy Oliver Queen is missing and presumed dead when his yacht is lost at sea. He returns five years later a changed man, determined to clean up the city as a hooded vigilante armed with a bow.\",\"popularity\":170.647,\"poster_path\":\"/gKG5QGz5Ngf8fgWpBsWtlg5L2SF.jpg\",\"first_air_date\":\"2012-10-10\",\"name\":\"Arrow\",\"vote_average\":6.8,\"vote_count\":5418},{\"adult\":false,\"backdrop_path\":null,\"genre_ids\":[99,35],\"id\":35383,\"origin_country\":[\"GB\"],\"original_language\":\"en\",\"original_name\":\"How TV Ruined Your Life\",\"overview\":\"How TV Ruined Your Life is a six-episode BBC Two television series written and presented by Charlie Brooker. Charlie Brooker, whose earlier TV-related programmes include How to Watch Television, Charlie Brooker's Screenwipe and You Have Been Watching, examines how the medium has bent reality to fit its own ends. Produced by Zeppotron, the series aired its first episode in January 2011.\",\"popularity\":2.487,\"poster_path\":\"/7Jf1O7Hna6nPjBpfu1biqpMsDjI.jpg\",\"first_air_date\":\"2011-01-25\",\"name\":\"How TV Ruined Your Life\",\"vote_average\":7.6,\"vote_count\":19},{\"adult\":false,\"backdrop_path\":\"/iWDs7D8PSRcstLFuQf7uwGjBB89.jpg\",\"genre_ids\":[80,18,9648],\"id\":21510,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"White Collar\",\"overview\":\"Neal Caffrey, a con man, forger and thief, is captured after a three-year game of cat and mouse with the FBI. With only months left serving a four-year sentence, he escapes to look for Kate, his girlfriend. Peter Burke, the FBI agent who initially captured Caffrey, finds and returns him to prison. This time, Caffrey proposes a deal with the FBI, as part of a work-release program. After some hesitation, Burke agrees, and thus begins this unconventional arrangement where Caffrey helps Burke apprehend white collar criminals.\",\"popularity\":72.635,\"poster_path\":\"/417XNiGvdzCsG9kDnnQJYaBsIrx.jpg\",\"first_air_date\":\"2009-10-23\",\"name\":\"White Collar\",\"vote_average\":8.308,\"vote_count\":1148},{\"adult\":false,\"backdrop_path\":\"/9hnNK78pwhTJjNygIFW4t2OcfZv.jpg\",\"genre_ids\":[35],\"id\":32406,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"The Big C\",\"overview\":\"A suburban mother faces her cancer diagnosis while trying to find humor and happiness as well.\",\"popularity\":12.656,\"poster_path\":\"/72M9N5bONawkSifdfjNlryWZ2uM.jpg\",\"first_air_date\":\"2010-08-16\",\"name\":\"The Big C\",\"vote_average\":7.18,\"vote_count\":75},{\"adult\":false,\"backdrop_path\":\"/sqtSI7uHhFSCvTx60pdqPXGhYCF.jpg\",\"genre_ids\":[35,80,18,9648],\"id\":1695,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"Monk\",\"overview\":\"Adrian Monk was once a rising star with the San Francisco Police Department, legendary for using unconventional means to solve the department's most baffling cases. But after the tragic (and still unsolved) murder of his wife Trudy, he developed an extreme case of obsessive-compulsive disorder. Now working as a private consultant, Monk continues to investigate cases in the most unconventional ways.\",\"popularity\":152.501,\"poster_path\":\"/3axGMbUecXXOPSeG47v2i9wK5y5.jpg\",\"first_air_date\":\"2002-07-12\",\"name\":\"Monk\",\"vote_average\":7.904,\"vote_count\":842},{\"adult\":false,\"backdrop_path\":\"/aGCq8HHRg65MUmP9Gb6MeoJDXrD.jpg\",\"genre_ids\":[35],\"id\":58942,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"The Michael J. Fox Show\",\"overview\":\"Look who’s making the news again! One of NY’s most beloved news anchors, Mike Henry (Michael J. Fox), put his career on hold to spend more time with his family and focus on his health after he was diagnosed with Parkinson’s. But now five years later, with the kids busy growing up and Mike growing restless, it just might be time for him to get back to work. Having never wanted Mike to leave in the first place, his old boss Harris Green jumped at the chance to get him back on TV. The trick, as it’s always been, was to make Mike think it was his idea. After several – okay, many - failed attempts, Mike’s family, anxious to see him out of the house, finally succeeded in getting him to “run into” Green. Now their plan is in motion. He’ll be back to juggling home, family, and career, just like the old days – only better.\",\"popularity\":6.79,\"poster_path\":\"/vHFM0GjFlqi8GpLECq2mF47V0LL.jpg\",\"first_air_date\":\"2013-09-26\",\"name\":\"The Michael J. Fox Show\",\"vote_average\":5.8,\"vote_count\":47},{\"adult\":false,\"backdrop_path\":\"/qzBaQAhGk5Rp08KX7EUTSVia6bZ.jpg\",\"genre_ids\":[35],\"id\":51320,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"The Millers\",\"overview\":\"A divorced reporter, looking forward to the single life, finds his parents' marital problems derail his plans.\",\"popularity\":7.507,\"poster_path\":\"/y3d7thiGCbYfFCJfKNyVX9GrqQo.jpg\",\"first_air_date\":\"2013-10-03\",\"name\":\"The Millers\",\"vote_average\":5.817,\"vote_count\":30},{\"adult\":false,\"backdrop_path\":\"/nywPcsxgt1PdEG7BqUYBIUTPNGx.jpg\",\"genre_ids\":[18],\"id\":44840,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"Mob City\",\"overview\":\"The true story of a decades-long conflict between the Los Angeles Police Department, under the determined leadership of Police Chief William Parker, and ruthless criminal elements led by Mickey Cohen, a one-time boxer who rose to the top of L.A.'s criminal world. The series is a fast-paced crime drama set in Los Angeles during the 1940s and '50s. It's a world of glamorous movie stars, powerful studio heads, returning war heroes, a powerful and corrupt police force and an even more dangerous criminal network determined to make L.A. its West Coast base.\",\"popularity\":6.096,\"poster_path\":\"/6W6Xhj1KOIcBtASHHhmpyySoUik.jpg\",\"first_air_date\":\"2013-12-04\",\"name\":\"Mob City\",\"vote_average\":6.934,\"vote_count\":61},{\"adult\":false,\"backdrop_path\":\"/g61rFsbIVoN8tb08nChex1FERQu.jpg\",\"genre_ids\":[18],\"id\":32940,\"origin_country\":[\"GB\"],\"original_language\":\"en\",\"original_name\":\"Accused\",\"overview\":\"Accused is a British television anthology series created by Jimmy McGovern. The drama series first aired on 15 November 2010 on BBC One and has run for two series. Each episode follows a different character as they await their verdict in court, and tells the story behind how they find themselves accused. The series has featured actors and actresses such as Christopher Eccleston, Benjamin Smith, Juliet Stevenson, Andy Serkis, Marc Warren, Naomie Harris, Sean Bean and Anne-Marie Duff as the accused in each episode.\\n\\nThe series follows previous drama series by McGovern, including anthology series The Street and Moving On. After the cancellation of The Street in 2009 by Granada Television, McGovern formed RSJ Films to produce independent drama programmes and consequently devised the Accused anthology series. Accused is written by McGovern, Danny Brocklehurst and Alice Nutter and is filmed in Manchester. In 2011 it won an International Emmy for best drama series.\",\"popularity\":11.661,\"poster_path\":\"/nfeqQPO2hpw0NYG6xiK0gWUC2l0.jpg\",\"first_air_date\":\"2010-11-15\",\"name\":\"Accused\",\"vote_average\":8.529,\"vote_count\":35},{\"adult\":false,\"backdrop_path\":\"/qPvvbMIe8pOHGQ0e8bq1Ely7qGL.jpg\",\"genre_ids\":[18,10759],\"id\":32573,\"origin_country\":[\"GB\"],\"original_language\":\"en\",\"original_name\":\"Strike Back\",\"overview\":\"The series follows John Porter, a former British Special Forces soldier, who is drafted back into service by Section 20, a fictional branch of the Secret Intelligence Service.\",\"popularity\":45.283,\"poster_path\":\"/rFy3EOZrRymjkalih7W3v8kSVWr.jpg\",\"first_air_date\":\"2010-05-05\",\"name\":\"Strike Back\",\"vote_average\":7.396,\"vote_count\":293}],\"total_pages\":17,\"total_results\":325}"
-              }
-            }
-          }
-        }
-      },
-      "TVShowsResultPage": {
-        "description": "200",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/TVShowsResultPage"
-            },
-            "examples": {
-              "Result": {
-                "value": "{\"page\":1,\"results\":[{\"adult\":false,\"backdrop_path\":\"/bsNm9z2TJfe0WO3RedPGWQ8mG1X.jpg\",\"genre_ids\":[18,80],\"id\":1396,\"origin_country\":[\"US\"],\"original_language\":\"en\",\"original_name\":\"Breaking Bad\",\"overview\":\"When Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer and given a prognosis of only two years left to live. He becomes filled with a sense of fearlessness and an unrelenting desire to secure his family's financial future at any cost as he enters the dangerous world of drugs and crime.\",\"popularity\":298.884,\"poster_path\":\"/ggFHVNu6YYI5L9pCfOacjizRGt.jpg\",\"first_air_date\":\"2008-01-20\",\"name\":\"Breaking Bad\",\"vote_average\":8.879,\"vote_count\":11536}],\"total_pages\":1,\"total_results\":1}"
               }
             }
           }
@@ -16628,21 +16643,6 @@
             "examples": {
               "Result": {
                 "value": "{\n  \"status_code\": 13,\n  \"status_message\": \"The item/record was deleted successfully.\"\n}"
-              }
-            }
-          }
-        }
-      },
-      "TvSeriesDetailsOk": {
-        "description": "200",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/TvSeriesDetailsOk"
-            },
-            "examples": {
-              "Result": {
-                "value": "{\n  \"adult\": false,\n  \"backdrop_path\": \"/6LWy0jvMpmjoS9fojNgHIKoWL05.jpg\",\n  \"created_by\": [\n    {\n      \"id\": 9813,\n      \"credit_id\": \"5256c8c219c2956ff604858a\",\n      \"name\": \"David Benioff\",\n      \"gender\": 2,\n      \"profile_path\": \"/xvNN5huL0X8yJ7h3IZfGG4O2zBD.jpg\"\n    },\n    {\n      \"id\": 228068,\n      \"credit_id\": \"552e611e9251413fea000901\",\n      \"name\": \"D.B. Weiss\",\n      \"gender\": 2,\n      \"profile_path\": \"/2RMejaT793U9KRk2IEbFfteQntE.jpg\"\n    }\n  ],\n  \"episode_run_time\": [\n    60\n  ],\n  \"first_air_date\": \"2011-04-17\",\n  \"genres\": [\n    {\n      \"id\": 10765,\n      \"name\": \"Sci-Fi & Fantasy\"\n    },\n    {\n      \"id\": 18,\n      \"name\": \"Drama\"\n    },\n    {\n      \"id\": 10759,\n      \"name\": \"Action & Adventure\"\n    }\n  ],\n  \"homepage\": \"http://www.hbo.com/game-of-thrones\",\n  \"id\": 1399,\n  \"in_production\": false,\n  \"languages\": [\n    \"en\"\n  ],\n  \"last_air_date\": \"2019-05-19\",\n  \"last_episode_to_air\": {\n    \"id\": 1551830,\n    \"name\": \"The Iron Throne\",\n    \"overview\": \"In the aftermath of the devastating attack on King's Landing, Daenerys must face the survivors.\",\n    \"vote_average\": 4.809,\n    \"vote_count\": 241,\n    \"air_date\": \"2019-05-19\",\n    \"episode_number\": 6,\n    \"production_code\": \"806\",\n    \"runtime\": 80,\n    \"season_number\": 8,\n    \"show_id\": 1399,\n    \"still_path\": \"/zBi2O5EJfgTS6Ae0HdAYLm9o2nf.jpg\"\n  },\n  \"name\": \"Game of Thrones\",\n  \"next_episode_to_air\": null,\n  \"networks\": [\n    {\n      \"id\": 49,\n      \"logo_path\": \"/tuomPhY2UtuPTqqFnKMVHvSb724.png\",\n      \"name\": \"HBO\",\n      \"origin_country\": \"US\"\n    }\n  ],\n  \"number_of_episodes\": 73,\n  \"number_of_seasons\": 8,\n  \"origin_country\": [\n    \"US\"\n  ],\n  \"original_language\": \"en\",\n  \"original_name\": \"Game of Thrones\",\n  \"overview\": \"Seven noble families fight for control of the mythical land of Westeros. Friction between the houses leads to full-scale war. All while a very ancient evil awakens in the farthest north. Amidst the war, a neglected military order of misfits, the Night's Watch, is all that stands between the realms of men and icy horrors beyond.\",\n  \"popularity\": 346.098,\n  \"poster_path\": \"/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg\",\n  \"production_companies\": [\n    {\n      \"id\": 76043,\n      \"logo_path\": \"/9RO2vbQ67otPrBLXCaC8UMp3Qat.png\",\n      \"name\": \"Revolution Sun Studios\",\n      \"origin_country\": \"US\"\n    },\n    {\n      \"id\": 12525,\n      \"logo_path\": null,\n      \"name\": \"Television 360\",\n      \"origin_country\": \"\"\n    },\n    {\n      \"id\": 5820,\n      \"logo_path\": null,\n      \"name\": \"Generator Entertainment\",\n      \"origin_country\": \"GB\"\n    },\n    {\n      \"id\": 12526,\n      \"logo_path\": null,\n      \"name\": \"Bighead Littlehead\",\n      \"origin_country\": \"\"\n    }\n  ],\n  \"production_countries\": [\n    {\n      \"iso_3166_1\": \"GB\",\n      \"name\": \"United Kingdom\"\n    },\n    {\n      \"iso_3166_1\": \"US\",\n      \"name\": \"United States of America\"\n    }\n  ],\n  \"seasons\": [\n    {\n      \"air_date\": \"2010-12-05\",\n      \"episode_count\": 272,\n      \"id\": 3627,\n      \"name\": \"Specials\",\n      \"overview\": \"\",\n      \"poster_path\": \"/kMTcwNRfFKCZ0O2OaBZS0nZ2AIe.jpg\",\n      \"season_number\": 0,\n      \"vote_average\": 0\n    },\n    {\n      \"air_date\": \"2011-04-17\",\n      \"episode_count\": 10,\n      \"id\": 3624,\n      \"name\": \"Season 1\",\n      \"overview\": \"Trouble is brewing in the Seven Kingdoms of Westeros. For the driven inhabitants of this visionary world, control of Westeros' Iron Throne holds the lure of great power. But in a land where the seasons can last a lifetime, winter is coming...and beyond the Great Wall that protects them, an ancient evil has returned. In Season One, the story centers on three primary areas: the Stark and the Lannister families, whose designs on controlling the throne threaten a tenuous peace; the dragon princess Daenerys, heir to the former dynasty, who waits just over the Narrow Sea with her malevolent brother Viserys; and the Great Wall--a massive barrier of ice where a forgotten danger is stirring.\",\n      \"poster_path\": \"/wgfKiqzuMrFIkU1M68DDDY8kGC1.jpg\",\n      \"season_number\": 1,\n      \"vote_average\": 8.3\n    },\n    {\n      \"air_date\": \"2012-04-01\",\n      \"episode_count\": 10,\n      \"id\": 3625,\n      \"name\": \"Season 2\",\n      \"overview\": \"The cold winds of winter are rising in Westeros...war is coming...and five kings continue their savage quest for control of the all-powerful Iron Throne. With winter fast approaching, the coveted Iron Throne is occupied by the cruel Joffrey, counseled by his conniving mother Cersei and uncle Tyrion. But the Lannister hold on the Throne is under assault on many fronts. Meanwhile, a new leader is rising among the wildings outside the Great Wall, adding new perils for Jon Snow and the order of the Night's Watch.\",\n      \"poster_path\": \"/9xfNkPwDOqyeUvfNhs1XlWA0esP.jpg\",\n      \"season_number\": 2,\n      \"vote_average\": 8.2\n    },\n    {\n      \"air_date\": \"2013-03-31\",\n      \"episode_count\": 10,\n      \"id\": 3626,\n      \"name\": \"Season 3\",\n      \"overview\": \"Duplicity and treachery...nobility and honor...conquest and triumph...and, of course, dragons. In Season 3, family and loyalty are the overarching themes as many critical storylines from the first two seasons come to a brutal head. Meanwhile, the Lannisters maintain their hold on King's Landing, though stirrings in the North threaten to alter the balance of power; Robb Stark, King of the North, faces a major calamity as he tries to build on his victories; a massive army of wildlings led by Mance Rayder march for the Wall; and Daenerys Targaryen--reunited with her dragons--attempts to raise an army in her quest for the Iron Throne.\",\n      \"poster_path\": \"/5MkZjRnCKiIGn3bkXrXfndEzqOU.jpg\",\n      \"season_number\": 3,\n      \"vote_average\": 8.2\n    },\n    {\n      \"air_date\": \"2014-04-06\",\n      \"episode_count\": 10,\n      \"id\": 3628,\n      \"name\": \"Season 4\",\n      \"overview\": \"The War of the Five Kings is drawing to a close, but new intrigues and plots are in motion, and the surviving factions must contend with enemies not only outside their ranks, but within.\",\n      \"poster_path\": \"/jXIMScXE4J4EVHUba1JgxZnWbo4.jpg\",\n      \"season_number\": 4,\n      \"vote_average\": 8.4\n    },\n    {\n      \"air_date\": \"2015-04-12\",\n      \"episode_count\": 10,\n      \"id\": 62090,\n      \"name\": \"Season 5\",\n      \"overview\": \"The War of the Five Kings, once thought to be drawing to a close, is instead entering a new and more chaotic phase. Westeros is on the brink of collapse, and many are seizing what they can while the realm implodes, like a corpse making a feast for crows.\",\n      \"poster_path\": \"/7Q1Hy1AHxAzA2lsmzEMBvuWTX0x.jpg\",\n      \"season_number\": 5,\n      \"vote_average\": 8.2\n    },\n    {\n      \"air_date\": \"2016-04-24\",\n      \"episode_count\": 10,\n      \"id\": 71881,\n      \"name\": \"Season 6\",\n      \"overview\": \"Following the shocking developments at the conclusion of season five, survivors from all parts of Westeros and Essos regroup to press forward, inexorably, towards their uncertain individual fates. Familiar faces will forge new alliances to bolster their strategic chances at survival, while new characters will emerge to challenge the balance of power in the east, west, north and south.\",\n      \"poster_path\": \"/p1udLh0gfqyZFmXBGa393gk8go5.jpg\",\n      \"season_number\": 6,\n      \"vote_average\": 8.3\n    },\n    {\n      \"air_date\": \"2017-07-16\",\n      \"episode_count\": 7,\n      \"id\": 81266,\n      \"name\": \"Season 7\",\n      \"overview\": \"The long winter is here. And with it comes a convergence of armies and attitudes that have been brewing for years.\",\n      \"poster_path\": \"/oX51n32QyHeFP5kErksemJsJljL.jpg\",\n      \"season_number\": 7,\n      \"vote_average\": 8.2\n    },\n    {\n      \"air_date\": \"2019-04-14\",\n      \"episode_count\": 6,\n      \"id\": 107971,\n      \"name\": \"Season 8\",\n      \"overview\": \"The Great War has come, the Wall has fallen and the Night King's army of the dead marches towards Westeros. The end is here, but who will take the Iron Throne?\",\n      \"poster_path\": \"/3OcQhbrecf4F4pYss2gSirTGPvD.jpg\",\n      \"season_number\": 8,\n      \"vote_average\": 6.5\n    }\n  ],\n  \"spoken_languages\": [\n    {\n      \"english_name\": \"English\",\n      \"iso_639_1\": \"en\",\n      \"name\": \"English\"\n    }\n  ],\n  \"status\": \"Ended\",\n  \"tagline\": \"Winter Is Coming\",\n  \"type\": \"Scripted\",\n  \"vote_average\": 8.438,\n  \"vote_count\": 21390\n}"
               }
             }
           }
