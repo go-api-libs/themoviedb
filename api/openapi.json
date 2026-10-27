@@ -9460,7 +9460,27 @@
             "type": "string",
             "example": "Scripted"
           }
-        }
+        },
+        "required": [
+          "created_by",
+          "episode_run_time",
+          "genres",
+          "homepage",
+          "in_production",
+          "languages",
+          "last_air_date",
+          "last_episode_to_air",
+          "networks",
+          "number_of_episodes",
+          "number_of_seasons",
+          "production_companies",
+          "production_countries",
+          "seasons",
+          "spoken_languages",
+          "status",
+          "tagline",
+          "type"
+        ]
       },
       "Shows": {
         "type": "array",
