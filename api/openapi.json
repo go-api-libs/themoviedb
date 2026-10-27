@@ -9286,6 +9286,7 @@
           },
           "popularity": {
             "type": "number",
+            "format": "double",
             "default": 0,
             "example": 346.098
           },
@@ -9319,6 +9320,7 @@
           },
           "vote_average": {
             "type": "number",
+            "format": "double",
             "default": 0,
             "example": 8.438
           },
@@ -9326,6 +9328,9 @@
             "type": "integer",
             "default": 0,
             "example": 21390
+          },
+          "softcore": {
+            "type": "boolean"
           }
         }
       },
@@ -9357,6 +9362,10 @@
           "profile_path": {
             "type": "string",
             "example": "/xvNN5huL0X8yJ7h3IZfGG4O2zBD.jpg"
+          },
+          "original_name": {
+            "type": "string",
+            "example": "Peter Morgan"
           }
         }
       },
@@ -9378,6 +9387,7 @@
           },
           "vote_average": {
             "type": "number",
+            "format": "double",
             "default": 0,
             "example": 4.809
           },
@@ -9418,6 +9428,10 @@
           "still_path": {
             "type": "string",
             "example": "/zBi2O5EJfgTS6Ae0HdAYLm9o2nf.jpg"
+          },
+          "episode_type": {
+            "type": "string",
+            "example": "finale"
           }
         }
       },
@@ -9463,9 +9477,9 @@
             "example": 0
           },
           "vote_average": {
-            "type": "integer",
-            "default": 0,
-            "example": 0
+            "type": "number",
+            "format": "double",
+            "example": 8.0
           }
         }
       },

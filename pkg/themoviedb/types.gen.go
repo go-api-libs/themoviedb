@@ -2820,6 +2820,7 @@ type ShowDetails struct {
 	Type                string                       `json:"type,omitzero"`
 	VoteAverage         float64                      `json:"vote_average,omitzero"`
 	VoteCount           int                          `json:"vote_count,omitzero"`
+	Softcore            *bool                        `json:"softcore,omitzero"`
 }
 
 // ShowDetailsCreatedBy defines a model
@@ -2827,11 +2828,12 @@ type ShowDetailsCreatedBy []ShowDetailsCreatedByItem
 
 // ShowDetailsCreatedByItem defines a model
 type ShowDetailsCreatedByItem struct {
-	ID          int    `json:"id,omitzero"`
-	CreditID    string `json:"credit_id,omitzero"`
-	Name        string `json:"name,omitzero"`
-	Gender      Gender `json:"gender,omitzero"`
-	ProfilePath string `json:"profile_path,omitzero"`
+	ID           int    `json:"id,omitzero"`
+	CreditID     string `json:"credit_id,omitzero"`
+	Name         string `json:"name,omitzero"`
+	Gender       Gender `json:"gender,omitzero"`
+	ProfilePath  string `json:"profile_path,omitzero"`
+	OriginalName string `json:"original_name,omitzero"`
 }
 
 // ShowDetailsLastEpisodeToAir defines a model
@@ -2848,6 +2850,7 @@ type ShowDetailsLastEpisodeToAir struct {
 	SeasonNumber   int        `json:"season_number,omitzero"`
 	ShowID         int        `json:"show_id,omitzero"`
 	StillPath      string     `json:"still_path,omitzero"`
+	EpisodeType    string     `json:"episode_type,omitzero"`
 }
 
 // ShowDetailsSeasons defines a model
@@ -2862,7 +2865,7 @@ type ShowDetailsSeasonsItem struct {
 	Overview     string     `json:"overview,omitzero"`
 	PosterPath   string     `json:"poster_path,omitzero"`
 	SeasonNumber int        `json:"season_number,omitzero"`
-	VoteAverage  int        `json:"vote_average,omitzero"`
+	VoteAverage  *float64   `json:"vote_average,omitzero"`
 }
 
 // Shows defines a model

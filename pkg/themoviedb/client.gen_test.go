@@ -14328,4 +14328,8 @@ func TestClient_Interactions(t *testing.T) {
 	if _, err := c.GetShowSeason(ctx, 65494, 1, &GetShowSeasonParams{}); err != nil {
 		t.Fatalf("GetShowSeason: %v", err)
 	}
+
+	if _, err := c.GetShow(ctx, 65494, &GetShowParams{}); err != nil {
+		t.Fatalf("GetShow: %v", err)
+	}
 }
