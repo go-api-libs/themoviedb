@@ -2906,7 +2906,7 @@
       "get": {
         "summary": "Changes",
         "description": "Get the recent changes for a TV season.",
-        "operationId": "GetSeasonChangesByID",
+        "operationId": "GetSeasonChanges",
         "responses": {
           "200": {
             "$ref": "#/components/responses/SeasonChanges"
@@ -3118,10 +3118,10 @@
       "get": {
         "summary": "Changes of an episode",
         "description": "Get the recent changes for a TV episode.",
-        "operationId": "GetEpisodeChangesByID",
+        "operationId": "GetEpisodeChanges",
         "responses": {
           "200": {
-            "$ref": "#/components/responses/TvEpisodeChangesByIDOk"
+            "$ref": "#/components/responses/EpisodeChangesWrapper"
           }
         }
       }
@@ -5059,9 +5059,8 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 63056
+            "description": "The ID of the episode",
+            "$ref": "#/components/schemas/EpisodeID"
           },
           "season_number": {
             "type": "integer",
@@ -5116,6 +5115,72 @@
             "default": 0,
             "example": 396
           }
+        },
+        "required": [
+          "id",
+          "season_number",
+          "episode_number",
+          "name",
+          "overview",
+          "air_date",
+          "production_code",
+          "runtime",
+          "show_id",
+          "vote_average",
+          "vote_count"
+        ]
+      },
+      "EpisodeChange": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "example": "production_code"
+          },
+          "items": {
+            "$ref": "#/components/schemas/EpisodeChangeItems"
+          }
+        }
+      },
+      "EpisodeChangeItems": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/EpisodeChangeItemsItem"
+        }
+      },
+      "EpisodeChangeItemsItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "54bd9ed7c3a3686c6b00da66"
+          },
+          "action": {
+            "type": "string",
+            "example": "added"
+          },
+          "time": {
+            "type": "string",
+            "example": "2015-01-20 00:18:31 UTC"
+          },
+          "value": {
+            "type": "string",
+            "example": "101"
+          }
+        }
+      },
+      "EpisodeChanges": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/EpisodeChange"
+        }
+      },
+      "EpisodeChangesWrapper": {
+        "type": "object",
+        "properties": {
+          "changes": {
+            "$ref": "#/components/schemas/EpisodeChanges"
+          }
         }
       },
       "EpisodeCountWrapper": {
@@ -5140,6 +5205,13 @@
             "$ref": "#/components/schemas/EpisodeMetadata"
           }
         ]
+      },
+      "EpisodeID": {
+        "description": "The ID of an episode",
+        "type": "integer",
+        "format": "int32",
+        "example": 63056,
+        "x-go-type-name": "EpisodeID"
       },
       "EpisodeMetadata": {
         "type": "object",
@@ -9251,9 +9323,8 @@
         "type": "object",
         "properties": {
           "episode_id": {
-            "type": "integer",
-            "default": 0,
-            "example": 63056
+            "description": "The ID of the episode",
+            "$ref": "#/components/schemas/EpisodeID"
           },
           "episode_number": {
             "type": "integer",
@@ -10071,59 +10142,6 @@
               "type": "string",
               "example": "US"
             }
-          }
-        }
-      },
-      "TvEpisodeChangesByIDOk": {
-        "type": "object",
-        "properties": {
-          "changes": {
-            "$ref": "#/components/schemas/TvEpisodeChangesByIDOkChanges"
-          }
-        }
-      },
-      "TvEpisodeChangesByIDOkChanges": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/TvEpisodeChangesByIDOkChangesItem"
-        }
-      },
-      "TvEpisodeChangesByIDOkChangesItem": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "example": "production_code"
-          },
-          "items": {
-            "$ref": "#/components/schemas/TvEpisodeChangesByIDOkChangesItemItems"
-          }
-        }
-      },
-      "TvEpisodeChangesByIDOkChangesItemItems": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/TvEpisodeChangesByIDOkChangesItemItemsItem"
-        }
-      },
-      "TvEpisodeChangesByIDOkChangesItemItemsItem": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "example": "54bd9ed7c3a3686c6b00da66"
-          },
-          "action": {
-            "type": "string",
-            "example": "added"
-          },
-          "time": {
-            "type": "string",
-            "example": "2015-01-20 00:18:31 UTC"
-          },
-          "value": {
-            "type": "string",
-            "example": "101"
           }
         }
       },
@@ -13150,6 +13168,21 @@
           }
         }
       },
+      "EpisodeChangesWrapper": {
+        "description": "200",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/EpisodeChangesWrapper"
+            },
+            "examples": {
+              "Result": {
+                "value": "{\n  \"changes\": [\n    {\n      \"key\": \"production_code\",\n      \"items\": [\n        {\n          \"id\": \"54bd9ed7c3a3686c6b00da66\",\n          \"action\": \"added\",\n          \"time\": \"2015-01-20 00:18:31 UTC\",\n          \"value\": \"101\"\n        }\n      ]\n    },\n    {\n      \"key\": \"overview\",\n      \"items\": [\n        {\n          \"id\": \"54bd9ed7c3a3686c6b00da67\",\n          \"action\": \"updated\",\n          \"time\": \"2015-01-20 00:18:31 UTC\",\n          \"iso_639_1\": \"fr\",\n          \"value\": \"Sur le continent de Westeros, un jeune patrouilleur de la Garde de Nuit, chargée de veiller sur le Mur, est condamné à mort pour désertion par Eddard Stark, seigneur de Winterfell et Gardien du Nord. Mais de sombres nouvelles arrivent de Port-Réal, la capitale des Sept Couronnes : Jon Arryn, ami intime d'Eddard et Main du roi Robert Baratheon, vient de mourir. Le roi Robert et sa cour entreprennent alors un voyage vers Winterfell, pour gratifier son ami Eddard de la charge de Main du roi. Pendant ce temps, les descendants des rois Targaryen en exil, renversés par Robert, fomentent leur retour en Westeros par un jeu d'alliance avec les Dothrakis, une tribu de guerriers nomades.\\nAlors qu'à Winterfell les festivités vont bon train durant le séjour du roi, Brandon, l'un des fils d'Eddard Stark, fait une découverte qui lui attire les foudres de la famille royale…\",\n          \"original_value\": \"Sur le continent de Westeros, un jeune patrouilleur de la Garde de Nuit, chargée de veiller sur le Mur, est condamné à mort pour désertion par Eddard Stark, seigneur de Winterfell et Gardien du Nord. Mais de sombres nouvelles arrivent de Port-Réal, la capitale des Sept Couronnes : Jon Arryn, ami intime d'Eddard et Main du roi Robert Baratheon, vient de mourir. Le roi Robert et sa cour entreprennent alors un voyage vers Winterfell, pour gratifier son ami Eddard de la charge de Main du roi. Pendant ce temps, les descendants des rois Targaryen en exil, renversés par Robert, fomentent leur retour en Westeros par un jeu d'alliance avec les Dothrakis, une tribu de guerriers nomades.\\n\\nAlors qu'à Winterfell les festivités vont bon train durant le séjour du roi, Brandon, l'un des fils d'Eddard Stark, fait une découverte qui lui attire les foudres de la famille royale...\"\n        },\n        {\n          \"id\": \"54c53255c3a36814210141d0\",\n          \"action\": \"added\",\n          \"time\": \"2015-01-25 18:13:41 UTC\",\n          \"iso_639_1\": \"es\",\n          \"value\": \"Ned Stark, Señor de Invernalia se entera de que su mentor, Jon Arryn, ha muerto y por esto el Rey Robert se dirige hacia el norte para ofrecerle ser la Mano del Rey. Al otro lado del Mar en Pentos, Viserys Targaryen planea casar a su hermana Daenerys con el lider de los guerreros de la tribu Dothraki, Khal Drogo con el objetivo de forjar una alianza que le permita reclamar el trono.\"\n        }\n      ]\n    },\n    {\n      \"key\": \"tvrage_id\",\n      \"items\": [\n        {\n          \"id\": \"54bd9ed89251416e9b005079\",\n          \"action\": \"added\",\n          \"time\": \"2015-01-20 00:18:32 UTC\",\n          \"value\": \"1065008299\"\n        }\n      ]\n    },\n    {\n      \"key\": \"name\",\n      \"items\": [\n        {\n          \"id\": \"54c53255c3a36814210141cf\",\n          \"action\": \"added\",\n          \"time\": \"2015-01-25 18:13:41 UTC\",\n          \"iso_639_1\": \"es\",\n          \"value\": \"Se acerca el invierno\"\n        }\n      ]\n    }\n  ]\n}"
+              }
+            }
+          }
+        }
+      },
       "FindByIDOk": {
         "description": "200",
         "content": {
@@ -14755,21 +14788,6 @@
             "examples": {
               "Result": {
                 "value": "{\n  \"status_code\": 1,\n  \"status_message\": \"Success.\"\n}"
-              }
-            }
-          }
-        }
-      },
-      "TvEpisodeChangesByIDOk": {
-        "description": "200",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/TvEpisodeChangesByIDOk"
-            },
-            "examples": {
-              "Result": {
-                "value": "{\n  \"changes\": [\n    {\n      \"key\": \"production_code\",\n      \"items\": [\n        {\n          \"id\": \"54bd9ed7c3a3686c6b00da66\",\n          \"action\": \"added\",\n          \"time\": \"2015-01-20 00:18:31 UTC\",\n          \"value\": \"101\"\n        }\n      ]\n    },\n    {\n      \"key\": \"overview\",\n      \"items\": [\n        {\n          \"id\": \"54bd9ed7c3a3686c6b00da67\",\n          \"action\": \"updated\",\n          \"time\": \"2015-01-20 00:18:31 UTC\",\n          \"iso_639_1\": \"fr\",\n          \"value\": \"Sur le continent de Westeros, un jeune patrouilleur de la Garde de Nuit, chargée de veiller sur le Mur, est condamné à mort pour désertion par Eddard Stark, seigneur de Winterfell et Gardien du Nord. Mais de sombres nouvelles arrivent de Port-Réal, la capitale des Sept Couronnes : Jon Arryn, ami intime d'Eddard et Main du roi Robert Baratheon, vient de mourir. Le roi Robert et sa cour entreprennent alors un voyage vers Winterfell, pour gratifier son ami Eddard de la charge de Main du roi. Pendant ce temps, les descendants des rois Targaryen en exil, renversés par Robert, fomentent leur retour en Westeros par un jeu d'alliance avec les Dothrakis, une tribu de guerriers nomades.\\nAlors qu'à Winterfell les festivités vont bon train durant le séjour du roi, Brandon, l'un des fils d'Eddard Stark, fait une découverte qui lui attire les foudres de la famille royale…\",\n          \"original_value\": \"Sur le continent de Westeros, un jeune patrouilleur de la Garde de Nuit, chargée de veiller sur le Mur, est condamné à mort pour désertion par Eddard Stark, seigneur de Winterfell et Gardien du Nord. Mais de sombres nouvelles arrivent de Port-Réal, la capitale des Sept Couronnes : Jon Arryn, ami intime d'Eddard et Main du roi Robert Baratheon, vient de mourir. Le roi Robert et sa cour entreprennent alors un voyage vers Winterfell, pour gratifier son ami Eddard de la charge de Main du roi. Pendant ce temps, les descendants des rois Targaryen en exil, renversés par Robert, fomentent leur retour en Westeros par un jeu d'alliance avec les Dothrakis, une tribu de guerriers nomades.\\n\\nAlors qu'à Winterfell les festivités vont bon train durant le séjour du roi, Brandon, l'un des fils d'Eddard Stark, fait une découverte qui lui attire les foudres de la famille royale...\"\n        },\n        {\n          \"id\": \"54c53255c3a36814210141d0\",\n          \"action\": \"added\",\n          \"time\": \"2015-01-25 18:13:41 UTC\",\n          \"iso_639_1\": \"es\",\n          \"value\": \"Ned Stark, Señor de Invernalia se entera de que su mentor, Jon Arryn, ha muerto y por esto el Rey Robert se dirige hacia el norte para ofrecerle ser la Mano del Rey. Al otro lado del Mar en Pentos, Viserys Targaryen planea casar a su hermana Daenerys con el lider de los guerreros de la tribu Dothraki, Khal Drogo con el objetivo de forjar una alianza que le permita reclamar el trono.\"\n        }\n      ]\n    },\n    {\n      \"key\": \"tvrage_id\",\n      \"items\": [\n        {\n          \"id\": \"54bd9ed89251416e9b005079\",\n          \"action\": \"added\",\n          \"time\": \"2015-01-20 00:18:32 UTC\",\n          \"value\": \"1065008299\"\n        }\n      ]\n    },\n    {\n      \"key\": \"name\",\n      \"items\": [\n        {\n          \"id\": \"54c53255c3a36814210141cf\",\n          \"action\": \"added\",\n          \"time\": \"2015-01-25 18:13:41 UTC\",\n          \"iso_639_1\": \"es\",\n          \"value\": \"Se acerca el invierno\"\n        }\n      ]\n    }\n  ]\n}"
               }
             }
           }
@@ -17076,8 +17094,7 @@
         "in": "path",
         "required": true,
         "schema": {
-          "type": "integer",
-          "format": "int32"
+          "$ref": "#/components/schemas/EpisodeID"
         }
       },
       "episode_number": {

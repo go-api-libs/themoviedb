@@ -689,8 +689,8 @@ type TvSeasonAggregateCreditsParams struct {
 	Language string
 }
 
-// GetSeasonChangesByIDParams holds the query parameters for GetSeasonChangesByID.
-type GetSeasonChangesByIDParams struct {
+// GetSeasonChangesParams holds the query parameters for GetSeasonChanges.
+type GetSeasonChangesParams struct {
 	EndDate   civil.Date
 	Page      int32
 	StartDate civil.Date
@@ -1378,18 +1378,44 @@ type Episode struct {
 
 // EpisodeBase defines a model
 type EpisodeBase struct {
-	ID             int        `json:"id,omitzero"`
-	SeasonNumber   int32      `json:"season_number,omitzero"`
-	EpisodeNumber  int        `json:"episode_number,omitzero"`
-	Name           string     `json:"name,omitzero"`
-	Overview       string     `json:"overview,omitzero"`
-	AirDate        civil.Date `json:"air_date,omitzero"`
-	ProductionCode string     `json:"production_code,omitzero"`
-	Runtime        int        `json:"runtime,omitzero"`
-	ShowID         int        `json:"show_id,omitzero"`
+	// The ID of the episode
+	ID             EpisodeID  `json:"id"`
+	SeasonNumber   int32      `json:"season_number"`
+	EpisodeNumber  int        `json:"episode_number"`
+	Name           string     `json:"name"`
+	Overview       string     `json:"overview"`
+	AirDate        civil.Date `json:"air_date"`
+	ProductionCode string     `json:"production_code"`
+	Runtime        int        `json:"runtime"`
+	ShowID         int        `json:"show_id"`
 	StillPath      string     `json:"still_path,omitzero"`
-	VoteAverage    float64    `json:"vote_average,omitzero"`
-	VoteCount      int        `json:"vote_count,omitzero"`
+	VoteAverage    float64    `json:"vote_average"`
+	VoteCount      int        `json:"vote_count"`
+}
+
+// EpisodeChange defines a model
+type EpisodeChange struct {
+	Key   string             `json:"key,omitzero"`
+	Items EpisodeChangeItems `json:"items,omitzero"`
+}
+
+// EpisodeChangeItems defines a model
+type EpisodeChangeItems []EpisodeChangeItemsItem
+
+// EpisodeChangeItemsItem defines a model
+type EpisodeChangeItemsItem struct {
+	ID     string `json:"id,omitzero"`
+	Action string `json:"action,omitzero"`
+	Time   string `json:"time,omitzero"`
+	Value  string `json:"value,omitzero"`
+}
+
+// EpisodeChanges defines a model
+type EpisodeChanges []EpisodeChange
+
+// EpisodeChangesWrapper defines a model
+type EpisodeChangesWrapper struct {
+	Changes EpisodeChanges `json:"changes,omitzero"`
 }
 
 // EpisodeDetails defines a model
@@ -1399,6 +1425,9 @@ type EpisodeDetails struct {
 	Crew       Crew   `json:"crew,omitzero"`
 	GuestStars Actors `json:"guest_stars,omitzero"`
 }
+
+// The ID of an episode
+type EpisodeID int32
 
 // EpisodeType defines a model
 type EpisodeType string
@@ -2824,8 +2853,9 @@ type SeasonChangeItemsItem struct {
 
 // SeasonChangeItemsItemValue defines a model
 type SeasonChangeItemsItemValue struct {
-	EpisodeID     int `json:"episode_id,omitzero"`
-	EpisodeNumber int `json:"episode_number,omitzero"`
+	// The ID of the episode
+	EpisodeID     *EpisodeID `json:"episode_id,omitzero"`
+	EpisodeNumber int        `json:"episode_number,omitzero"`
 }
 
 // SeasonChanges defines a model
@@ -3174,31 +3204,6 @@ type TrendingTvResultsItem struct {
 	VoteAverage      float64    `json:"vote_average,omitzero"`
 	VoteCount        int        `json:"vote_count,omitzero"`
 	OriginCountry    []string   `json:"origin_country,omitzero"`
-}
-
-// TvEpisodeChangesByIDOk defines a model
-type TvEpisodeChangesByIDOk struct {
-	Changes TvEpisodeChangesByIDOkChanges `json:"changes,omitzero"`
-}
-
-// TvEpisodeChangesByIDOkChanges defines a model
-type TvEpisodeChangesByIDOkChanges []TvEpisodeChangesByIDOkChangesItem
-
-// TvEpisodeChangesByIDOkChangesItem defines a model
-type TvEpisodeChangesByIDOkChangesItem struct {
-	Key   string                                 `json:"key,omitzero"`
-	Items TvEpisodeChangesByIDOkChangesItemItems `json:"items,omitzero"`
-}
-
-// TvEpisodeChangesByIDOkChangesItemItems defines a model
-type TvEpisodeChangesByIDOkChangesItemItems []TvEpisodeChangesByIDOkChangesItemItemsItem
-
-// TvEpisodeChangesByIDOkChangesItemItemsItem defines a model
-type TvEpisodeChangesByIDOkChangesItemItemsItem struct {
-	ID     string `json:"id,omitzero"`
-	Action string `json:"action,omitzero"`
-	Time   string `json:"time,omitzero"`
-	Value  string `json:"value,omitzero"`
 }
 
 // TvEpisodeCreditsOk defines a model

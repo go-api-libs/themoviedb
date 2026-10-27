@@ -10817,15 +10817,15 @@ func (c *Client) TvSeasonAggregateCreditsWithResult[R any](ctx context.Context, 
 // Get the recent changes for a TV season.
 //
 //	GET /tv/season/{season_id}/changes
-func (c *Client) GetSeasonChangesByID(ctx context.Context, seasonID SeasonID, params *GetSeasonChangesByIDParams) (*SeasonChangesWrapper, error) {
-	return c.GetSeasonChangesByIDWithResult[SeasonChangesWrapper](ctx, seasonID, params)
+func (c *Client) GetSeasonChanges(ctx context.Context, seasonID SeasonID, params *GetSeasonChangesParams) (*SeasonChangesWrapper, error) {
+	return c.GetSeasonChangesWithResult[SeasonChangesWrapper](ctx, seasonID, params)
 }
 
 // Get the recent changes for a TV season.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/season/{season_id}/changes
-func (c *Client) GetSeasonChangesByIDWithResult[R any](ctx context.Context, seasonID SeasonID, params *GetSeasonChangesByIDParams) (*R, error) {
+func (c *Client) GetSeasonChangesWithResult[R any](ctx context.Context, seasonID SeasonID, params *GetSeasonChangesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", "season", strconv.FormatInt(int64(seasonID), 10), "changes")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -11532,15 +11532,15 @@ func (c *Client) TvEpisodeAccountStatesWithResult[R any](ctx context.Context, se
 // Get the recent changes for a TV episode.
 //
 //	GET /tv/episode/{episode_id}/changes
-func (c *Client) GetEpisodeChangesByID(ctx context.Context, episodeID int32) (*TvEpisodeChangesByIDOk, error) {
-	return c.GetEpisodeChangesByIDWithResult[TvEpisodeChangesByIDOk](ctx, episodeID)
+func (c *Client) GetEpisodeChanges(ctx context.Context, episodeID EpisodeID) (*EpisodeChangesWrapper, error) {
+	return c.GetEpisodeChangesWithResult[EpisodeChangesWrapper](ctx, episodeID)
 }
 
 // Get the recent changes for a TV episode.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/episode/{episode_id}/changes
-func (c *Client) GetEpisodeChangesByIDWithResult[R any](ctx context.Context, episodeID int32) (*R, error) {
+func (c *Client) GetEpisodeChangesWithResult[R any](ctx context.Context, episodeID EpisodeID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", "episode", strconv.FormatInt(int64(episodeID), 10), "changes")
 	req := (&http.Request{
 		Header: http.Header{
@@ -11570,7 +11570,7 @@ func (c *Client) GetEpisodeChangesByIDWithResult[R any](ctx context.Context, epi
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvEpisodeChangesByIDOk); ok {
+			if _, ok := any(&out).(*EpisodeChangesWrapper); ok {
 				opts = jsonOpts
 			}
 
