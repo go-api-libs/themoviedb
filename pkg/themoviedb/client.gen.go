@@ -10572,8 +10572,8 @@ func (c *Client) TvSeriesDeleteRatingWithResult[R any](ctx context.Context, seri
 // Query the details of a TV season.
 //
 //	GET /tv/{series_id}/season/{season_number}
-func (c *Client) GetShowSeason(ctx context.Context, seriesID SeriesID, seasonNumber int32, params *GetShowSeasonParams) (*Season, error) {
-	return c.GetShowSeasonWithResult[Season](ctx, seriesID, seasonNumber, params)
+func (c *Client) GetShowSeason(ctx context.Context, seriesID SeriesID, seasonNumber int32, params *GetShowSeasonParams) (*SeasonDetails, error) {
+	return c.GetShowSeasonWithResult[SeasonDetails](ctx, seriesID, seasonNumber, params)
 }
 
 // Query the details of a TV season.
@@ -10624,7 +10624,7 @@ func (c *Client) GetShowSeasonWithResult[R any](ctx context.Context, seriesID Se
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*Season); ok {
+			if _, ok := any(&out).(*SeasonDetails); ok {
 				opts = jsonOpts
 			}
 

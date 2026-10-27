@@ -2789,29 +2789,20 @@ type SearchPersonOkResultsItem struct {
 
 // Season defines a model
 type Season struct {
-	UnderscoreID string     `json:"_id"`
-	AirDate      civil.Date `json:"air_date"`
-	Episodes     Episodes   `json:"episodes"`
-	Name         string     `json:"name"`
-	Networks     Companies  `json:"networks"`
-	Overview     string     `json:"overview"`
-	// The ID of the season
-	ID           SeasonID `json:"id"`
-	PosterPath   string   `json:"poster_path,omitzero"`
-	SeasonNumber int      `json:"season_number"`
-	VoteAverage  float64  `json:"vote_average"`
+	SeasonBase
+	EpisodeCount int `json:"episode_count,omitzero"`
 }
 
-// Season2 defines a model
-type Season2 struct {
-	AirDate      civil.Date `json:"air_date,omitzero"`
-	EpisodeCount int        `json:"episode_count,omitzero"`
-	ID           int        `json:"id,omitzero"`
-	Name         string     `json:"name,omitzero"`
-	Overview     string     `json:"overview,omitzero"`
+// SeasonBase defines a model
+type SeasonBase struct {
+	// The ID of the season
+	ID           SeasonID   `json:"id"`
+	Name         string     `json:"name"`
+	AirDate      civil.Date `json:"air_date"`
+	Overview     string     `json:"overview"`
 	PosterPath   string     `json:"poster_path,omitzero"`
-	SeasonNumber int        `json:"season_number,omitzero"`
-	VoteAverage  *float64   `json:"vote_average,omitzero"`
+	SeasonNumber int        `json:"season_number"`
+	VoteAverage  float64    `json:"vote_average"`
 }
 
 // SeasonChange defines a model
@@ -2845,8 +2836,19 @@ type SeasonChangesWrapper struct {
 	Changes SeasonChanges `json:"changes,omitzero"`
 }
 
+// SeasonDetails defines a model
+type SeasonDetails struct {
+	SeasonBase
+	UnderscoreID string    `json:"_id"`
+	Episodes     Episodes  `json:"episodes"`
+	Networks     Companies `json:"networks"`
+}
+
 // The ID of a season
 type SeasonID int32
+
+// Seasons defines a model
+type Seasons []Season
 
 // The ID of a series, i.e. a TV Show.
 type SeriesID int32
@@ -2879,29 +2881,26 @@ type ShowBase struct {
 // ShowDetails defines a model
 type ShowDetails struct {
 	ShowBase
-	CreatedBy           People             `json:"created_by"`
-	EpisodeRunTime      []int              `json:"episode_run_time"`
-	Genres              Keywords           `json:"genres"`
-	Homepage            url.URL            `json:"homepage"`
-	InProduction        bool               `json:"in_production"`
-	Languages           []string           `json:"languages"`
-	LastAirDate         civil.Date         `json:"last_air_date"`
-	LastEpisodeToAir    Episode            `json:"last_episode_to_air"`
-	NextEpisodeToAir    *struct{}          `json:"next_episode_to_air,omitzero"`
-	Networks            Companies          `json:"networks"`
-	NumberOfEpisodes    int                `json:"number_of_episodes"`
-	NumberOfSeasons     int                `json:"number_of_seasons"`
-	ProductionCompanies Companies          `json:"production_companies"`
-	ProductionCountries Countries          `json:"production_countries"`
-	Seasons             ShowDetailsSeasons `json:"seasons"`
-	SpokenLanguages     Languages          `json:"spoken_languages"`
-	Status              string             `json:"status"`
-	Tagline             string             `json:"tagline"`
-	Type                string             `json:"type"`
+	CreatedBy           People     `json:"created_by"`
+	EpisodeRunTime      []int      `json:"episode_run_time"`
+	Genres              Keywords   `json:"genres"`
+	Homepage            url.URL    `json:"homepage"`
+	InProduction        bool       `json:"in_production"`
+	Languages           []string   `json:"languages"`
+	LastAirDate         civil.Date `json:"last_air_date"`
+	LastEpisodeToAir    Episode    `json:"last_episode_to_air"`
+	NextEpisodeToAir    *struct{}  `json:"next_episode_to_air,omitzero"`
+	Networks            Companies  `json:"networks"`
+	NumberOfEpisodes    int        `json:"number_of_episodes"`
+	NumberOfSeasons     int        `json:"number_of_seasons"`
+	ProductionCompanies Companies  `json:"production_companies"`
+	ProductionCountries Countries  `json:"production_countries"`
+	Seasons             Seasons    `json:"seasons"`
+	SpokenLanguages     Languages  `json:"spoken_languages"`
+	Status              string     `json:"status"`
+	Tagline             string     `json:"tagline"`
+	Type                string     `json:"type"`
 }
-
-// ShowDetailsSeasons defines a model
-type ShowDetailsSeasons []Season2
 
 // Shows defines a model
 type Shows []Show
