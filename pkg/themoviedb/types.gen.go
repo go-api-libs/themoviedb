@@ -1373,9 +1373,7 @@ type DiscoverTvResultsItem struct {
 // Episode defines a model
 type Episode struct {
 	EpisodeBase
-	EpisodeType EpisodeType `json:"episode_type,omitzero"`
-	Crew        Crew        `json:"crew,omitzero"`
-	GuestStars  Actors      `json:"guest_stars,omitzero"`
+	EpisodeTypeWrapper
 }
 
 // EpisodeBase defines a model
@@ -1392,6 +1390,14 @@ type EpisodeBase struct {
 	StillPath      string     `json:"still_path,omitzero"`
 	VoteAverage    float64    `json:"vote_average,omitzero"`
 	VoteCount      int        `json:"vote_count,omitzero"`
+}
+
+// EpisodeDetails defines a model
+type EpisodeDetails struct {
+	EpisodeBase
+	EpisodeTypeWrapper
+	Crew       Crew   `json:"crew,omitzero"`
+	GuestStars Actors `json:"guest_stars,omitzero"`
 }
 
 // EpisodeType defines a model
@@ -1412,8 +1418,13 @@ func (e EpisodeType) Valid() bool {
 	}
 }
 
+// EpisodeTypeWrapper defines a model
+type EpisodeTypeWrapper struct {
+	EpisodeType EpisodeType `json:"episode_type,omitzero"`
+}
+
 // Episodes defines a model
-type Episodes []Episode
+type Episodes []EpisodeDetails
 
 // Error defines a model
 type Error struct {
@@ -2821,42 +2832,25 @@ type ShowBase struct {
 // ShowDetails defines a model
 type ShowDetails struct {
 	ShowBase
-	CreatedBy           People                      `json:"created_by"`
-	EpisodeRunTime      []int                       `json:"episode_run_time"`
-	Genres              Keywords                    `json:"genres"`
-	Homepage            url.URL                     `json:"homepage"`
-	InProduction        bool                        `json:"in_production"`
-	Languages           []string                    `json:"languages"`
-	LastAirDate         civil.Date                  `json:"last_air_date"`
-	LastEpisodeToAir    ShowDetailsLastEpisodeToAir `json:"last_episode_to_air"`
-	NextEpisodeToAir    *struct{}                   `json:"next_episode_to_air,omitzero"`
-	Networks            Companies                   `json:"networks"`
-	NumberOfEpisodes    int                         `json:"number_of_episodes"`
-	NumberOfSeasons     int                         `json:"number_of_seasons"`
-	ProductionCompanies Companies                   `json:"production_companies"`
-	ProductionCountries Countries                   `json:"production_countries"`
-	Seasons             ShowDetailsSeasons          `json:"seasons"`
-	SpokenLanguages     Languages                   `json:"spoken_languages"`
-	Status              string                      `json:"status"`
-	Tagline             string                      `json:"tagline"`
-	Type                string                      `json:"type"`
-}
-
-// ShowDetailsLastEpisodeToAir defines a model
-type ShowDetailsLastEpisodeToAir struct {
-	ID             int        `json:"id,omitzero"`
-	Name           string     `json:"name,omitzero"`
-	Overview       string     `json:"overview,omitzero"`
-	VoteAverage    float64    `json:"vote_average,omitzero"`
-	VoteCount      int        `json:"vote_count,omitzero"`
-	AirDate        civil.Date `json:"air_date,omitzero"`
-	EpisodeNumber  int        `json:"episode_number,omitzero"`
-	ProductionCode string     `json:"production_code,omitzero"`
-	Runtime        int        `json:"runtime,omitzero"`
-	SeasonNumber   int        `json:"season_number,omitzero"`
-	ShowID         int        `json:"show_id,omitzero"`
-	StillPath      string     `json:"still_path,omitzero"`
-	EpisodeType    string     `json:"episode_type,omitzero"`
+	CreatedBy           People             `json:"created_by"`
+	EpisodeRunTime      []int              `json:"episode_run_time"`
+	Genres              Keywords           `json:"genres"`
+	Homepage            url.URL            `json:"homepage"`
+	InProduction        bool               `json:"in_production"`
+	Languages           []string           `json:"languages"`
+	LastAirDate         civil.Date         `json:"last_air_date"`
+	LastEpisodeToAir    Episode            `json:"last_episode_to_air"`
+	NextEpisodeToAir    *struct{}          `json:"next_episode_to_air,omitzero"`
+	Networks            Companies          `json:"networks"`
+	NumberOfEpisodes    int                `json:"number_of_episodes"`
+	NumberOfSeasons     int                `json:"number_of_seasons"`
+	ProductionCompanies Companies          `json:"production_companies"`
+	ProductionCountries Countries          `json:"production_countries"`
+	Seasons             ShowDetailsSeasons `json:"seasons"`
+	SpokenLanguages     Languages          `json:"spoken_languages"`
+	Status              string             `json:"status"`
+	Tagline             string             `json:"tagline"`
+	Type                string             `json:"type"`
 }
 
 // ShowDetailsSeasons defines a model

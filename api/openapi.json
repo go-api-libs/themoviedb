@@ -5050,7 +5050,7 @@
             "$ref": "#/components/schemas/EpisodeBase"
           },
           {
-            "$ref": "#/components/schemas/EpisodeDetails"
+            "$ref": "#/components/schemas/EpisodeTypeWrapper"
           }
         ]
       },
@@ -5117,11 +5117,21 @@
         }
       },
       "EpisodeDetails": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EpisodeBase"
+          },
+          {
+            "$ref": "#/components/schemas/EpisodeTypeWrapper"
+          },
+          {
+            "$ref": "#/components/schemas/EpisodeMetadata"
+          }
+        ]
+      },
+      "EpisodeMetadata": {
         "type": "object",
         "properties": {
-          "episode_type": {
-            "$ref": "#/components/schemas/EpisodeType"
-          },
           "crew": {
             "$ref": "#/components/schemas/Crew"
           },
@@ -5138,10 +5148,18 @@
         ],
         "example": "standard"
       },
+      "EpisodeTypeWrapper": {
+        "type": "object",
+        "properties": {
+          "episode_type": {
+            "$ref": "#/components/schemas/EpisodeType"
+          }
+        }
+      },
       "Episodes": {
         "type": "array",
         "items": {
-          "$ref": "#/components/schemas/Episode"
+          "$ref": "#/components/schemas/EpisodeDetails"
         }
       },
       "Error": {
@@ -9266,72 +9284,6 @@
           }
         ]
       },
-      "ShowDetailsLastEpisodeToAir": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 1551830
-          },
-          "name": {
-            "type": "string",
-            "example": "The Iron Throne"
-          },
-          "overview": {
-            "type": "string",
-            "example": "In the aftermath of the devastating attack on King's Landing, Daenerys must face the survivors."
-          },
-          "vote_average": {
-            "type": "number",
-            "format": "double",
-            "default": 0,
-            "example": 4.809
-          },
-          "vote_count": {
-            "type": "integer",
-            "default": 0,
-            "example": 241
-          },
-          "air_date": {
-            "type": "string",
-            "format": "date",
-            "example": "2019-05-19"
-          },
-          "episode_number": {
-            "type": "integer",
-            "default": 0,
-            "example": 6
-          },
-          "production_code": {
-            "type": "string",
-            "example": "806"
-          },
-          "runtime": {
-            "type": "integer",
-            "default": 0,
-            "example": 80
-          },
-          "season_number": {
-            "type": "integer",
-            "default": 0,
-            "example": 8
-          },
-          "show_id": {
-            "type": "integer",
-            "default": 0,
-            "example": 1399
-          },
-          "still_path": {
-            "type": "string",
-            "example": "/zBi2O5EJfgTS6Ae0HdAYLm9o2nf.jpg"
-          },
-          "episode_type": {
-            "type": "string",
-            "example": "finale"
-          }
-        }
-      },
       "ShowDetailsSeasons": {
         "type": "array",
         "items": {
@@ -9420,7 +9372,7 @@
             "example": "2019-05-19"
           },
           "last_episode_to_air": {
-            "$ref": "#/components/schemas/ShowDetailsLastEpisodeToAir"
+            "$ref": "#/components/schemas/Episode"
           },
           "next_episode_to_air": {},
           "networks": {
