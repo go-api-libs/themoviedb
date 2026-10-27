@@ -4822,9 +4822,8 @@
             "example": 1
           },
           "show_id": {
-            "type": "integer",
-            "default": 0,
-            "example": 100088
+            "description": "The ID of the show (series, TV show).",
+            "$ref": "#/components/schemas/ShowID"
           }
         }
       },
@@ -5097,9 +5096,8 @@
             "example": 62
           },
           "show_id": {
-            "type": "integer",
-            "default": 0,
-            "example": 1399
+            "description": "The ID of the show (series, TV show).",
+            "$ref": "#/components/schemas/ShowID"
           },
           "still_path": {
             "type": "string",
@@ -5586,9 +5584,8 @@
             "example": 1
           },
           "show_id": {
-            "type": "integer",
-            "default": 0,
-            "example": 1399
+            "description": "The ID of the show (series, TV show).",
+            "$ref": "#/components/schemas/ShowID"
           },
           "still_path": {
             "type": "string",
@@ -9451,6 +9448,7 @@
         "type": "object",
         "properties": {
           "id": {
+            "description": "The ID of the show (series, TV show).",
             "$ref": "#/components/schemas/ShowID"
           },
           "name": {
@@ -9612,7 +9610,7 @@
         ]
       },
       "ShowID": {
-        "description": "The ID of a series, i.e. a TV Show.",
+        "description": "The ID of a show (series, TV show).",
         "type": "integer",
         "format": "int32",
         "example": 1396,
@@ -10319,9 +10317,8 @@
             "example": 6
           },
           "show_id": {
-            "type": "integer",
-            "default": 0,
-            "example": 59717
+            "description": "The ID of the show (series, TV show).",
+            "$ref": "#/components/schemas/ShowID"
           },
           "still_path": {
             "type": "string",
@@ -11482,9 +11479,8 @@
             "example": 1
           },
           "show_id": {
-            "type": "integer",
-            "default": 0,
-            "example": 225491
+            "description": "The ID of the show (series, TV show).",
+            "$ref": "#/components/schemas/ShowID"
           },
           "still_path": {}
         }
@@ -17442,6 +17438,7 @@
         "in": "path",
         "required": true,
         "schema": {
+          "description": "The ID of the show (series, TV show).",
           "$ref": "#/components/schemas/ShowID"
         }
       },
