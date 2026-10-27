@@ -1141,9 +1141,9 @@ type CollectionTranslationsOkTranslationsItem struct {
 
 // CollectionTranslationsOkTranslationsItemData defines a model
 type CollectionTranslationsOkTranslationsItemData struct {
-	Title    string `json:"title,omitzero"`
-	Overview string `json:"overview,omitzero"`
-	Homepage string `json:"homepage,omitzero"`
+	Title    string  `json:"title,omitzero"`
+	Overview string  `json:"overview,omitzero"`
+	Homepage url.URL `json:"homepage,omitzero"`
 }
 
 // Companies defines a model
@@ -1161,7 +1161,7 @@ type Company struct {
 type CompanyDetailsOk struct {
 	Description   string    `json:"description,omitzero"`
 	Headquarters  string    `json:"headquarters,omitzero"`
-	Homepage      string    `json:"homepage,omitzero"`
+	Homepage      url.URL   `json:"homepage,omitzero"`
 	ID            int       `json:"id,omitzero"`
 	LogoPath      string    `json:"logo_path,omitzero"`
 	Name          string    `json:"name,omitzero"`
@@ -1887,7 +1887,7 @@ type MovieLatestIDOk struct {
 	BelongsToCollection *struct{}  `json:"belongs_to_collection,omitzero"`
 	Budget              int        `json:"budget,omitzero"`
 	Genres              []struct{} `json:"genres,omitzero"`
-	Homepage            string     `json:"homepage,omitzero"`
+	Homepage            url.URL    `json:"homepage,omitzero"`
 	ID                  int        `json:"id,omitzero"`
 	ImdbID              *struct{}  `json:"imdb_id,omitzero"`
 	OriginalLanguage    string     `json:"original_language,omitzero"`
@@ -2021,11 +2021,11 @@ type MovieTranslationsOkTranslationsItem struct {
 
 // MovieTranslationsOkTranslationsItemData defines a model
 type MovieTranslationsOkTranslationsItemData struct {
-	Homepage string `json:"homepage,omitzero"`
-	Overview string `json:"overview,omitzero"`
-	Runtime  int    `json:"runtime,omitzero"`
-	Tagline  string `json:"tagline,omitzero"`
-	Title    string `json:"title,omitzero"`
+	Homepage url.URL `json:"homepage,omitzero"`
+	Overview string  `json:"overview,omitzero"`
+	Runtime  int     `json:"runtime,omitzero"`
+	Tagline  string  `json:"tagline,omitzero"`
+	Title    string  `json:"title,omitzero"`
 }
 
 // MovieUpcomingListDates defines a model
@@ -2265,12 +2265,12 @@ type MoviesResultPage struct {
 
 // NetworkDetailsOk defines a model
 type NetworkDetailsOk struct {
-	Headquarters  string `json:"headquarters,omitzero"`
-	Homepage      string `json:"homepage,omitzero"`
-	ID            int    `json:"id,omitzero"`
-	LogoPath      string `json:"logo_path,omitzero"`
-	Name          string `json:"name,omitzero"`
-	OriginCountry string `json:"origin_country,omitzero"`
+	Headquarters  string  `json:"headquarters,omitzero"`
+	Homepage      url.URL `json:"homepage,omitzero"`
+	ID            int     `json:"id,omitzero"`
+	LogoPath      string  `json:"logo_path,omitzero"`
+	Name          string  `json:"name,omitzero"`
+	OriginCountry string  `json:"origin_country,omitzero"`
 }
 
 // PaginatedResponse defines a model
@@ -2448,7 +2448,7 @@ type PersonLatestIDOk struct {
 	Birthday           *struct{}  `json:"birthday,omitzero"`
 	Deathday           *struct{}  `json:"deathday,omitzero"`
 	Gender             Gender     `json:"gender,omitzero"`
-	Homepage           *struct{}  `json:"homepage,omitzero"`
+	Homepage           url.URL    `json:"homepage,omitzero"`
 	ID                 int        `json:"id,omitzero"`
 	ImdbID             *struct{}  `json:"imdb_id,omitzero"`
 	KnownForDepartment *struct{}  `json:"known_for_department,omitzero"`
@@ -2802,7 +2802,7 @@ type ShowDetails struct {
 	CreatedBy           ShowDetailsCreatedBy         `json:"created_by,omitzero"`
 	EpisodeRunTime      []int                        `json:"episode_run_time,omitzero"`
 	Genres              Keywords                     `json:"genres,omitzero"`
-	Homepage            string                       `json:"homepage,omitzero"`
+	Homepage            url.URL                      `json:"homepage,omitzero"`
 	InProduction        *bool                        `json:"in_production,omitzero"`
 	Languages           []string                     `json:"languages,omitzero"`
 	LastAirDate         civil.Date                   `json:"last_air_date,omitzero"`
@@ -3623,7 +3623,7 @@ type TvSeriesLatestIDOk struct {
 	EpisodeRunTime      []struct{}                          `json:"episode_run_time,omitzero"`
 	FirstAirDate        civil.Date                          `json:"first_air_date,omitzero"`
 	Genres              []struct{}                          `json:"genres,omitzero"`
-	Homepage            string                              `json:"homepage,omitzero"`
+	Homepage            url.URL                             `json:"homepage,omitzero"`
 	ID                  int                                 `json:"id,omitzero"`
 	InProduction        *bool                               `json:"in_production,omitzero"`
 	Languages           []struct{}                          `json:"languages,omitzero"`
@@ -3797,10 +3797,10 @@ type TvSeriesTranslationsOkTranslationsItem struct {
 
 // TvSeriesTranslationsOkTranslationsItemData defines a model
 type TvSeriesTranslationsOkTranslationsItemData struct {
-	Name     string `json:"name,omitzero"`
-	Overview string `json:"overview,omitzero"`
-	Homepage string `json:"homepage,omitzero"`
-	Tagline  string `json:"tagline,omitzero"`
+	Name     string  `json:"name,omitzero"`
+	Overview string  `json:"overview,omitzero"`
+	Homepage url.URL `json:"homepage,omitzero"`
+	Tagline  string  `json:"tagline,omitzero"`
 }
 
 // TvSeriesWatchProvidersOk defines a model

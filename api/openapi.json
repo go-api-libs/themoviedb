@@ -4423,6 +4423,7 @@
           },
           "homepage": {
             "type": "string",
+            "format": "uri",
             "example": ""
           }
         }
@@ -4471,6 +4472,7 @@
           },
           "homepage": {
             "type": "string",
+            "format": "uri",
             "example": "https://www.lucasfilm.com"
           },
           "id": {
@@ -6398,6 +6400,7 @@
           },
           "homepage": {
             "type": "string",
+            "format": "uri",
             "example": ""
           },
           "id": {
@@ -6778,6 +6781,7 @@
         "properties": {
           "homepage": {
             "type": "string",
+            "format": "uri",
             "example": ""
           },
           "overview": {
@@ -7460,6 +7464,7 @@
           },
           "homepage": {
             "type": "string",
+            "format": "uri",
             "example": "https://www.hbo.com"
           },
           "id": {
@@ -8055,7 +8060,10 @@
           "gender": {
             "$ref": "#/components/schemas/Gender"
           },
-          "homepage": {},
+          "homepage": {
+            "type": "string",
+            "format": "uri"
+          },
           "id": {
             "type": "integer",
             "default": 0,
@@ -9367,6 +9375,7 @@
           },
           "homepage": {
             "type": "string",
+            "format": "uri",
             "example": "http://www.hbo.com/game-of-thrones"
           },
           "in_production": {
@@ -11283,6 +11292,7 @@
           },
           "homepage": {
             "type": "string",
+            "format": "uri",
             "example": ""
           },
           "id": {
@@ -11837,6 +11847,7 @@
           },
           "homepage": {
             "type": "string",
+            "format": "uri",
             "example": ""
           },
           "tagline": {
