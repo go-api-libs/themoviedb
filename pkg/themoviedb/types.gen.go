@@ -2773,6 +2773,12 @@ type SeriesID int32
 
 // Show defines a model
 type Show struct {
+	ShowBase
+	GenreIDsWrapper
+}
+
+// ShowBase defines a model
+type ShowBase struct {
 	// The ID of a series, i.e. a TV Show.
 	ID               SeriesID   `json:"id"`
 	Name             string     `json:"name"`
@@ -2788,34 +2794,23 @@ type Show struct {
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
 	Adult            bool       `json:"adult"`
 	Softcore         bool       `json:"softcore"`
-	GenreIDsWrapper
 }
 
 // ShowDetails defines a model
 type ShowDetails struct {
-	Adult               *bool                        `json:"adult,omitzero"`
-	BackdropPath        string                       `json:"backdrop_path,omitzero"`
+	ShowBase
 	CreatedBy           ShowDetailsCreatedBy         `json:"created_by,omitzero"`
 	EpisodeRunTime      []int                        `json:"episode_run_time,omitzero"`
-	FirstAirDate        civil.Date                   `json:"first_air_date,omitzero"`
 	Genres              Keywords                     `json:"genres,omitzero"`
 	Homepage            string                       `json:"homepage,omitzero"`
-	ID                  int                          `json:"id,omitzero"`
 	InProduction        *bool                        `json:"in_production,omitzero"`
 	Languages           []string                     `json:"languages,omitzero"`
 	LastAirDate         civil.Date                   `json:"last_air_date,omitzero"`
 	LastEpisodeToAir    *ShowDetailsLastEpisodeToAir `json:"last_episode_to_air,omitzero"`
-	Name                string                       `json:"name,omitzero"`
 	NextEpisodeToAir    *struct{}                    `json:"next_episode_to_air,omitzero"`
 	Networks            Companies                    `json:"networks,omitzero"`
 	NumberOfEpisodes    int                          `json:"number_of_episodes,omitzero"`
 	NumberOfSeasons     int                          `json:"number_of_seasons,omitzero"`
-	OriginCountry       []string                     `json:"origin_country,omitzero"`
-	OriginalLanguage    string                       `json:"original_language,omitzero"`
-	OriginalName        string                       `json:"original_name,omitzero"`
-	Overview            string                       `json:"overview,omitzero"`
-	Popularity          float64                      `json:"popularity,omitzero"`
-	PosterPath          string                       `json:"poster_path,omitzero"`
 	ProductionCompanies Companies                    `json:"production_companies,omitzero"`
 	ProductionCountries Countries                    `json:"production_countries,omitzero"`
 	Seasons             ShowDetailsSeasons           `json:"seasons,omitzero"`
@@ -2823,9 +2818,6 @@ type ShowDetails struct {
 	Status              string                       `json:"status,omitzero"`
 	Tagline             string                       `json:"tagline,omitzero"`
 	Type                string                       `json:"type,omitzero"`
-	VoteAverage         float64                      `json:"vote_average,omitzero"`
-	VoteCount           int                          `json:"vote_count,omitzero"`
-	Softcore            *bool                        `json:"softcore,omitzero"`
 }
 
 // ShowDetailsCreatedBy defines a model

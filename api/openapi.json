@@ -9190,151 +9190,14 @@
         ]
       },
       "ShowDetails": {
-        "type": "object",
-        "properties": {
-          "adult": {
-            "type": "boolean",
-            "default": true,
-            "example": false
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ShowBase"
           },
-          "backdrop_path": {
-            "type": "string",
-            "example": "/6LWy0jvMpmjoS9fojNgHIKoWL05.jpg"
-          },
-          "created_by": {
-            "$ref": "#/components/schemas/ShowDetailsCreatedBy"
-          },
-          "episode_run_time": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "default": 0,
-              "example": 60
-            }
-          },
-          "first_air_date": {
-            "type": "string",
-            "format": "date",
-            "example": "2011-04-17"
-          },
-          "genres": {
-            "$ref": "#/components/schemas/Keywords"
-          },
-          "homepage": {
-            "type": "string",
-            "example": "http://www.hbo.com/game-of-thrones"
-          },
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 1399
-          },
-          "in_production": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "languages": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "example": "en"
-            }
-          },
-          "last_air_date": {
-            "type": "string",
-            "format": "date",
-            "example": "2019-05-19"
-          },
-          "last_episode_to_air": {
-            "$ref": "#/components/schemas/ShowDetailsLastEpisodeToAir"
-          },
-          "name": {
-            "type": "string",
-            "example": "Game of Thrones"
-          },
-          "next_episode_to_air": {},
-          "networks": {
-            "$ref": "#/components/schemas/Companies"
-          },
-          "number_of_episodes": {
-            "type": "integer",
-            "default": 0,
-            "example": 73
-          },
-          "number_of_seasons": {
-            "type": "integer",
-            "default": 0,
-            "example": 8
-          },
-          "origin_country": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "example": "US"
-            }
-          },
-          "original_language": {
-            "type": "string",
-            "example": "en"
-          },
-          "original_name": {
-            "type": "string",
-            "example": "Game of Thrones"
-          },
-          "overview": {
-            "type": "string",
-            "example": "Seven noble families fight for control of the mythical land of Westeros. Friction between the houses leads to full-scale war. All while a very ancient evil awakens in the farthest north. Amidst the war, a neglected military order of misfits, the Night's Watch, is all that stands between the realms of men and icy horrors beyond."
-          },
-          "popularity": {
-            "type": "number",
-            "format": "double",
-            "default": 0,
-            "example": 346.098
-          },
-          "poster_path": {
-            "type": "string",
-            "example": "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg"
-          },
-          "production_companies": {
-            "$ref": "#/components/schemas/Companies"
-          },
-          "production_countries": {
-            "$ref": "#/components/schemas/Countries"
-          },
-          "seasons": {
-            "$ref": "#/components/schemas/ShowDetailsSeasons"
-          },
-          "spoken_languages": {
-            "$ref": "#/components/schemas/Languages"
-          },
-          "status": {
-            "type": "string",
-            "example": "Ended"
-          },
-          "tagline": {
-            "type": "string",
-            "example": "Winter Is Coming"
-          },
-          "type": {
-            "type": "string",
-            "example": "Scripted"
-          },
-          "vote_average": {
-            "type": "number",
-            "format": "double",
-            "default": 0,
-            "example": 8.438
-          },
-          "vote_count": {
-            "type": "integer",
-            "default": 0,
-            "example": 21390
-          },
-          "softcore": {
-            "type": "boolean"
+          {
+            "$ref": "#/components/schemas/ShowMetadata"
           }
-        }
+        ]
       },
       "ShowDetailsCreatedBy": {
         "type": "array",
@@ -9482,6 +9345,87 @@
             "type": "number",
             "format": "double",
             "example": 8.0
+          }
+        }
+      },
+      "ShowMetadata": {
+        "type": "object",
+        "properties": {
+          "created_by": {
+            "$ref": "#/components/schemas/ShowDetailsCreatedBy"
+          },
+          "episode_run_time": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "default": 0,
+              "example": 60
+            }
+          },
+          "genres": {
+            "$ref": "#/components/schemas/Keywords"
+          },
+          "homepage": {
+            "type": "string",
+            "example": "http://www.hbo.com/game-of-thrones"
+          },
+          "in_production": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "en"
+            }
+          },
+          "last_air_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2019-05-19"
+          },
+          "last_episode_to_air": {
+            "$ref": "#/components/schemas/ShowDetailsLastEpisodeToAir"
+          },
+          "next_episode_to_air": {},
+          "networks": {
+            "$ref": "#/components/schemas/Companies"
+          },
+          "number_of_episodes": {
+            "type": "integer",
+            "default": 0,
+            "example": 73
+          },
+          "number_of_seasons": {
+            "type": "integer",
+            "default": 0,
+            "example": 8
+          },
+          "production_companies": {
+            "$ref": "#/components/schemas/Companies"
+          },
+          "production_countries": {
+            "$ref": "#/components/schemas/Countries"
+          },
+          "seasons": {
+            "$ref": "#/components/schemas/ShowDetailsSeasons"
+          },
+          "spoken_languages": {
+            "$ref": "#/components/schemas/Languages"
+          },
+          "status": {
+            "type": "string",
+            "example": "Ended"
+          },
+          "tagline": {
+            "type": "string",
+            "example": "Winter Is Coming"
+          },
+          "type": {
+            "type": "string",
+            "example": "Scripted"
           }
         }
       },
