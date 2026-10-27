@@ -3075,7 +3075,7 @@
         "operationId": "GetEpisodeDetails",
         "responses": {
           "200": {
-            "$ref": "#/components/responses/EpisodeDetails2"
+            "$ref": "#/components/responses/EpisodeDetails"
           }
         }
       }
