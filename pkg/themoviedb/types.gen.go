@@ -609,11 +609,11 @@ type TvSeriesAggregateCreditsParams struct {
 	Language string
 }
 
-// TvSeriesChangesParams holds the query parameters for TvSeriesChanges.
-type TvSeriesChangesParams struct {
+// GetShowChangesParams holds the query parameters for GetShowChanges.
+type GetShowChangesParams struct {
 	EndDate   civil.Date
 	Page      int32
-	StartDate string
+	StartDate civil.Date
 }
 
 // TvSeriesCreditsParams holds the query parameters for TvSeriesCredits.
@@ -693,7 +693,7 @@ type TvSeasonAggregateCreditsParams struct {
 type GetSeasonChangesByIDParams struct {
 	EndDate   civil.Date
 	Page      int32
-	StartDate string
+	StartDate civil.Date
 }
 
 // TvSeasonCreditsParams holds the query parameters for TvSeasonCredits.
@@ -2850,9 +2850,6 @@ type SeasonID int32
 // Seasons defines a model
 type Seasons []Season
 
-// The ID of a series, i.e. a TV Show.
-type SeriesID int32
-
 // Show defines a model
 type Show struct {
 	ShowBase
@@ -2862,7 +2859,7 @@ type Show struct {
 // ShowBase defines a model
 type ShowBase struct {
 	// The ID of a series, i.e. a TV Show.
-	ID               SeriesID   `json:"id"`
+	ID               ShowID     `json:"id"`
 	Name             string     `json:"name"`
 	FirstAirDate     civil.Date `json:"first_air_date"`
 	Overview         string     `json:"overview"`
@@ -2876,6 +2873,34 @@ type ShowBase struct {
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
 	Adult            bool       `json:"adult"`
 	Softcore         bool       `json:"softcore"`
+}
+
+// ShowChange defines a model
+type ShowChange struct {
+	Key   string          `json:"key,omitzero"`
+	Items ShowChangeItems `json:"items,omitzero"`
+}
+
+// ShowChangeItems defines a model
+type ShowChangeItems []ShowChangeItemsItem
+
+// ShowChangeItemsItem defines a model
+type ShowChangeItemsItem struct {
+	ID            string                             `json:"id,omitzero"`
+	Action        string                             `json:"action,omitzero"`
+	Time          string                             `json:"time,omitzero"`
+	ISO639Part1   string                             `json:"iso_639_1,omitzero"`
+	ISO3166Part1  string                             `json:"iso_3166_1,omitzero"`
+	Value         *TvSeriesChangesItemItemsItemValue `json:"value,omitzero"`
+	OriginalValue *TvSeriesChangesItemItemsItemValue `json:"original_value,omitzero"`
+}
+
+// ShowChanges defines a model
+type ShowChanges []ShowChange
+
+// ShowChangesWrapper defines a model
+type ShowChangesWrapper struct {
+	Changes ShowChanges `json:"changes,omitzero"`
 }
 
 // ShowDetails defines a model
@@ -2901,6 +2926,9 @@ type ShowDetails struct {
 	Tagline             string     `json:"tagline"`
 	Type                string     `json:"type"`
 }
+
+// The ID of a series, i.e. a TV Show.
+type ShowID int32
 
 // Shows defines a model
 type Shows []Show
@@ -3528,34 +3556,6 @@ type TvSeriesChangesItemItemsItemValue struct {
 type TvSeriesChangesItemItemsItemValuePoster struct {
 	FilePath    string `json:"file_path,omitzero"`
 	ISO639Part1 string `json:"iso_639_1,omitzero"`
-}
-
-// TvSeriesChangesOk defines a model
-type TvSeriesChangesOk struct {
-	Changes TvSeriesChangesOkChanges `json:"changes,omitzero"`
-}
-
-// TvSeriesChangesOkChanges defines a model
-type TvSeriesChangesOkChanges []TvSeriesChangesOkChangesItem
-
-// TvSeriesChangesOkChangesItem defines a model
-type TvSeriesChangesOkChangesItem struct {
-	Key   string                            `json:"key,omitzero"`
-	Items TvSeriesChangesOkChangesItemItems `json:"items,omitzero"`
-}
-
-// TvSeriesChangesOkChangesItemItems defines a model
-type TvSeriesChangesOkChangesItemItems []TvSeriesChangesOkChangesItemItemsItem
-
-// TvSeriesChangesOkChangesItemItemsItem defines a model
-type TvSeriesChangesOkChangesItemItemsItem struct {
-	ID            string                             `json:"id,omitzero"`
-	Action        string                             `json:"action,omitzero"`
-	Time          string                             `json:"time,omitzero"`
-	ISO639Part1   string                             `json:"iso_639_1,omitzero"`
-	ISO3166Part1  string                             `json:"iso_3166_1,omitzero"`
-	Value         *TvSeriesChangesItemItemsItemValue `json:"value,omitzero"`
-	OriginalValue *TvSeriesChangesItemItemsItemValue `json:"original_value,omitzero"`
 }
 
 // TvSeriesContentRatingsOk defines a model
