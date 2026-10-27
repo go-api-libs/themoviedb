@@ -1229,6 +1229,19 @@ type Country struct {
 	Name         string `json:"name,omitzero"`
 }
 
+// Creator defines a model
+type Creator struct {
+	ID           int    `json:"id,omitzero"`
+	CreditID     string `json:"credit_id,omitzero"`
+	Name         string `json:"name,omitzero"`
+	Gender       Gender `json:"gender,omitzero"`
+	ProfilePath  string `json:"profile_path,omitzero"`
+	OriginalName string `json:"original_name,omitzero"`
+}
+
+// Creators defines a model
+type Creators []Creator
+
 // CreditDetailsOk defines a model
 type CreditDetailsOk struct {
 	CreditType string                 `json:"credit_type,omitzero"`
@@ -2799,7 +2812,7 @@ type ShowBase struct {
 // ShowDetails defines a model
 type ShowDetails struct {
 	ShowBase
-	CreatedBy           ShowDetailsCreatedBy         `json:"created_by,omitzero"`
+	CreatedBy           Creators                     `json:"created_by,omitzero"`
 	EpisodeRunTime      []int                        `json:"episode_run_time,omitzero"`
 	Genres              Keywords                     `json:"genres,omitzero"`
 	Homepage            url.URL                      `json:"homepage,omitzero"`
@@ -2818,19 +2831,6 @@ type ShowDetails struct {
 	Status              string                       `json:"status,omitzero"`
 	Tagline             string                       `json:"tagline,omitzero"`
 	Type                string                       `json:"type,omitzero"`
-}
-
-// ShowDetailsCreatedBy defines a model
-type ShowDetailsCreatedBy []ShowDetailsCreatedByItem
-
-// ShowDetailsCreatedByItem defines a model
-type ShowDetailsCreatedByItem struct {
-	ID           int    `json:"id,omitzero"`
-	CreditID     string `json:"credit_id,omitzero"`
-	Name         string `json:"name,omitzero"`
-	Gender       Gender `json:"gender,omitzero"`
-	ProfilePath  string `json:"profile_path,omitzero"`
-	OriginalName string `json:"original_name,omitzero"`
 }
 
 // ShowDetailsLastEpisodeToAir defines a model
