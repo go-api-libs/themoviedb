@@ -8135,6 +8135,35 @@
           "profile_path": {}
         }
       },
+      "PersonMetadata": {
+        "type": "object",
+        "properties": {
+          "known_for_department": {
+            "$ref": "#/components/schemas/Department"
+          },
+          "popularity": {
+            "type": "number",
+            "format": "double",
+            "default": 0,
+            "example": 30.6
+          },
+          "credit_id": {
+            "type": "string",
+            "example": "5256c8b219c2956ff6047cd8"
+          },
+          "adult": {
+            "type": "boolean",
+            "default": true,
+            "example": false
+          }
+        },
+        "required": [
+          "adult",
+          "known_for_department",
+          "popularity",
+          "credit_id"
+        ]
+      },
       "PersonMovieCreditsOk": {
         "type": "object",
         "properties": {

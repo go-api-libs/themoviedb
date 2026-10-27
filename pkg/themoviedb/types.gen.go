@@ -2475,6 +2475,14 @@ type PersonLatestIDOk struct {
 	ProfilePath        *struct{}  `json:"profile_path,omitzero"`
 }
 
+// PersonMetadata defines a model
+type PersonMetadata struct {
+	KnownForDepartment Department `json:"known_for_department"`
+	Popularity         float64    `json:"popularity"`
+	CreditID           string     `json:"credit_id"`
+	Adult              bool       `json:"adult"`
+}
+
 // PersonMovieCreditsOk defines a model
 type PersonMovieCreditsOk struct {
 	Cast PersonCast               `json:"cast,omitzero"`
