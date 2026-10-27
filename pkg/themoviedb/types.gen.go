@@ -1274,7 +1274,7 @@ type CreditDetailsOkMediaSeasonsItem struct {
 	Name         string     `json:"name,omitzero"`
 	Overview     string     `json:"overview,omitzero"`
 	PosterPath   string     `json:"poster_path,omitzero"`
-	SeasonNumber int        `json:"season_number,omitzero"`
+	SeasonNumber int32      `json:"season_number,omitzero"`
 	ShowID       int        `json:"show_id,omitzero"`
 }
 
@@ -1379,7 +1379,7 @@ type Episode struct {
 // EpisodeBase defines a model
 type EpisodeBase struct {
 	ID             int        `json:"id,omitzero"`
-	SeasonNumber   int        `json:"season_number,omitzero"`
+	SeasonNumber   int32      `json:"season_number,omitzero"`
 	EpisodeNumber  int        `json:"episode_number,omitzero"`
 	Name           string     `json:"name,omitzero"`
 	Overview       string     `json:"overview,omitzero"`
@@ -1546,7 +1546,7 @@ type GuestSessionRatedTvEpisodesOkResultsItem struct {
 	Overview       string     `json:"overview,omitzero"`
 	ProductionCode string     `json:"production_code,omitzero"`
 	Runtime        int        `json:"runtime,omitzero"`
-	SeasonNumber   int        `json:"season_number,omitzero"`
+	SeasonNumber   int32      `json:"season_number,omitzero"`
 	ShowID         int        `json:"show_id,omitzero"`
 	StillPath      string     `json:"still_path,omitzero"`
 	VoteAverage    float64    `json:"vote_average,omitzero"`
@@ -2801,7 +2801,7 @@ type SeasonBase struct {
 	AirDate      civil.Date `json:"air_date"`
 	Overview     string     `json:"overview"`
 	PosterPath   string     `json:"poster_path,omitzero"`
-	SeasonNumber int        `json:"season_number"`
+	SeasonNumber int32      `json:"season_number"`
 	VoteAverage  float64    `json:"vote_average"`
 }
 
@@ -3015,7 +3015,7 @@ type TVEpisodeDetails struct {
 	ID             int        `json:"id,omitzero"`
 	ProductionCode string     `json:"production_code,omitzero"`
 	Runtime        int        `json:"runtime,omitzero"`
-	SeasonNumber   int        `json:"season_number,omitzero"`
+	SeasonNumber   int32      `json:"season_number,omitzero"`
 	StillPath      string     `json:"still_path,omitzero"`
 	VoteAverage    float64    `json:"vote_average,omitzero"`
 	VoteCount      int        `json:"vote_count,omitzero"`
@@ -3228,7 +3228,7 @@ type TvEpisodeGroupDetailsOkGroupsItemEpisodesItem struct {
 	Overview       string     `json:"overview,omitzero"`
 	ProductionCode string     `json:"production_code,omitzero"`
 	Runtime        *struct{}  `json:"runtime,omitzero"`
-	SeasonNumber   int        `json:"season_number,omitzero"`
+	SeasonNumber   int32      `json:"season_number,omitzero"`
 	ShowID         int        `json:"show_id,omitzero"`
 	StillPath      string     `json:"still_path,omitzero"`
 	VoteAverage    float64    `json:"vote_average,omitzero"`
@@ -3668,7 +3668,7 @@ type TvSeriesLatestIDOkLastEpisodeToAir struct {
 	EpisodeNumber  int        `json:"episode_number,omitzero"`
 	ProductionCode string     `json:"production_code,omitzero"`
 	Runtime        *struct{}  `json:"runtime,omitzero"`
-	SeasonNumber   int        `json:"season_number,omitzero"`
+	SeasonNumber   int32      `json:"season_number,omitzero"`
 	ShowID         int        `json:"show_id,omitzero"`
 	StillPath      *struct{}  `json:"still_path,omitzero"`
 }
@@ -3684,7 +3684,7 @@ type TvSeriesLatestIDOkSeasonsItem struct {
 	Name         string    `json:"name,omitzero"`
 	Overview     string    `json:"overview,omitzero"`
 	PosterPath   *struct{} `json:"poster_path,omitzero"`
-	SeasonNumber int       `json:"season_number,omitzero"`
+	SeasonNumber int32     `json:"season_number,omitzero"`
 }
 
 // TvSeriesReviewsOk defines a model
@@ -3721,9 +3721,9 @@ type TvSeriesScreenedTheatricallyOkResults []TvSeriesScreenedTheatricallyOkResul
 
 // TvSeriesScreenedTheatricallyOkResultsItem defines a model
 type TvSeriesScreenedTheatricallyOkResultsItem struct {
-	ID            int `json:"id,omitzero"`
-	EpisodeNumber int `json:"episode_number,omitzero"`
-	SeasonNumber  int `json:"season_number,omitzero"`
+	ID            int   `json:"id,omitzero"`
+	EpisodeNumber int   `json:"episode_number,omitzero"`
+	SeasonNumber  int32 `json:"season_number,omitzero"`
 }
 
 // TvSeriesSimilarOk defines a model

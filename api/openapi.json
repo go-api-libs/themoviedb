@@ -3116,9 +3116,9 @@
         }
       ],
       "get": {
-        "summary": "Changes",
+        "summary": "Changes of an episode",
         "description": "Get the recent changes for a TV episode.",
-        "operationId": "tv-episode-changes-by-id",
+        "operationId": "GetEpisodeChangesByID",
         "responses": {
           "200": {
             "$ref": "#/components/responses/TvEpisodeChangesByIDOk"
@@ -4817,6 +4817,7 @@
           },
           "season_number": {
             "type": "integer",
+            "format": "int32",
             "default": 0,
             "example": 1
           },
@@ -5064,6 +5065,7 @@
           },
           "season_number": {
             "type": "integer",
+            "format": "int32",
             "default": 0,
             "example": 1
           },
@@ -5441,6 +5443,7 @@
           },
           "season_number": {
             "type": "integer",
+            "format": "int32",
             "default": 0,
             "example": 1
           },
@@ -9186,6 +9189,7 @@
           },
           "season_number": {
             "type": "integer",
+            "format": "int32",
             "default": 0,
             "example": 1
           },
@@ -9633,6 +9637,7 @@
           },
           "season_number": {
             "type": "integer",
+            "format": "int32",
             "default": 0,
             "example": 1
           },
@@ -10221,6 +10226,7 @@
           "runtime": {},
           "season_number": {
             "type": "integer",
+            "format": "int32",
             "default": 0,
             "example": 6
           },
@@ -11446,6 +11452,7 @@
           "runtime": {},
           "season_number": {
             "type": "integer",
+            "format": "int32",
             "default": 0,
             "example": 1
           },
@@ -11488,6 +11495,7 @@
           "poster_path": {},
           "season_number": {
             "type": "integer",
+            "format": "int32",
             "default": 0,
             "example": 1
           }
@@ -11593,6 +11601,7 @@
           },
           "season_number": {
             "type": "integer",
+            "format": "int32",
             "default": 0,
             "example": 5
           }

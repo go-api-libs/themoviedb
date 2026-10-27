@@ -11532,15 +11532,15 @@ func (c *Client) TvEpisodeAccountStatesWithResult[R any](ctx context.Context, se
 // Get the recent changes for a TV episode.
 //
 //	GET /tv/episode/{episode_id}/changes
-func (c *Client) TvEpisodeChangesByID(ctx context.Context, episodeID int32) (*TvEpisodeChangesByIDOk, error) {
-	return c.TvEpisodeChangesByIDWithResult[TvEpisodeChangesByIDOk](ctx, episodeID)
+func (c *Client) GetEpisodeChangesByID(ctx context.Context, episodeID int32) (*TvEpisodeChangesByIDOk, error) {
+	return c.GetEpisodeChangesByIDWithResult[TvEpisodeChangesByIDOk](ctx, episodeID)
 }
 
 // Get the recent changes for a TV episode.
 // You can define a custom result to unmarshal the response into.
 //
 //	GET /tv/episode/{episode_id}/changes
-func (c *Client) TvEpisodeChangesByIDWithResult[R any](ctx context.Context, episodeID int32) (*R, error) {
+func (c *Client) GetEpisodeChangesByIDWithResult[R any](ctx context.Context, episodeID int32) (*R, error) {
 	u := c.baseURL.JoinPath("tv", "episode", strconv.FormatInt(int64(episodeID), 10), "changes")
 	req := (&http.Request{
 		Header: http.Header{
