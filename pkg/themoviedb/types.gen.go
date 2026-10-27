@@ -1430,19 +1430,20 @@ type EpisodeDetails struct {
 
 // EpisodeDetails2 defines a model
 type EpisodeDetails2 struct {
-	AirDate        civil.Date `json:"air_date,omitzero"`
-	Crew           Crew       `json:"crew,omitzero"`
-	EpisodeNumber  int32      `json:"episode_number,omitzero"`
-	GuestStars     Actors     `json:"guest_stars,omitzero"`
-	Name           string     `json:"name,omitzero"`
-	Overview       string     `json:"overview,omitzero"`
-	ID             int        `json:"id,omitzero"`
-	ProductionCode string     `json:"production_code,omitzero"`
-	Runtime        int        `json:"runtime,omitzero"`
-	SeasonNumber   int32      `json:"season_number,omitzero"`
-	StillPath      string     `json:"still_path,omitzero"`
-	VoteAverage    float64    `json:"vote_average,omitzero"`
-	VoteCount      int        `json:"vote_count,omitzero"`
+	AirDate        civil.Date  `json:"air_date,omitzero"`
+	Crew           Crew        `json:"crew,omitzero"`
+	EpisodeNumber  int32       `json:"episode_number,omitzero"`
+	GuestStars     Actors      `json:"guest_stars,omitzero"`
+	Name           string      `json:"name,omitzero"`
+	Overview       string      `json:"overview,omitzero"`
+	ID             int         `json:"id,omitzero"`
+	ProductionCode string      `json:"production_code,omitzero"`
+	Runtime        int         `json:"runtime,omitzero"`
+	SeasonNumber   int32       `json:"season_number,omitzero"`
+	StillPath      string      `json:"still_path,omitzero"`
+	VoteAverage    float64     `json:"vote_average,omitzero"`
+	VoteCount      int         `json:"vote_count,omitzero"`
+	EpisodeType    EpisodeType `json:"episode_type,omitzero"`
 }
 
 // The ID of an episode

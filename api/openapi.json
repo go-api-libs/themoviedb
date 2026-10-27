@@ -5259,6 +5259,7 @@
           },
           "vote_average": {
             "type": "number",
+            "format": "double",
             "default": 0,
             "example": 7.8
           },
@@ -5266,6 +5267,9 @@
             "type": "integer",
             "default": 0,
             "example": 286
+          },
+          "episode_type": {
+            "$ref": "#/components/schemas/EpisodeType"
           }
         }
       },

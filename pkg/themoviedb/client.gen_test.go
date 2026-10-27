@@ -14332,4 +14332,8 @@ func TestClient_Interactions(t *testing.T) {
 	if _, err := c.GetShow(ctx, 65494, &GetShowParams{}); err != nil {
 		t.Fatalf("GetShow: %v", err)
 	}
+
+	if _, err := c.GetEpisodeDetails(ctx, 65494, 1, 1, &GetEpisodeDetailsParams{}); err != nil {
+		t.Fatalf("GetEpisodeDetails: %v", err)
+	}
 }
