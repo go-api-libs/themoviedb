@@ -3689,10 +3689,13 @@
       "Actor": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/PersonDetails"
+            "$ref": "#/components/schemas/Person"
           },
           {
             "$ref": "#/components/schemas/CharacterBase"
+          },
+          {
+            "$ref": "#/components/schemas/PersonExtra"
           }
         ]
       },
@@ -4881,14 +4884,17 @@
       "CrewMember": {
         "allOf": [
           {
-            "$ref": "#/components/schemas/PersonDetails"
+            "$ref": "#/components/schemas/Person"
           },
           {
-            "$ref": "#/components/schemas/CrewMemberBase"
+            "$ref": "#/components/schemas/CrewMemberExtra"
+          },
+          {
+            "$ref": "#/components/schemas/PersonExtra"
           }
         ]
       },
-      "CrewMemberBase": {
+      "CrewMemberExtra": {
         "type": "object",
         "properties": {
           "department": {
@@ -7909,59 +7915,13 @@
       },
       "PersonDetails": {
         "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 22970
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Person"
           },
-          "name": {
-            "type": "string",
-            "example": "Peter Dinklage"
-          },
-          "original_name": {
-            "type": "string",
-            "example": "Peter Dinklage"
-          },
-          "adult": {
-            "type": "boolean",
-            "default": true,
-            "example": false
-          },
-          "gender": {
-            "$ref": "#/components/schemas/Gender"
-          },
-          "known_for_department": {
-            "$ref": "#/components/schemas/Department"
-          },
-          "popularity": {
-            "type": "number",
-            "format": "double",
-            "default": 0,
-            "example": 30.6
-          },
-          "profile_path": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "example": "/lRsRgnksAhBRXwAB68MFjmTtLrk.jpg"
-          },
-          "credit_id": {
-            "type": "string",
-            "example": "5256c8b219c2956ff6047cd8"
+          {
+            "$ref": "#/components/schemas/PersonMetadata"
           }
-        },
-        "required": [
-          "id",
-          "name",
-          "original_name",
-          "adult",
-          "gender",
-          "known_for_department",
-          "popularity",
-          "profile_path",
-          "credit_id"
         ]
       },
       "PersonDetailsOk": {
@@ -8071,6 +8031,23 @@
           "youtube_id": {}
         }
       },
+      "PersonExtra": {
+        "type": "object",
+        "properties": {
+          "known_for_department": {
+            "type": "string",
+            "example": "Acting"
+          },
+          "popularity": {
+            "type": "number",
+            "format": "double",
+            "example": 2.9861
+          },
+          "adult": {
+            "type": "boolean"
+          }
+        }
+      },
       "PersonID": {
         "description": "The ID of a person",
         "type": "integer",
@@ -8121,7 +8098,9 @@
             "example": 4064343
           },
           "imdb_id": {},
-          "known_for_department": {},
+          "known_for_department": {
+            "$ref": "#/components/schemas/Department"
+          },
           "name": {
             "type": "string",
             "example": "Ángel Cruz"

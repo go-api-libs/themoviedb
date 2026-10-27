@@ -878,9 +878,10 @@ type AccountRatedTvOkResultsItem struct {
 
 // Actor defines a model
 type Actor struct {
-	PersonDetails
+	Person
 	Character string `json:"character"`
 	Order     int    `json:"order"`
+	PersonExtra
 }
 
 // Actors defines a model
@@ -1298,9 +1299,10 @@ type Crew []CrewMember
 
 // CrewMember defines a model
 type CrewMember struct {
-	PersonDetails
+	Person
 	Department Department `json:"department,omitzero"`
 	Job        Job        `json:"job,omitzero"`
+	PersonExtra
 }
 
 // Department defines a model
@@ -2404,15 +2406,11 @@ type PersonCombinedCreditsOkCrewItem struct {
 
 // PersonDetails defines a model
 type PersonDetails struct {
-	ID                 int        `json:"id"`
-	Name               string     `json:"name"`
-	OriginalName       string     `json:"original_name"`
-	Adult              bool       `json:"adult"`
-	Gender             Gender     `json:"gender"`
+	Person
 	KnownForDepartment Department `json:"known_for_department"`
 	Popularity         float64    `json:"popularity"`
-	ProfilePath        string     `json:"profile_path"`
 	CreditID           string     `json:"credit_id"`
+	Adult              bool       `json:"adult"`
 }
 
 // PersonDetailsOk defines a model
@@ -2448,6 +2446,13 @@ type PersonExternalIdsOk struct {
 	YoutubeID   *struct{} `json:"youtube_id,omitzero"`
 }
 
+// PersonExtra defines a model
+type PersonExtra struct {
+	KnownForDepartment string   `json:"known_for_department,omitzero"`
+	Popularity         *float64 `json:"popularity,omitzero"`
+	Adult              *bool    `json:"adult,omitzero"`
+}
+
 // The ID of a person
 type PersonID int32
 
@@ -2468,19 +2473,11 @@ type PersonLatestIDOk struct {
 	Homepage           url.URL    `json:"homepage,omitzero"`
 	ID                 int        `json:"id,omitzero"`
 	ImdbID             *struct{}  `json:"imdb_id,omitzero"`
-	KnownForDepartment *struct{}  `json:"known_for_department,omitzero"`
+	KnownForDepartment Department `json:"known_for_department,omitzero"`
 	Name               string     `json:"name,omitzero"`
 	PlaceOfBirth       *struct{}  `json:"place_of_birth,omitzero"`
 	Popularity         int        `json:"popularity,omitzero"`
 	ProfilePath        *struct{}  `json:"profile_path,omitzero"`
-}
-
-// PersonMetadata defines a model
-type PersonMetadata struct {
-	KnownForDepartment Department `json:"known_for_department"`
-	Popularity         float64    `json:"popularity"`
-	CreditID           string     `json:"credit_id"`
-	Adult              bool       `json:"adult"`
 }
 
 // PersonMovieCreditsOk defines a model
