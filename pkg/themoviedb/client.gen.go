@@ -11366,8 +11366,8 @@ func (c *Client) TvSeasonWatchProvidersWithResult[R any](ctx context.Context, se
 // Query the details of a TV episode.
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}
-func (c *Client) GetEpisodeDetails(ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *GetEpisodeDetailsParams) (*EpisodeDetails2, error) {
-	return c.GetEpisodeDetailsWithResult[EpisodeDetails2](ctx, seriesID, seasonNumber, episodeNumber, params)
+func (c *Client) GetEpisodeDetails(ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *GetEpisodeDetailsParams) (*EpisodeDetails, error) {
+	return c.GetEpisodeDetailsWithResult[EpisodeDetails](ctx, seriesID, seasonNumber, episodeNumber, params)
 }
 
 // Query the details of a TV episode.
@@ -11418,7 +11418,7 @@ func (c *Client) GetEpisodeDetailsWithResult[R any](ctx context.Context, seriesI
 
 			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
 			opts := jsonOptsLenient
-			if _, ok := any(&out).(*EpisodeDetails2); ok {
+			if _, ok := any(&out).(*EpisodeDetails); ok {
 				opts = jsonOpts
 			}
 

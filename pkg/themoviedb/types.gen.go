@@ -1374,6 +1374,7 @@ type DiscoverTvResultsItem struct {
 // Episode defines a model
 type Episode struct {
 	EpisodeBase
+	ShowIDWrapper
 	EpisodeTypeWrapper
 }
 
@@ -1388,11 +1389,9 @@ type EpisodeBase struct {
 	AirDate        civil.Date `json:"air_date"`
 	ProductionCode string     `json:"production_code"`
 	Runtime        int        `json:"runtime"`
-	// The ID of the show (series, TV show).
-	ShowID      ShowID  `json:"show_id"`
-	StillPath   string  `json:"still_path,omitzero"`
-	VoteAverage float64 `json:"vote_average"`
-	VoteCount   int     `json:"vote_count"`
+	StillPath      string     `json:"still_path,omitzero"`
+	VoteAverage    float64    `json:"vote_average"`
+	VoteCount      int        `json:"vote_count"`
 }
 
 // EpisodeChange defines a model
@@ -1424,30 +1423,17 @@ type EpisodeChangesWrapper struct {
 type EpisodeDetails struct {
 	EpisodeBase
 	EpisodeTypeWrapper
-	Crew       Crew   `json:"crew,omitzero"`
-	GuestStars Actors `json:"guest_stars,omitzero"`
-}
-
-// EpisodeDetails2 defines a model
-type EpisodeDetails2 struct {
-	AirDate        civil.Date  `json:"air_date,omitzero"`
-	Crew           Crew        `json:"crew,omitzero"`
-	EpisodeNumber  int32       `json:"episode_number,omitzero"`
-	GuestStars     Actors      `json:"guest_stars,omitzero"`
-	Name           string      `json:"name,omitzero"`
-	Overview       string      `json:"overview,omitzero"`
-	ID             int         `json:"id,omitzero"`
-	ProductionCode string      `json:"production_code,omitzero"`
-	Runtime        int         `json:"runtime,omitzero"`
-	SeasonNumber   int32       `json:"season_number,omitzero"`
-	StillPath      string      `json:"still_path,omitzero"`
-	VoteAverage    float64     `json:"vote_average,omitzero"`
-	VoteCount      int         `json:"vote_count,omitzero"`
-	EpisodeType    EpisodeType `json:"episode_type,omitzero"`
+	EpisodeMetadata
 }
 
 // The ID of an episode
 type EpisodeID int32
+
+// EpisodeMetadata defines a model
+type EpisodeMetadata struct {
+	Crew       Crew   `json:"crew,omitzero"`
+	GuestStars Actors `json:"guest_stars,omitzero"`
+}
 
 // EpisodeType defines a model
 type EpisodeType string
@@ -1473,7 +1459,7 @@ type EpisodeTypeWrapper struct {
 }
 
 // Episodes defines a model
-type Episodes []EpisodeDetails
+type Episodes []ShowEpisodeDetails
 
 // Error defines a model
 type Error struct {
@@ -2702,6 +2688,7 @@ type PersonTvCreditsOkCrewItem struct {
 // RatedEpisode defines a model
 type RatedEpisode struct {
 	EpisodeBase
+	ShowIDWrapper
 	Rating int `json:"rating,omitzero"`
 }
 
@@ -2978,8 +2965,22 @@ type ShowDetails struct {
 	Type                string     `json:"type"`
 }
 
+// ShowEpisodeDetails defines a model
+type ShowEpisodeDetails struct {
+	EpisodeBase
+	ShowIDWrapper
+	EpisodeTypeWrapper
+	EpisodeMetadata
+}
+
 // The ID of a show (series, TV show).
 type ShowID int32
+
+// ShowIDWrapper defines a model
+type ShowIDWrapper struct {
+	// The ID of the show (series, TV show).
+	ShowID ShowID `json:"show_id"`
+}
 
 // Shows defines a model
 type Shows []Show
