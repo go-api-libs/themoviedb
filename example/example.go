@@ -52,7 +52,7 @@ func (s *Service) SearchMovies(ctx context.Context) error {
 		fmt.Printf("Release Date: %v\n", res.ReleaseDate)
 
 		if imgPath := res.PosterPath; imgPath != "" {
-			if err := s.saveImage(ctx, imgPath); err != nil {
+			if err := s.saveImage(ctx, res.OriginalTitle, imgPath); err != nil {
 				return err
 			}
 		}
@@ -70,40 +70,77 @@ func (s *Service) SearchShows(ctx context.Context) error {
 	}
 
 	for _, show := range res.Results {
+		// if you want to get recent changes
+		if _, err := s.cli.GetShowChanges(ctx, show.ID, nil); err != nil {
+			return err
+		}
+
+		fmt.Printf("ID: %v\n", show.ID)
 		fmt.Printf("Name: %s\n", show.Name)
-		fmt.Printf("Description: %s\n", show.Overview) // i.e. description
+		fmt.Printf("Description: %s\n", show.Overview)
 		fmt.Printf("Popularity: %v\n", show.Popularity)
 		fmt.Printf("First Air Date: %v\n", show.FirstAirDate)
 
+		// save show poster
 		if imgPath := show.PosterPath; imgPath != "" {
-			if err := s.saveImage(ctx, imgPath); err != nil {
+			if err := s.saveImage(ctx, show.Name, imgPath); err != nil {
 				return err
 			}
 		}
 
-		season1, err := s.cli.GetShowSeason(ctx, show.ID, 1, &themoviedb.GetShowSeasonParams{})
+		showDetails, err := s.cli.GetShow(ctx, show.ID, nil)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("season1.ID: %v\n", season1.ID)
-		fmt.Printf("season1.UnderscoreID: %v\n", season1.UnderscoreID)
-		fmt.Printf("season1.Name: %v\n", season1.Name)
-		fmt.Printf("season1.PosterPath: %v\n", season1.PosterPath)
-		fmt.Printf("season1.AirDate: %v\n", season1.AirDate)
+		fmt.Printf("NumberOfSeasons: %v\n", showDetails.NumberOfSeasons)
+		fmt.Printf("NumberOfEpisodes: %v\n", showDetails.NumberOfEpisodes)
 
-		for _, ep := range season1.Episodes {
-			fmt.Println("---")
+		for _, season := range showDetails.Seasons {
+			seasonDir := filepath.Join(show.Name, season.Name)
 
-			fmt.Printf("ep.ID: %v\n", ep.ID)
-			fmt.Printf("ep.Name: %v\n", ep.Name)
-			fmt.Printf("ep.Overview: %v\n", ep.Overview)
-			fmt.Printf("ep.EpisodeType: %v\n", ep.EpisodeType)
+			// if you want to get recent changes
+			if _, err := s.cli.GetSeasonChanges(ctx, season.ID, nil); err != nil {
+				return err
+			}
 
-			if imgPath := ep.StillPath; imgPath != "" {
-				if err := s.saveImage(ctx, imgPath); err != nil {
+			seasonDetails, err := s.cli.GetShowSeason(ctx, showDetails.ID, season.SeasonNumber, nil)
+			if err != nil {
+				return err
+			}
+
+			// save season posters
+			if imgPath := seasonDetails.PosterPath; imgPath != "" {
+				if err := s.saveImage(ctx, seasonDir, imgPath); err != nil {
 					return err
 				}
+			}
+
+			for _, ep := range seasonDetails.Episodes {
+				// if you want to get recent changes
+				if _, err := s.cli.GetEpisodeChanges(ctx, ep.ID); err != nil {
+					return err
+				}
+
+				// doesn't happen
+				if ep.ShowID != show.ID {
+					return fmt.Errorf("id mismatch: %d vs. %d", ep.ShowID, show.ID)
+				}
+
+				epDir := filepath.Join(seasonDir, fmt.Sprintf("%02d %s", ep.EpisodeNumber, ep.Name))
+				if imgPath := ep.StillPath; imgPath != "" {
+					if err := s.saveImage(ctx, epDir, imgPath); err != nil {
+						return err
+					}
+				}
+
+				// get additional details
+				_, err := s.cli.GetEpisodeDetails(ctx, show.ID, season.SeasonNumber, ep.EpisodeNumber, nil)
+				if err != nil {
+					return err
+				}
+
+				break
 			}
 		}
 
@@ -113,14 +150,18 @@ func (s *Service) SearchShows(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) saveImage(ctx context.Context, path string) error {
+func (s *Service) saveImage(ctx context.Context, dir, path string) error {
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return err
+	}
+
 	img, err := s.cli.GetImage(ctx, path)
 	if err != nil {
 		return err
 	}
 	defer img.Close()
 
-	f, err := os.Create(filepath.Base(path))
+	f, err := os.Create(filepath.Join(dir, filepath.Base(path)))
 	if err != nil {
 		return err
 	}
