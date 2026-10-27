@@ -5050,6 +5050,9 @@
             "$ref": "#/components/schemas/EpisodeBase"
           },
           {
+            "$ref": "#/components/schemas/ShowIDWrapper"
+          },
+          {
             "$ref": "#/components/schemas/EpisodeTypeWrapper"
           }
         ]
@@ -5095,10 +5098,6 @@
             "default": 0,
             "example": 62
           },
-          "show_id": {
-            "description": "The ID of the show (series, TV show).",
-            "$ref": "#/components/schemas/ShowID"
-          },
           "still_path": {
             "type": "string",
             "example": "/9hGF3WUkBf7cSjMg0cdMDHJkByd.jpg"
@@ -5124,7 +5123,6 @@
           "air_date",
           "production_code",
           "runtime",
-          "show_id",
           "vote_average",
           "vote_count"
         ]
@@ -5205,74 +5203,6 @@
           }
         ]
       },
-      "EpisodeDetails2": {
-        "type": "object",
-        "properties": {
-          "air_date": {
-            "type": "string",
-            "format": "date",
-            "example": "2011-04-17"
-          },
-          "crew": {
-            "$ref": "#/components/schemas/Crew"
-          },
-          "episode_number": {
-            "type": "integer",
-            "format": "int32",
-            "default": 0,
-            "example": 1
-          },
-          "guest_stars": {
-            "$ref": "#/components/schemas/Actors"
-          },
-          "name": {
-            "type": "string",
-            "example": "Winter Is Coming"
-          },
-          "overview": {
-            "type": "string",
-            "example": "Jon Arryn, the Hand of the King, is dead. King Robert Baratheon plans to ask his oldest friend, Eddard Stark, to take Jon's place. Across the sea, Viserys Targaryen plans to wed his sister to a nomadic warlord in exchange for an army."
-          },
-          "id": {
-            "type": "integer",
-            "default": 0,
-            "example": 63056
-          },
-          "production_code": {
-            "type": "string",
-            "example": "101"
-          },
-          "runtime": {
-            "type": "integer",
-            "default": 0,
-            "example": 62
-          },
-          "season_number": {
-            "type": "integer",
-            "format": "int32",
-            "default": 0,
-            "example": 1
-          },
-          "still_path": {
-            "type": "string",
-            "example": "/9hGF3WUkBf7cSjMg0cdMDHJkByd.jpg"
-          },
-          "vote_average": {
-            "type": "number",
-            "format": "double",
-            "default": 0,
-            "example": 7.8
-          },
-          "vote_count": {
-            "type": "integer",
-            "default": 0,
-            "example": 286
-          },
-          "episode_type": {
-            "$ref": "#/components/schemas/EpisodeType"
-          }
-        }
-      },
       "EpisodeID": {
         "description": "The ID of an episode",
         "type": "integer",
@@ -5310,7 +5240,7 @@
       "Episodes": {
         "type": "array",
         "items": {
-          "$ref": "#/components/schemas/EpisodeDetails"
+          "$ref": "#/components/schemas/ShowEpisodeDetails"
         }
       },
       "Error": {
@@ -8858,6 +8788,9 @@
             "$ref": "#/components/schemas/EpisodeBase"
           },
           {
+            "$ref": "#/components/schemas/ShowIDWrapper"
+          },
+          {
             "$ref": "#/components/schemas/RatingWrapper"
           }
         ]
@@ -9613,12 +9546,40 @@
           }
         ]
       },
+      "ShowEpisodeDetails": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EpisodeBase"
+          },
+          {
+            "$ref": "#/components/schemas/ShowIDWrapper"
+          },
+          {
+            "$ref": "#/components/schemas/EpisodeTypeWrapper"
+          },
+          {
+            "$ref": "#/components/schemas/EpisodeMetadata"
+          }
+        ]
+      },
       "ShowID": {
         "description": "The ID of a show (series, TV show).",
         "type": "integer",
         "format": "int32",
         "example": 1396,
         "x-go-type-name": "ShowID"
+      },
+      "ShowIDWrapper": {
+        "type": "object",
+        "properties": {
+          "show_id": {
+            "description": "The ID of the show (series, TV show).",
+            "$ref": "#/components/schemas/ShowID"
+          }
+        },
+        "required": [
+          "show_id"
+        ]
       },
       "ShowMetadata": {
         "type": "object",
@@ -13196,7 +13157,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/EpisodeDetails2"
+              "$ref": "#/components/schemas/EpisodeDetails"
             },
             "examples": {
               "Result": {
