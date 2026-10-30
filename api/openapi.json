@@ -2835,6 +2835,9 @@
         "responses": {
           "200": {
             "$ref": "#/components/responses/SeasonDetails"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -5246,6 +5249,10 @@
       "Error": {
         "type": "object",
         "properties": {
+          "success": {
+            "type": "boolean",
+            "const": false
+          },
           "status_code": {
             "type": "integer",
             "example": 7
@@ -5253,16 +5260,12 @@
           "status_message": {
             "type": "string",
             "example": "Invalid API key: You must be granted a valid key."
-          },
-          "success": {
-            "type": "boolean",
-            "const": false
           }
         },
         "required": [
+          "success",
           "status_code",
-          "status_message",
-          "success"
+          "status_message"
         ]
       },
       "ExternalSource": {
@@ -13865,6 +13868,16 @@
               "Result": {
                 "value": "{\"headquarters\":\"New York City, New York\",\"homepage\":\"https://www.hbo.com\",\"id\":49,\"logo_path\":\"/tuomPhY2UtuPTqqFnKMVHvSb724.png\",\"name\":\"HBO\",\"origin_country\":\"US\"}"
               }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not Found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
             }
           }
         }

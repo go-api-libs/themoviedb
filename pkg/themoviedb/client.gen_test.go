@@ -14336,4 +14336,10 @@ func TestClient_Interactions(t *testing.T) {
 	if _, err := c.GetEpisodeDetails(ctx, 65494, 1, 1, &GetEpisodeDetailsParams{}); err != nil {
 		t.Fatalf("GetEpisodeDetails: %v", err)
 	}
+
+	if _, err := c.GetShowSeason(ctx, 6138, 2, &GetShowSeasonParams{}); err == nil {
+		t.Fatal("GetShowSeason: expected error")
+	} else if _, ok := errors.AsType[*Error](err); !ok {
+		t.Fatalf("GetShowSeason: got: %T, want: *Error", err)
+	}
 }

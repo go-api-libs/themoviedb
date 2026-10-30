@@ -1463,9 +1463,9 @@ type Episodes []ShowEpisodeDetails
 
 // Error defines a model
 type Error struct {
+	Success       bool   `json:"success"`
 	StatusCode    int    `json:"status_code"`
 	StatusMessage string `json:"status_message"`
-	Success       bool   `json:"success"`
 }
 
 // ExternalSource defines a model
