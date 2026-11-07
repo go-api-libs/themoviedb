@@ -5,13 +5,24 @@
 .NOTPARALLEL:
 MAKEFLAGS += --no-print-directory
 
-BINARY := bin/openapi-compress
+BINARY := bin/openapi-compress$(shell go env GOEXE)
 PKG    := ./cmd/openapi-compress/
 
 CLEAN_FILES := bin cover.out
 
+# remove deletes files and directories: with rm, or with PowerShell on
+# Windows, which may have no rm.
+ifeq ($(OS),Windows_NT)
+empty :=
+comma := ,
+remove = powershell -NoProfile -Command "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $(subst $(empty) $(empty),$(comma),$(strip $1)); exit 0"
+else
+remove = rm -rf $1
+endif
+
 # A tool built with an older Go than this module targets refuses to analyse it.
 TOOL_GO := $(shell go env GOVERSION)
+tools: export GOTOOLCHAIN := $(TOOL_GO)
 
 # Where make tools installs, which is GOBIN when that is set. Put on the PATH
 # below so an older copy earlier on yours cannot be the one that runs.
@@ -19,7 +30,9 @@ TOOL_BIN := $(shell go env GOBIN)
 ifeq ($(TOOL_BIN),)
 TOOL_BIN := $(shell go env GOPATH)/bin
 endif
-export PATH := $(TOOL_BIN):$(PATH)
+# A Windows PATH is separated by ;, any other by :, Git Bash's too.
+PATH_SEP := $(if $(findstring ;,$(PATH)),;,:)
+export PATH := $(TOOL_BIN)$(PATH_SEP)$(PATH)
 
 .PHONY: all ci ready build run lint vet vuln test test-race cover format fix tidy deps generate verify doc tools clean
 
@@ -33,12 +46,11 @@ ci: ready verify
 ready: generate fix vet test-race build
 
 build:
-	mkdir -p bin
 	go build -o $(BINARY) $(PKG)
 
 # ARGS passes flags through, e.g. `make run ARGS=-debug`.
 run: build
-	$(BINARY) $(ARGS) | loggo stream
+	"$(BINARY)" $(ARGS) | loggo stream
 
 lint:
 	golangci-lint run
@@ -90,11 +102,11 @@ doc:
 
 # Installs what the targets above shell out to, into $(go env GOPATH)/bin.
 tools:
-	GOTOOLCHAIN=$(TOOL_GO) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
-	GOTOOLCHAIN=$(TOOL_GO) go install golang.org/x/vuln/cmd/govulncheck@latest
-	GOTOOLCHAIN=$(TOOL_GO) go install golang.org/x/pkgsite/cmd/pkgsite@latest
-	GOTOOLCHAIN=$(TOOL_GO) go install github.com/MarkRosemaker/devtool@latest
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+	go install golang.org/x/vuln/cmd/govulncheck@latest
+	go install golang.org/x/pkgsite/cmd/pkgsite@latest
+	go install github.com/MarkRosemaker/devtool@latest
 
 # A fragment adds its own with CLEAN_FILES += dist.
 clean:
-	rm -rf $(CLEAN_FILES)
+	$(call remove,$(CLEAN_FILES))
