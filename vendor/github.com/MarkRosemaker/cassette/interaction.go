@@ -28,7 +28,7 @@ type Request struct {
 	// be made, has none.
 	URL     url.URL     `json:"url"`
 	Headers http.Header `json:"header,omitempty"`
-	Body    Body        `json:"body,omitempty"`
+	Body    Body        `json:"body,omitzero"`
 	// BodyOmitted is set for a body that was not text, see [IsText], which is not recorded.
 	BodyOmitted bool `json:"bodyOmitted,omitzero"`
 }
@@ -117,7 +117,7 @@ func queryName(param string) string {
 type Response struct {
 	StatusCode int         `json:"statusCode"`
 	Headers    http.Header `json:"header,omitempty"`
-	Body       Body        `json:"body,omitempty"`
+	Body       Body        `json:"body,omitzero"`
 	// BodyOmitted is set for a body that was not text, see [IsText], which is not recorded.
 	BodyOmitted bool `json:"bodyOmitted,omitzero"`
 }
@@ -152,6 +152,10 @@ func NewResponse(resp *http.Response) (Response, error) {
 
 // Body is a recorded body: written as the JSON it is, or as a string if it is no JSON.
 type Body []byte
+
+// IsZero reports whether there is no body, which is left out when written: an empty JSON value, such as null or {},
+// is a body all the same.
+func (b Body) IsZero() bool { return len(b) == 0 }
 
 // MarshalJSONTo implements [json.MarshalerTo].
 func (b Body) MarshalJSONTo(enc *jsontext.Encoder) error {
