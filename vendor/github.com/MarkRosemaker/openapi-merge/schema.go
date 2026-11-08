@@ -49,6 +49,7 @@ func Schema(a, b *openapi.Schema, isParam bool) error {
 	}
 
 	tp = reconcileNull(a, b, tp)
+	adoptFormat(a, b)
 	improveExample(a, b)
 
 	if tp != b.Type {
@@ -269,6 +270,12 @@ func reconcileTypeMismatch(a, b *openapi.Schema, tp openapi.DataType, isParam bo
 	case a.Type == openapi.TypeInteger && b.Type == openapi.TypeString:
 		b.Replace(a)
 		return true, nil
+	case a.Type == openapi.TypeObject && b.Type == openapi.TypeArray,
+		a.Type == openapi.TypeArray && b.Type == openapi.TypeObject:
+		// a value seen as an object in one sample and as an array in another, as a job's images, one per direction
+		// or a list of frames, is either
+		mergeObjectOrArray(a, b)
+		return true, nil
 	default:
 		return true, mismatchError("type", fmt.Errorf("%q != %q", tp, b.Type), a, b)
 	}
@@ -326,6 +333,27 @@ func fitsDateBasic(v jsontext.Value) bool {
 	_, err := time.Parse("20060102", str)
 
 	return err == nil
+}
+
+// adoptFormat gives a string that says nothing of its values, as an upstream specification writes most, the format of
+// the one it is merged with, such as the uuid of a recorded ID: without a format, an example, an enum or a const, it
+// has nothing against it. It runs before a takes b's example, which would make it seem to say something.
+func adoptFormat(a, b *openapi.Schema) {
+	if a.Type != openapi.TypeString || b.Type != openapi.TypeString {
+		return
+	}
+
+	switch {
+	case isBareString(a) && b.Format != "":
+		a.Format = b.Format
+	case isBareString(b) && a.Format != "":
+		b.Format = a.Format
+	}
+}
+
+// isBareString reports whether s, a string, says nothing of its values.
+func isBareString(s *openapi.Schema) bool {
+	return s.Format == "" && s.Example == nil && len(s.Enum) == 0 && len(s.Const) == 0
 }
 
 // isEmptyString reports whether v is the empty string.
@@ -1281,6 +1309,22 @@ func mergeDateTimeOrTimestamp(a, b *openapi.Schema) {
 			&intCopy,
 		},
 	}
+
+	a.Replace(&merged)
+	b.Replace(&merged)
+}
+
+// mergeObjectOrArray makes a and b a oneOf of an object and an array, the object first, storing the result in both.
+func mergeObjectOrArray(a, b *openapi.Schema) {
+	obj, arr := *a, *b
+	if a.Type == openapi.TypeArray {
+		obj, arr = *b, *a
+	}
+
+	obj.Title, obj.Description = "", ""
+	arr.Title, arr.Description = "", ""
+
+	merged := openapi.Schema{Title: a.Title, Description: a.Description, OneOf: openapi.SchemaList{&obj, &arr}}
 
 	a.Replace(&merged)
 	b.Replace(&merged)

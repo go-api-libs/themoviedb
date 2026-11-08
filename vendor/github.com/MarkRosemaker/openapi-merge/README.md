@@ -69,6 +69,13 @@ particular ways that sample-derived schemas disagree:
 - **Dates in ISO 8601's basic form** — a string declared `date-basic`, such as
   `"20260320"`, keeps the format when a sample, which is recorded without one,
   holds such a date too, and loses it when the sample holds something else.
+- **Objects or arrays** — a value seen as an object in one sample and as an
+  array in another, such as a job's images, one per direction or a list of
+  frames, becomes a `oneOf` of the two, and further samples go to theirs.
+- **Bare strings take a format** — a string declared with no format, example,
+  enum or const, as an upstream specification writes most, takes the format of
+  the value it is merged with, such as the `uuid` of a recorded ID: it says
+  nothing against one.
 - **Empty dates** — a `date` or `date-time` keeps its format when a sample holds
   an empty string, a value left out, and takes the other's example over it.
 - **Numbers sent as strings** — a value seen as a numeric string, such as

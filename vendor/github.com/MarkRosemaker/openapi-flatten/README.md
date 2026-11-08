@@ -7,16 +7,6 @@
 
 <h3 align="center">Give every type in your API spec a name and a home.</h3>
 
-<div align="center" id=badges>
-
-![Code Coverage](https://img.shields.io/badge/coverage-65.9%25-yellowgreen)
-
-</div>
-
-
-
-
-
 `openapi-flatten` eliminates nesting in [OpenAPI 3.x](https://spec.openapis.org/oas/v3.1.0)
 specifications. It promotes inline schema definitions, responses, request bodies,
 and parameters into the top-level `components` section and replaces them with `$ref`

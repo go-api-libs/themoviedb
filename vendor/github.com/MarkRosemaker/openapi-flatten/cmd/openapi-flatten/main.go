@@ -11,22 +11,25 @@ import (
 )
 
 func main() {
-	if err := run(context.Background()); err != nil {
+	if err := run(context.Background(), os.Args[1:]); err != nil {
 		fmt.Fprintf(os.Stderr, "openapi-flatten: %v\n", err)
-		flag.Usage()
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context) error {
+func run(_ context.Context, args []string) error {
 	var (
 		specPath string
 		cfg      flatten.Config
 	)
 
-	flag.StringVar(&specPath, "spec", "api/openapi.json", "path to OpenAPI spec file")
-	flag.BoolVar(&cfg.MarkOrigin, "mark-origin", false, "mark each schema moved into the components with x-flattened-from")
-	flag.Parse()
+	fs := flag.NewFlagSet("openapi-flatten", flag.ContinueOnError)
+	fs.StringVar(&specPath, "spec", "api/openapi.json", "path to OpenAPI spec file")
+	fs.BoolVar(&cfg.MarkOrigin, "mark-origin", false, "mark each schema moved into the components with x-flattened-from")
+
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	doc, err := openapi.LoadFromFile(specPath)
 	if err != nil {

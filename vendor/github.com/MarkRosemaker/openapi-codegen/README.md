@@ -247,11 +247,12 @@ automatically whenever a client or server is, and client tests whenever a client
 |---|---|---|
 | `-spec` | `api/openapi.json` | Path to the OpenAPI specification |
 | `-out` | `pkg/<package>` | Output directory for generated files |
-| `-pkg` | directory name | Go package name |
+| `-pkg` | working directory's name, lower case, without dashes | Go package name |
 | `-agent` | — | `User-Agent` string for the generated client |
 | `-client` | `false` | Generate `client.gen.go` and `client.gen_test.go` |
 | `-server` | `false` | Generate `server.gen.go` |
 | `-js` | `false` | Generate `api.js` |
+| `-debug` | `false` | Generate the client in debug mode, see [Debug mode](#features) |
 
 It can also be used as a library:
 

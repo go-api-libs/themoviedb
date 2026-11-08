@@ -270,7 +270,7 @@ func fromParam(p *openapi.Parameter, apiTitle string) (Param, error) {
 
 	param.GoName = strcase.ToGoCamel(p.Name)
 
-	param.FieldName = strcase.ToGoPascal(p.Name)
+	param.FieldName = goPascal(p.Name)
 
 	schema := paramSchema(p.Schema)
 	switch d := deref(schema); {

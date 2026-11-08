@@ -833,7 +833,7 @@ func fieldGoName(jsonName string) string {
 
 	sanitized := goWords(r.Replace(jsonName))
 	sanitized = replaceLeadingDigits(sanitized)
-	name := identOr(strcase.ToGoPascal(sanitized), jsonName)
+	name := identOr(goPascal(sanitized), jsonName)
 
 	if first, _ := utf8.DecodeRuneInString(name); !unicode.IsUpper(first) {
 		name = "X" + name // exported, or encoding leaves it out
@@ -884,6 +884,28 @@ func goWords(s string) string {
 
 		return ' '
 	}, s)
+}
+
+// rePluralInitialism matches the plural of an initialism strcase writes as a word, as Ids in BackgroundJobIds.
+var rePluralInitialism = regexp.MustCompile(`(Ids|Urls|Uris)([A-Z0-9]|$)`)
+
+// pluralInitialisms are the plurals Go writes in capitals but the s, as BackgroundJobIDs.
+var pluralInitialisms = map[string]string{"Ids": "IDs", "Urls": "URLs", "Uris": "URIs"}
+
+// goPascal is strcase.ToGoPascal, with the plural of an initialism written as Go does: background_job_ids is
+// BackgroundJobIDs, not BackgroundJobIds.
+func goPascal(s string) string {
+	name := strcase.ToGoPascal(s)
+
+	// a match takes the capital after it, so two plurals in a row take two passes
+	for prev := ""; prev != name; {
+		prev, name = name, rePluralInitialism.ReplaceAllStringFunc(name, func(m string) string {
+			g := rePluralInitialism.FindStringSubmatch(m)
+			return pluralInitialisms[g[1]] + g[2]
+		})
+	}
+
+	return name
 }
 
 // isIdent reports whether s holds only what a Go name can.
