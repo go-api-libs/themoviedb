@@ -831,7 +831,7 @@ type AccountRatedMoviesOkResults []AccountRatedMoviesOkResultsItem
 type AccountRatedMoviesOkResultsItem struct {
 	Adult            *bool      `json:"adult,omitzero"`
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	ID               int        `json:"id,omitzero"`
 	OriginalLanguage string     `json:"original_language,omitzero"`
 	OriginalTitle    string     `json:"original_title,omitzero"`
@@ -861,7 +861,7 @@ type AccountRatedTvOkResults []AccountRatedTvOkResultsItem
 type AccountRatedTvOkResultsItem struct {
 	Adult            *bool      `json:"adult,omitzero"`
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	ID               int        `json:"id,omitzero"`
 	OriginCountry    []string   `json:"origin_country,omitzero"`
 	OriginalLanguage string     `json:"original_language,omitzero"`
@@ -1107,7 +1107,7 @@ type CollectionDetailsOkPartsItem struct {
 	PosterPath       string     `json:"poster_path,omitzero"`
 	MediaType        string     `json:"media_type,omitzero"`
 	OriginalLanguage string     `json:"original_language,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	Popularity       float64    `json:"popularity,omitzero"`
 	ReleaseDate      civil.Date `json:"release_date,omitzero"`
 	Video            *bool      `json:"video,omitzero"`
@@ -1252,7 +1252,7 @@ type CreditDetailsOkMedia struct {
 	Overview         string                      `json:"overview,omitzero"`
 	PosterPath       string                      `json:"poster_path,omitzero"`
 	MediaType        string                      `json:"media_type,omitzero"`
-	GenreIds         []int                       `json:"genre_ids,omitzero"`
+	GenreIDs         []int                       `json:"genre_ids,omitzero"`
 	Popularity       float64                     `json:"popularity,omitzero"`
 	FirstAirDate     civil.Date                  `json:"first_air_date,omitzero"`
 	VoteAverage      float64                     `json:"vote_average,omitzero"`
@@ -1358,7 +1358,7 @@ type DiscoverTvResults []DiscoverTvResultsItem
 type DiscoverTvResultsItem struct {
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
 	FirstAirDate     civil.Date `json:"first_air_date,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	ID               int        `json:"id,omitzero"`
 	Name             string     `json:"name,omitzero"`
 	OriginCountry    []string   `json:"origin_country,omitzero"`
@@ -1546,7 +1546,7 @@ type GuestSessionRatedMoviesOkResults []GuestSessionRatedMoviesOkResultsItem
 type GuestSessionRatedMoviesOkResultsItem struct {
 	Adult            *bool      `json:"adult,omitzero"`
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	ID               int        `json:"id,omitzero"`
 	OriginalLanguage string     `json:"original_language,omitzero"`
 	OriginalTitle    string     `json:"original_title,omitzero"`
@@ -1605,7 +1605,7 @@ type GuestSessionRatedTvOkResults []GuestSessionRatedTvOkResultsItem
 type GuestSessionRatedTvOkResultsItem struct {
 	Adult            *bool      `json:"adult,omitzero"`
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	ID               int        `json:"id,omitzero"`
 	OriginCountry    []string   `json:"origin_country,omitzero"`
 	OriginalLanguage string     `json:"original_language,omitzero"`
@@ -1754,7 +1754,7 @@ type ListDetailsOkItems []ListDetailsOkItemsItem
 type ListDetailsOkItemsItem struct {
 	Adult            *bool      `json:"adult,omitzero"`
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	ID               int        `json:"id,omitzero"`
 	MediaType        string     `json:"media_type,omitzero"`
 	OriginalLanguage string     `json:"original_language,omitzero"`
@@ -2099,7 +2099,7 @@ type MovieUpcomingListOkResults []MovieUpcomingListOkResultsItem
 type MovieUpcomingListOkResultsItem struct {
 	Adult            *bool      `json:"adult,omitzero"`
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	ID               int        `json:"id,omitzero"`
 	OriginalLanguage string     `json:"original_language,omitzero"`
 	OriginalTitle    string     `json:"original_title,omitzero"`
@@ -2350,7 +2350,7 @@ type PersonCast []PersonCastMember
 type PersonCastMember struct {
 	Adult            *bool      `json:"adult,omitzero"`
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	ID               int        `json:"id,omitzero"`
 	OriginalLanguage string     `json:"original_language,omitzero"`
 	OriginalTitle    string     `json:"original_title,omitzero"`
@@ -2408,7 +2408,7 @@ type PersonCombinedCreditsOkCast []PersonCombinedCreditsOkCastMember
 type PersonCombinedCreditsOkCastMember struct {
 	Adult            *bool      `json:"adult,omitzero"`
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	ID               int        `json:"id,omitzero"`
 	OriginalLanguage string     `json:"original_language,omitzero"`
 	OriginalTitle    string     `json:"original_title,omitzero"`
@@ -2433,7 +2433,7 @@ type PersonCombinedCreditsOkCrew []PersonCombinedCreditsOkCrewItem
 type PersonCombinedCreditsOkCrewItem struct {
 	Adult            *bool      `json:"adult,omitzero"`
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	ID               int        `json:"id,omitzero"`
 	OriginalLanguage string     `json:"original_language,omitzero"`
 	OriginalTitle    string     `json:"original_title,omitzero"`
@@ -2541,7 +2541,7 @@ type PersonMovieCreditsOkCrew []PersonMovieCreditsOkCrewItem
 type PersonMovieCreditsOkCrewItem struct {
 	Adult            *bool      `json:"adult,omitzero"`
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	ID               int        `json:"id,omitzero"`
 	OriginalLanguage string     `json:"original_language,omitzero"`
 	OriginalTitle    string     `json:"original_title,omitzero"`
@@ -2588,7 +2588,7 @@ type PersonPopularListOkResultsItemKnownFor []PersonPopularListOkResultsItemKnow
 type PersonPopularListOkResultsItemKnownForItem struct {
 	Adult            *bool      `json:"adult,omitzero"`
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	ID               int        `json:"id,omitzero"`
 	MediaType        string     `json:"media_type,omitzero"`
 	OriginalLanguage string     `json:"original_language,omitzero"`
@@ -2643,7 +2643,7 @@ type PersonTvCreditsOkCast []PersonTvCreditsOkCastMember
 type PersonTvCreditsOkCastMember struct {
 	Adult            *bool      `json:"adult,omitzero"`
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	ID               int        `json:"id,omitzero"`
 	OriginCountry    []string   `json:"origin_country,omitzero"`
 	OriginalLanguage string     `json:"original_language,omitzero"`
@@ -2667,7 +2667,7 @@ type PersonTvCreditsOkCrew []PersonTvCreditsOkCrewItem
 type PersonTvCreditsOkCrewItem struct {
 	Adult            *bool      `json:"adult,omitzero"`
 	BackdropPath     string     `json:"backdrop_path,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	ID               int        `json:"id,omitzero"`
 	OriginCountry    []string   `json:"origin_country,omitzero"`
 	OriginalLanguage string     `json:"original_language,omitzero"`
@@ -2790,7 +2790,7 @@ type SearchMultiOkResultsItem struct {
 	Overview         string     `json:"overview,omitzero"`
 	PosterPath       string     `json:"poster_path,omitzero"`
 	MediaType        string     `json:"media_type,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	Popularity       float64    `json:"popularity,omitzero"`
 	ReleaseDate      civil.Date `json:"release_date,omitzero"`
 	Video            *bool      `json:"video,omitzero"`
@@ -3148,7 +3148,7 @@ type TrendingAllResultsItem struct {
 	Overview         string     `json:"overview,omitzero"`
 	PosterPath       string     `json:"poster_path,omitzero"`
 	MediaType        string     `json:"media_type,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	Popularity       float64    `json:"popularity,omitzero"`
 	ReleaseDate      civil.Date `json:"release_date,omitzero"`
 	Video            *bool      `json:"video,omitzero"`
@@ -3203,7 +3203,7 @@ type TrendingTvResultsItem struct {
 	Overview         string     `json:"overview,omitzero"`
 	PosterPath       string     `json:"poster_path,omitzero"`
 	MediaType        string     `json:"media_type,omitzero"`
-	GenreIds         []int      `json:"genre_ids,omitzero"`
+	GenreIDs         []int      `json:"genre_ids,omitzero"`
 	Popularity       float64    `json:"popularity,omitzero"`
 	FirstAirDate     civil.Date `json:"first_air_date,omitzero"`
 	VoteAverage      float64    `json:"vote_average,omitzero"`
@@ -3753,7 +3753,7 @@ type TvSeriesSimilarOkResults []TvSeriesSimilarOkResultsItem
 type TvSeriesSimilarOkResultsItem struct {
 	Adult            *bool    `json:"adult,omitzero"`
 	BackdropPath     string   `json:"backdrop_path,omitzero"`
-	GenreIds         []int    `json:"genre_ids,omitzero"`
+	GenreIDs         []int    `json:"genre_ids,omitzero"`
 	ID               int      `json:"id,omitzero"`
 	OriginCountry    []string `json:"origin_country,omitzero"`
 	OriginalLanguage string   `json:"original_language,omitzero"`
@@ -3782,7 +3782,7 @@ type TvSeriesTopRatedListOkResults []TvSeriesTopRatedListOkResultsItem
 type TvSeriesTopRatedListOkResultsItem struct {
 	BackdropPath     string   `json:"backdrop_path,omitzero"`
 	FirstAirDate     string   `json:"first_air_date,omitzero"`
-	GenreIds         []int    `json:"genre_ids,omitzero"`
+	GenreIDs         []int    `json:"genre_ids,omitzero"`
 	ID               int      `json:"id,omitzero"`
 	Name             string   `json:"name,omitzero"`
 	OriginCountry    []string `json:"origin_country,omitzero"`
