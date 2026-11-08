@@ -266,20 +266,7 @@ func processAuth(doc *openapi.Document, op *openapi.Operation, created bool, v s
 		return nil
 	}
 
-	// Add security scheme to components if not present.
-	if doc.Components.SecuritySchemes == nil {
-		doc.Components.SecuritySchemes = openapi.SecuritySchemes{}
-	}
-
-	name := openapi.SecuritySchemeName(schemeName)
-	if _, ok := doc.Components.SecuritySchemes[name]; !ok {
-		doc.Components.SecuritySchemes.Set(name, &openapi.SecuritySchemeRef{
-			Value: &openapi.SecurityScheme{
-				Type:   openapi.SecuritySchemeTypeHTTP,
-				Scheme: scheme,
-			},
-		})
-	}
+	name := httpScheme(doc, schemeName, scheme)
 
 	requireAuth(doc, op, created, openapi.SecurityRequirement{name: []string{}})
 
@@ -554,4 +541,25 @@ func addBinaryRequestBody(op *openapi.Operation, contentType string) {
 // binarySchema is the schema of a body that is not text: a string of bytes.
 func binarySchema() *openapi.Schema {
 	return &openapi.Schema{Type: openapi.TypeString, Format: openapi.FormatBinary}
+}
+
+// httpScheme is the name of the document's HTTP security scheme for scheme, as "bearer", adding one by name if it has
+// none: a spec that declares its bearer scheme as HTTPBearer keeps that one name for it.
+func httpScheme(doc *openapi.Document, name, scheme string) openapi.SecuritySchemeName {
+	for n, s := range doc.Components.SecuritySchemes.ByIndex() {
+		if s != nil && s.Value != nil && s.Value.Type == openapi.SecuritySchemeTypeHTTP &&
+			strings.EqualFold(s.Value.Scheme, scheme) {
+			return n
+		}
+	}
+
+	if doc.Components.SecuritySchemes == nil {
+		doc.Components.SecuritySchemes = openapi.SecuritySchemes{}
+	}
+
+	doc.Components.SecuritySchemes.Set(openapi.SecuritySchemeName(name), &openapi.SecuritySchemeRef{
+		Value: &openapi.SecurityScheme{Type: openapi.SecuritySchemeTypeHTTP, Scheme: scheme},
+	})
+
+	return openapi.SecuritySchemeName(name)
 }
