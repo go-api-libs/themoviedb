@@ -12,8 +12,8 @@
 		"rest-api",
 		"swagger"
 	],
-	"coverage": 86,
-	"devtoolVersion": "v0.0.0-20261108191901-d8daa400b330",
+	"coverage": 86.4,
+	"devtoolVersion": "v0.0.0-20261109001007-fdf8edc8fe88",
 	"kind": "cli",
 	"tools": {
 		"golangci-lint": "v2.15.0",
