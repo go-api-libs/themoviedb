@@ -75,10 +75,19 @@ the spec. What it writes is kept: a later run does not remove it, even
 once the interaction that caused it has changed. When an interaction
 contradicts your edit, it can also overwrite that edit.
 
-So change a type in both files, in the same commit. After `make ready`,
-read the diff of `api/openapi.json`. Put back any edit enrich reverted,
-and delete any example it inferred from an interaction that no longer
-exists.
+So a type you change in the spec must agree with the interactions: where it
+does not, the interactions are right. After `make ready`, read the diff of
+`api/openapi.json`. Put back any edit enrich reverted, and delete any example
+it inferred from an interaction that no longer exists.
+
+`api/interactions.json` is the evidence the library's types rest on: each
+interaction is a real call to the API, recorded by the client in debug mode,
+which masks credentials and shortens long strings. Never write or edit one by
+hand, and never remove one unasked, least of all to make a type hold: where
+an interaction contradicts a type, the type is wrong. Evidence you need and
+do not have comes from a new recorded call, which takes the API key and may
+cost money, so ask for it. An interaction restored from git goes back
+exactly as it was recorded.
 
 `.gitignore` is the exception: only the marked block at its head is
 generated. Your own rules go below that block, where they win — in a
