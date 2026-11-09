@@ -19,21 +19,21 @@ require (
 require (
 	github.com/MarkRosemaker/errpath v0.0.0-20261109120451-91cd29644c73 // indirect
 	github.com/MarkRosemaker/json2yaml v0.0.0-20261109120452-2329987d7bc8 // indirect
-	github.com/MarkRosemaker/openapi v0.0.0-20261109161642-725ef5aabe58 // indirect
-	github.com/MarkRosemaker/openapi-codegen v0.0.0-20261109175328-168e8a2dff1e // indirect
-	github.com/MarkRosemaker/openapi-compare v0.0.0-20261109161739-2fa272f4d24c // indirect
-	github.com/MarkRosemaker/openapi-compress v0.0.0-20261109161911-d93351532eac // indirect
-	github.com/MarkRosemaker/openapi-edit v0.0.0-20261109161741-d76f0817b31b // indirect
-	github.com/MarkRosemaker/openapi-enrich v0.0.0-20261109161834-09c1f3afa5da // indirect
-	github.com/MarkRosemaker/openapi-flatten v0.0.0-20261109161739-8d8554bd00b8 // indirect
-	github.com/MarkRosemaker/openapi-merge v0.0.0-20261109161739-0ba20c22a8eb // indirect
-	github.com/MarkRosemaker/ordmap v0.0.0-20261109120513-91fe4bc7e3db // indirect
+	github.com/MarkRosemaker/openapi v0.0.0-20261109211946-32ea4a5e2711 // indirect
+	github.com/MarkRosemaker/openapi-codegen v0.0.0-20261109212441-685fd46dee5c // indirect
+	github.com/MarkRosemaker/openapi-compare v0.0.0-20261109212022-f5a4f4a5080e // indirect
+	github.com/MarkRosemaker/openapi-compress v0.0.0-20261109212158-9d650458f7e3 // indirect
+	github.com/MarkRosemaker/openapi-edit v0.0.0-20261109212023-da578ef7b002 // indirect
+	github.com/MarkRosemaker/openapi-enrich v0.0.0-20261109212110-ebf4b8fa7406 // indirect
+	github.com/MarkRosemaker/openapi-flatten v0.0.0-20261109212023-ea50733be0b2 // indirect
+	github.com/MarkRosemaker/openapi-merge v0.0.0-20261109212022-e015a17edc56 // indirect
+	github.com/MarkRosemaker/ordmap v0.0.0-20261109211921-475c54164ef0 // indirect
 	github.com/MarkRosemaker/yaml v0.0.0-20261109161623-86a6a512ccb9 // indirect
 	github.com/MarkRosemaker/yaml2json v0.0.0-20261109120453-1b901dbf7e8f // indirect
 	github.com/ettle/strcase v0.2.0 // indirect
 	github.com/go-api-libs/types v0.0.0-20261109120451-6cd1daca4971 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
-	golang.org/x/exp v0.0.0-20261106192419-47ce03d25ef0 // indirect
+	golang.org/x/exp v0.0.0-20261109185158-a52e3aef5920 // indirect
 	golang.org/x/mod v0.43.0 // indirect
 	golang.org/x/sync v0.25.0 // indirect
 	golang.org/x/text v0.44.0 // indirect
