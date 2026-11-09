@@ -19,16 +19,16 @@ require (
 require (
 	github.com/MarkRosemaker/errpath v0.0.0-20261109120451-91cd29644c73 // indirect
 	github.com/MarkRosemaker/json2yaml v0.0.0-20261109120452-2329987d7bc8 // indirect
-	github.com/MarkRosemaker/openapi v0.0.0-20261109135105-2a95a2dad154 // indirect
-	github.com/MarkRosemaker/openapi-codegen v0.0.0-20261109135643-6417697d12b5 // indirect
-	github.com/MarkRosemaker/openapi-compare v0.0.0-20261109135152-8a1c5021b581 // indirect
-	github.com/MarkRosemaker/openapi-compress v0.0.0-20261109135336-d356500aabfd // indirect
-	github.com/MarkRosemaker/openapi-edit v0.0.0-20261109135154-4cb87b778e57 // indirect
-	github.com/MarkRosemaker/openapi-enrich v0.0.0-20261109135255-075b857a9885 // indirect
-	github.com/MarkRosemaker/openapi-flatten v0.0.0-20261109135155-26c3e0331f49 // indirect
-	github.com/MarkRosemaker/openapi-merge v0.0.0-20261109135153-6d996385e8d5 // indirect
+	github.com/MarkRosemaker/openapi v0.0.0-20261109161642-725ef5aabe58 // indirect
+	github.com/MarkRosemaker/openapi-codegen v0.0.0-20261109162339-267dbf6ef446 // indirect
+	github.com/MarkRosemaker/openapi-compare v0.0.0-20261109161739-2fa272f4d24c // indirect
+	github.com/MarkRosemaker/openapi-compress v0.0.0-20261109161911-d93351532eac // indirect
+	github.com/MarkRosemaker/openapi-edit v0.0.0-20261109161741-d76f0817b31b // indirect
+	github.com/MarkRosemaker/openapi-enrich v0.0.0-20261109161834-09c1f3afa5da // indirect
+	github.com/MarkRosemaker/openapi-flatten v0.0.0-20261109161739-8d8554bd00b8 // indirect
+	github.com/MarkRosemaker/openapi-merge v0.0.0-20261109161739-0ba20c22a8eb // indirect
 	github.com/MarkRosemaker/ordmap v0.0.0-20261109120513-91fe4bc7e3db // indirect
-	github.com/MarkRosemaker/yaml v0.0.0-20261109134148-916ecfa7e164 // indirect
+	github.com/MarkRosemaker/yaml v0.0.0-20261109161623-86a6a512ccb9 // indirect
 	github.com/MarkRosemaker/yaml2json v0.0.0-20261109120453-1b901dbf7e8f // indirect
 	github.com/ettle/strcase v0.2.0 // indirect
 	github.com/go-api-libs/types v0.0.0-20261109120451-6cd1daca4971 // indirect
