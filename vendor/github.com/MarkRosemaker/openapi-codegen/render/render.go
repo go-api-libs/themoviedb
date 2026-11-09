@@ -74,6 +74,11 @@ func FilesFromFS(fsys fs.FS, doc *ir.Document, g config.Generate) ([]File, error
 			return nil, fmt.Errorf("template %s: %w", name, err)
 		}
 
+		// a template with nothing to write, such as tests of types without any to test, is no file
+		if rendered == nil {
+			continue
+		}
+
 		files = append(files, File{Name: outName, Content: rendered})
 	}
 
@@ -91,6 +96,10 @@ func RenderTemplate(tmplName, tmplContent string, doc *ir.Document) ([]byte, err
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, doc); err != nil {
 		return nil, fmt.Errorf("execute: %w", err)
+	}
+
+	if len(bytes.TrimSpace(buf.Bytes())) == 0 {
+		return nil, nil
 	}
 
 	// goimports: remove unused imports, add missing ones.

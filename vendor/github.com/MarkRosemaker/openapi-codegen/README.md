@@ -57,7 +57,10 @@ rest of the family before generating anything:
   code and an unknown content type are reported as such; each error status the specification declares is
   decoded into its type and returned as a custom error; a struct of the package's own rejects a member it does not
   declare where a type of the caller's own, given to the `WithResult` variant, accepts it, or, in debug mode, the
-  call is added to the debug file once; and an optional request body left out is sent as no body at all.
+  call is added to the debug file once; and an optional request body left out is sent as no body at all. In debug
+  mode, a body the client cannot decode even leniently is still added to the debug file and returned as a decoding
+  error, joined with the error of a debug file it cannot write; an error type is decoded leniently too. A failure
+  that declares no body is reported by its status, and every member of an enum is `Valid`, a value none is not.
 - **JavaScript client** — optional `api.js` alongside the Go output. A relative
   server URL, such as `/api`, makes it call the server that serves the page.
 
@@ -250,7 +253,8 @@ openapi-codegen -spec openapi.json -out ./gen -pkg mypkg -client
 ```
 
 At least one of `-client`, `-server`, or `-js` is required. Types are generated
-automatically whenever a client or server is, and client tests whenever a client is.
+automatically whenever a client or server is, with `types.gen_test.go` where there is something to test in
+them, such as an enum, and client tests whenever a client is.
 
 | Flag | Default | Purpose |
 |---|---|---|

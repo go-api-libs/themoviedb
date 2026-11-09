@@ -29,7 +29,7 @@ func newTestServer(t *testing.T, status int) *httptest.Server {
 	return srv
 }
 
-{{ if or .HasErrorResponses .HasStructSuccess -}}
+{{ if .NeedsBodyServer -}}
 // newBodyServer is the base URL of a server that answers every request with status, contentType and body.
 func newBodyServer(t *testing.T, status int, contentType string, body []byte) *url.URL {
 	t.Helper()
@@ -50,7 +50,7 @@ func newBodyServer(t *testing.T, status int, contentType string, body []byte) *u
 }
 
 {{ end -}}
-{{ if .HasStructSuccess -}}
+{{ if .NeedsUnknownMember -}}
 // withUnknownMember is v as JSON, with a member no type declares added to it.
 func withUnknownMember(t *testing.T, v any) []byte {
 	t.Helper()
@@ -318,6 +318,54 @@ func TestClient_Error(t *testing.T) {
 			}
 		})
 		{{- end }}
+		{{- with $.DebugDecoded . }}
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, {{.GoConstant}}, {{printf "%q" .ContentType}}, []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.{{$op.Name}}(t.Context(){{range $op.PathParams}}, {{ .ZeroVal }}{{end}}
+			{{- with $op.NilParamsExpr}}, {{ . }}{{ end -}}
+			{{if $op.RequestBody}}, {{if $op.RequestBody.Required}}{{$.MinimalLiteral $op.RequestBody.TypeName}}{{else}}nil{{end}}{{end}}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, {{.GoConstant}}, {{printf "%q" .ContentType}}, []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.{{$op.Name}}(t.Context(){{range $op.PathParams}}, {{ .ZeroVal }}{{end}}
+			{{- with $op.NilParamsExpr}}, {{ . }}{{ end -}}
+			{{if $op.RequestBody}}, {{if $op.RequestBody.Required}}{{$.MinimalLiteral $op.RequestBody.TypeName}}{{else}}nil{{end}}{{end}}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
+		{{- end }}
 		{{- range .ErrorResponses }}
 
 		t.Run("{{.StatusCode}} response", func(t *testing.T) {
@@ -371,6 +419,46 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
+			}
+		})
+		{{- if $.LenientError . }}
+
+		t.Run("{{.StatusCode}} response debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, {{.GoConstant}}, {{printf "%q" .ContentType}}, withUnknownMember(t, {{$.MinimalLiteral .GoType.Name}}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if {{if $op.SuccessReturn}}_, {{end}}err := c.{{$op.Name}}(t.Context(){{range $op.PathParams}}, {{ .ZeroVal }}{{end}}
+			{{- with $op.NilParamsExpr}}, {{ . }}{{ end -}}
+			{{if $op.RequestBody}}, {{if $op.RequestBody.Required}}{{$.MinimalLiteral $op.RequestBody.TypeName}}{{else}}nil{{end}}{{end}}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*{{.GoType.Name}}](err); !ok {
+				t.Fatalf("got: %v, want the *{{.GoType.Name}} decoded leniently", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+		{{- end }}
+		{{- end }}
+		{{- range .BodilessFailures }}
+
+		t.Run("{{.StatusCode}} response without a body", func(t *testing.T) {
+			c, err := NewClient(WithBaseURL(newBodyServer(t, {{.GoConstant}}, "", nil)))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if {{if $op.SuccessReturn}}_, {{end}}err := c.{{$op.Name}}(t.Context(){{range $op.PathParams}}, {{ .ZeroVal }}{{end}}
+			{{- with $op.NilParamsExpr}}, {{ . }}{{ end -}}
+			{{if $op.RequestBody}}, {{if $op.RequestBody.Required}}{{$.MinimalLiteral $op.RequestBody.TypeName}}{{else}}nil{{end}}{{end}}); err == nil || !strings.Contains(err.Error(), "{{$op.Name}}: status") {
+				t.Fatalf("got: %v, want an error naming the status", err)
 			}
 		})
 		{{- end }}

@@ -3,7 +3,7 @@ package config
 type Generate struct {
 	// File selection: if all are false, client files are generated.
 	// Set one or more to true to generate only those files.
-	Types      bool // generate types.gen.go
+	Types      bool // generate types.gen.go, and types.gen_test.go where there is something to test
 	Client     bool // generate client.gen.go
 	ClientTest bool // generate client.gen_test.go
 	Server     bool // generate server.gen.go
@@ -31,7 +31,7 @@ func (g Generate) ShouldGenerate(f string) bool {
 	g.setDefaults()
 
 	switch f {
-	case "types.gen.go":
+	case "types.gen.go", "types.gen_test.go":
 		return g.Types
 	case "client.gen.go":
 		return g.Client

@@ -16,7 +16,7 @@ github.com/MarkRosemaker/jsonutil
 # github.com/MarkRosemaker/openapi v0.0.0-20261109161642-725ef5aabe58
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi
-# github.com/MarkRosemaker/openapi-codegen v0.0.0-20261109162339-267dbf6ef446
+# github.com/MarkRosemaker/openapi-codegen v0.0.0-20261109170718-63810d48853f
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-codegen
 github.com/MarkRosemaker/openapi-codegen/cmd/openapi-codegen
@@ -70,7 +70,7 @@ github.com/spf13/afero/mem
 # golang.org/x/exp v0.0.0-20261106192419-47ce03d25ef0
 ## explicit; go 1.26.0
 golang.org/x/exp/maps
-# golang.org/x/mod v0.42.0
+# golang.org/x/mod v0.43.0
 ## explicit; go 1.26.0
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
@@ -78,7 +78,7 @@ golang.org/x/mod/semver
 # golang.org/x/sync v0.25.0
 ## explicit; go 1.26.0
 golang.org/x/sync/errgroup
-# golang.org/x/text v0.43.0
+# golang.org/x/text v0.44.0
 ## explicit; go 1.26.0
 golang.org/x/text/runes
 golang.org/x/text/transform
