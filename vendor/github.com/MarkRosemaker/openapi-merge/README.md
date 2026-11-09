@@ -72,10 +72,12 @@ particular ways that sample-derived schemas disagree:
 - **Objects or arrays** — a value seen as an object in one sample and as an
   array in another, such as a job's images, one per direction or a list of
   frames, becomes a `oneOf` of the two, and further samples go to theirs.
-- **Bare strings take a format** — a string declared with no format, example,
-  enum or const, as an upstream specification writes most, takes the format of
-  the value it is merged with, such as the `uuid` of a recorded ID: it says
-  nothing against one.
+- **Strings keep no format only one side has** — a string without a format,
+  such as an upstream specification declares or values that shared none left
+  behind, stays without one when merged with a string that has one, such as a
+  recorded `uuid`: one value cannot say what every value is, and a client
+  generated from the claim would reject the values it does not fit. The two
+  dates above are the exceptions, where both sides' values fit the format.
 - **Empty dates** — a `date` or `date-time` keeps its format when a sample holds
   an empty string, a value left out, and takes the other's example over it.
 - **Numbers sent as strings** — a value seen as a numeric string, such as
@@ -178,6 +180,7 @@ Two neighbours are easy to confuse with this one:
 ## Additional Information
 
 - [**Go Reference**](https://pkg.go.dev/github.com/MarkRosemaker/openapi-merge): API documentation.
+- [**Architecture**](docs/architecture.md): how the parts fit together.
 
 ## Contributing
 

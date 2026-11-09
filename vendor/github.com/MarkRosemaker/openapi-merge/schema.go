@@ -49,7 +49,6 @@ func Schema(a, b *openapi.Schema, isParam bool) error {
 	}
 
 	tp = reconcileNull(a, b, tp)
-	adoptFormat(a, b)
 	improveExample(a, b)
 
 	if tp != b.Type {
@@ -335,27 +334,6 @@ func fitsDateBasic(v jsontext.Value) bool {
 	return err == nil
 }
 
-// adoptFormat gives a string that says nothing of its values, as an upstream specification writes most, the format of
-// the one it is merged with, such as the uuid of a recorded ID: without a format, an example, an enum or a const, it
-// has nothing against it. It runs before a takes b's example, which would make it seem to say something.
-func adoptFormat(a, b *openapi.Schema) {
-	if a.Type != openapi.TypeString || b.Type != openapi.TypeString {
-		return
-	}
-
-	switch {
-	case isBareString(a) && b.Format != "":
-		a.Format = b.Format
-	case isBareString(b) && a.Format != "":
-		b.Format = a.Format
-	}
-}
-
-// isBareString reports whether s, a string, says nothing of its values.
-func isBareString(s *openapi.Schema) bool {
-	return s.Format == "" && s.Example == nil && len(s.Enum) == 0 && len(s.Const) == 0
-}
-
 // isEmptyString reports whether v is the empty string.
 func isEmptyString(v jsontext.Value) bool { return string(v) == `""` }
 
@@ -401,6 +379,10 @@ func reconcileFormats(a, b *openapi.Schema) error {
 
 				a.Format, b.Format = f, f
 			default:
+				// Merging only widens: a string without a format is either a contract that allows any string, such as
+				// an upstream specification declares, or what values that share no format left behind, and nothing
+				// tells the two apart. Taking the other side's format would claim of every value what one showed, and
+				// a generated client would then reject the values it does not fit. Keep it bare.
 				a.Format, b.Format = "", ""
 			}
 		default:

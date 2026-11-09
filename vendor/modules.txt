@@ -4,53 +4,53 @@ cloud.google.com/go/civil
 # github.com/MarkRosemaker/cassette v0.0.0-20261109120533-6bb1f7aae1f2
 ## explicit; go 1.27
 github.com/MarkRosemaker/cassette
-# github.com/MarkRosemaker/errpath v0.0.0-20261107140447-85db0425f9e7
+# github.com/MarkRosemaker/errpath v0.0.0-20261109120451-91cd29644c73
 ## explicit; go 1.23.2
 github.com/MarkRosemaker/errpath
-# github.com/MarkRosemaker/json2yaml v0.0.0-20261107140447-4f50afec4d91
+# github.com/MarkRosemaker/json2yaml v0.0.0-20261109120452-2329987d7bc8
 ## explicit; go 1.27
 github.com/MarkRosemaker/json2yaml
 # github.com/MarkRosemaker/jsonutil v0.0.0-20261109120454-26f22c55639c
 ## explicit; go 1.27
 github.com/MarkRosemaker/jsonutil
-# github.com/MarkRosemaker/openapi v0.0.0-20261108211915-31ba4a6d7900
+# github.com/MarkRosemaker/openapi v0.0.0-20261109120606-4fca17eacf0c
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi
-# github.com/MarkRosemaker/openapi-codegen v0.0.0-20261109005730-a9a56306b6c0
+# github.com/MarkRosemaker/openapi-codegen v0.0.0-20261109121251-d8490bc4aa88
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-codegen
 github.com/MarkRosemaker/openapi-codegen/cmd/openapi-codegen
 github.com/MarkRosemaker/openapi-codegen/config
 github.com/MarkRosemaker/openapi-codegen/ir
 github.com/MarkRosemaker/openapi-codegen/render
-# github.com/MarkRosemaker/openapi-compare v0.0.0-20261108230245-1c749fd12aa1
+# github.com/MarkRosemaker/openapi-compare v0.0.0-20261109120732-32a205b65632
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-compare/schema
-# github.com/MarkRosemaker/openapi-compress v0.0.0-20261108230405-60458b267f0f
+# github.com/MarkRosemaker/openapi-compress v0.0.0-20261109120908-3cb8186e655b
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-compress
 github.com/MarkRosemaker/openapi-compress/cmd/openapi-compress
-# github.com/MarkRosemaker/openapi-edit v0.0.0-20261108230247-ae9812341df5
+# github.com/MarkRosemaker/openapi-edit v0.0.0-20261109120732-2c7515ba9190
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-edit
-# github.com/MarkRosemaker/openapi-enrich v0.0.0-20261109005541-ae70fbeb05a3
+# github.com/MarkRosemaker/openapi-enrich v0.0.0-20261109120838-4433908ea0be
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-enrich
 github.com/MarkRosemaker/openapi-enrich/cmd/openapi-enrich
-# github.com/MarkRosemaker/openapi-flatten v0.0.0-20261108230248-f2fc8e2e5ba0
+# github.com/MarkRosemaker/openapi-flatten v0.0.0-20261109120733-57b21ee73d6d
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-flatten
 github.com/MarkRosemaker/openapi-flatten/cmd/openapi-flatten
-# github.com/MarkRosemaker/openapi-merge v0.0.0-20261108230247-8213695ae64a
+# github.com/MarkRosemaker/openapi-merge v0.0.0-20261109120732-fe59ad195681
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-merge
-# github.com/MarkRosemaker/ordmap v0.0.0-20261107140516-dfbaf0adfb2f
+# github.com/MarkRosemaker/ordmap v0.0.0-20261109120513-91fe4bc7e3db
 ## explicit; go 1.27
 github.com/MarkRosemaker/ordmap
-# github.com/MarkRosemaker/yaml v0.0.0-20261107140521-b843aa1c6679
+# github.com/MarkRosemaker/yaml v0.0.0-20261109120525-183cb2f5021f
 ## explicit; go 1.27
 github.com/MarkRosemaker/yaml
-# github.com/MarkRosemaker/yaml2json v0.0.0-20261107140447-bc027eaff998
+# github.com/MarkRosemaker/yaml2json v0.0.0-20261109120453-1b901dbf7e8f
 ## explicit; go 1.27
 github.com/MarkRosemaker/yaml2json
 # github.com/ettle/strcase v0.2.0
@@ -59,7 +59,7 @@ github.com/ettle/strcase
 # github.com/go-api-libs/api v0.0.0-20261109120454-35fbf0e61179
 ## explicit; go 1.27
 github.com/go-api-libs/api
-# github.com/go-api-libs/types v0.0.0-20261107140447-c9d929c01756
+# github.com/go-api-libs/types v0.0.0-20261109120451-6cd1daca4971
 ## explicit; go 1.27
 github.com/go-api-libs/types
 # github.com/spf13/afero v1.15.0
@@ -75,7 +75,7 @@ golang.org/x/exp/maps
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/sync v0.24.0
+# golang.org/x/sync v0.25.0
 ## explicit; go 1.26.0
 golang.org/x/sync/errgroup
 # golang.org/x/text v0.43.0
