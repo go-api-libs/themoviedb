@@ -9,9 +9,11 @@ import (
 	"encoding/json/v2"
 	"errors"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -185,6 +187,48 @@ func TestClient_Error(t *testing.T) {
 			}
 		})
 
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ValidateKey(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ValidateKey(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
+
 		t.Run("401 response", func(t *testing.T) {
 			body, err := json.Marshal(Error{}, jsonOpts)
 			if err != nil {
@@ -230,6 +274,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
+			}
+		})
+
+		t.Run("401 response debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusUnauthorized, "application/json", withUnknownMember(t, Error{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ValidateKey(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*Error](err); !ok {
+				t.Fatalf("got: %v, want the *Error decoded leniently", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
 			}
 		})
 	})
@@ -345,6 +410,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountDetails(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountDetails(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -540,6 +647,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountAddFavorite(t.Context(), 0, nil, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountAddFavorite(t.Context(), 0, nil, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("AccountAddToWatchlist", func(t *testing.T) {
@@ -733,6 +882,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountAddToWatchlist(t.Context(), 0, nil, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountAddToWatchlist(t.Context(), 0, nil, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("AccountGetFavorites", func(t *testing.T) {
@@ -827,6 +1018,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountGetFavorites(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountGetFavorites(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("AccountFavoriteTv", func(t *testing.T) {
@@ -919,6 +1152,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountFavoriteTv(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountFavoriteTv(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -1036,6 +1311,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountLists(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountLists(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("AccountRatedMovies", func(t *testing.T) {
@@ -1149,6 +1466,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountRatedMovies(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountRatedMovies(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -1266,6 +1625,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountRatedTv(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountRatedTv(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("GetRatedTvEpisodes", func(t *testing.T) {
@@ -1358,6 +1759,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetRatedTvEpisodes(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetRatedTvEpisodes(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -1454,6 +1897,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountWatchlistMovies(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountWatchlistMovies(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("AccountWatchlistTv", func(t *testing.T) {
@@ -1546,6 +2031,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountWatchlistTv(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AccountWatchlistTv(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -1663,6 +2190,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AuthenticationCreateGuestSession(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AuthenticationCreateGuestSession(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("AuthenticationCreateRequestToken", func(t *testing.T) {
@@ -1776,6 +2345,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AuthenticationCreateRequestToken(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AuthenticationCreateRequestToken(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -1971,6 +2582,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AuthenticationCreateSession(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AuthenticationCreateSession(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("AuthenticationCreateSessionFromV4Token", func(t *testing.T) {
@@ -2162,6 +2815,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AuthenticationCreateSessionFromV4Token(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AuthenticationCreateSessionFromV4Token(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -2357,6 +3052,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AuthenticationCreateSessionFromLogin(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AuthenticationCreateSessionFromLogin(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("AuthenticationDeleteSession", func(t *testing.T) {
@@ -2550,6 +3287,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AuthenticationDeleteSession(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AuthenticationDeleteSession(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("CertificationMovieList", func(t *testing.T) {
@@ -2663,6 +3442,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CertificationMovieList(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CertificationMovieList(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -2780,6 +3601,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CertificationsTvList(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CertificationsTvList(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("ChangesMovieList", func(t *testing.T) {
@@ -2893,6 +3756,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ChangesMovieList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ChangesMovieList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -3010,6 +3915,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ChangesPeopleList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ChangesPeopleList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("ChangesTvList", func(t *testing.T) {
@@ -3123,6 +4070,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ChangesTvList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ChangesTvList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -3240,6 +4229,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CollectionDetails(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CollectionDetails(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("CollectionImages", func(t *testing.T) {
@@ -3353,6 +4384,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CollectionImages(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CollectionImages(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -3470,6 +4543,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CollectionTranslations(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CollectionTranslations(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("CompanyDetails", func(t *testing.T) {
@@ -3583,6 +4698,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CompanyDetails(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CompanyDetails(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -3700,6 +4857,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CompanyAlternativeNames(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CompanyAlternativeNames(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("CompanyImages", func(t *testing.T) {
@@ -3813,6 +5012,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CompanyImages(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CompanyImages(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -3930,6 +5171,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ConfigurationDetails(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ConfigurationDetails(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("ConfigurationCountries", func(t *testing.T) {
@@ -4022,6 +5305,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ConfigurationCountries(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ConfigurationCountries(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -4118,6 +5443,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ConfigurationJobs(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ConfigurationJobs(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("ConfigurationLanguages", func(t *testing.T) {
@@ -4210,6 +5577,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ConfigurationLanguages(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ConfigurationLanguages(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -4306,6 +5715,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ConfigurationPrimaryTranslations(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ConfigurationPrimaryTranslations(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("ConfigurationTimezones", func(t *testing.T) {
@@ -4398,6 +5849,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ConfigurationTimezones(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ConfigurationTimezones(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -4515,6 +6008,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CreditDetails(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.CreditDetails(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("DiscoverMovie", func(t *testing.T) {
@@ -4607,6 +6142,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.DiscoverMovie(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.DiscoverMovie(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -4724,6 +6301,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.DiscoverTv(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.DiscoverTv(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("FindByID", func(t *testing.T) {
@@ -4837,6 +6456,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.FindByID(t.Context(), "", FindByIDParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.FindByID(t.Context(), "", FindByIDParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -4954,6 +6615,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GenreMovieList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GenreMovieList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("GenreTvList", func(t *testing.T) {
@@ -5067,6 +6770,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GenreTvList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GenreTvList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -5184,6 +6929,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GuestSessionRatedMovies(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GuestSessionRatedMovies(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("GuestSessionRatedTv", func(t *testing.T) {
@@ -5297,6 +7084,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GuestSessionRatedTv(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GuestSessionRatedTv(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -5414,6 +7243,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GuestSessionRatedTvEpisodes(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GuestSessionRatedTvEpisodes(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("KeywordDetails", func(t *testing.T) {
@@ -5529,6 +7400,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.KeywordDetails(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.KeywordDetails(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("KeywordMovies", func(t *testing.T) {
@@ -5642,6 +7555,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.KeywordMovies(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.KeywordMovies(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -5837,6 +7792,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListAddMovie(t.Context(), 0, ListAddMovieParams{}, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListAddMovie(t.Context(), 0, ListAddMovieParams{}, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("ListCheckItemStatus", func(t *testing.T) {
@@ -5952,6 +7949,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListCheckItemStatus(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListCheckItemStatus(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("ListClear", func(t *testing.T) {
@@ -6065,6 +8104,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListClear(t.Context(), 0, ListClearParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListClear(t.Context(), 0, ListClearParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -6260,6 +8341,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListCreate(t.Context(), ListCreateParams{}, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListCreate(t.Context(), ListCreateParams{}, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("ListDetails", func(t *testing.T) {
@@ -6375,6 +8498,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListDetails(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListDetails(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("ListDelete", func(t *testing.T) {
@@ -6488,6 +8653,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListDelete(t.Context(), 0, ListDeleteParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListDelete(t.Context(), 0, ListDeleteParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -6683,6 +8890,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListRemoveMovie(t.Context(), 0, ListRemoveMovieParams{}, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListRemoveMovie(t.Context(), 0, ListRemoveMovieParams{}, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("GetNowPlaying", func(t *testing.T) {
@@ -6798,6 +9047,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetNowPlaying(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetNowPlaying(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("GetPopular", func(t *testing.T) {
@@ -6892,6 +9183,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetPopular(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetPopular(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("GetTopRated", func(t *testing.T) {
@@ -6984,6 +9317,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetTopRated(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetTopRated(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -7101,6 +9476,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetUpcoming(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetUpcoming(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("GetMovie", func(t *testing.T) {
@@ -7193,6 +9610,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetMovie(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetMovie(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -7310,6 +9769,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieAccountStates(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieAccountStates(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("GetAlternativeTitles", func(t *testing.T) {
@@ -7423,6 +9924,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetAlternativeTitles(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetAlternativeTitles(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -7540,6 +10083,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieChanges(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieChanges(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("MovieCredits", func(t *testing.T) {
@@ -7653,6 +10238,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieCredits(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieCredits(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -7770,6 +10397,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieExternalIds(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieExternalIds(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("GetMovieImages", func(t *testing.T) {
@@ -7883,6 +10552,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetMovieImages(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetMovieImages(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -8000,6 +10711,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieKeywords(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieKeywords(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("MovieLatestID", func(t *testing.T) {
@@ -8115,6 +10868,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieLatestID(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieLatestID(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("MovieLists", func(t *testing.T) {
@@ -8228,6 +11023,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieLists(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieLists(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -8388,6 +11225,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieReleaseDates(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieReleaseDates(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("MovieReviews", func(t *testing.T) {
@@ -8503,6 +11382,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieReviews(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieReviews(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("MovieSimilar", func(t *testing.T) {
@@ -8595,6 +11516,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieSimilar(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieSimilar(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -8712,6 +11675,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieTranslations(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieTranslations(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("MovieVideos", func(t *testing.T) {
@@ -8827,6 +11832,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieVideos(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieVideos(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("MovieWatchProviders", func(t *testing.T) {
@@ -8940,6 +11987,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieWatchProviders(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieWatchProviders(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -9135,6 +12224,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieAddRating(t.Context(), 0, nil, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieAddRating(t.Context(), 0, nil, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("MovieDeleteRating", func(t *testing.T) {
@@ -9248,6 +12379,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieDeleteRating(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.MovieDeleteRating(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -9365,6 +12538,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.NetworkDetails(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.NetworkDetails(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("DetailsCopy", func(t *testing.T) {
@@ -9478,6 +12693,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.DetailsCopy(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.DetailsCopy(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -9595,6 +12852,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AlternativeNamesCopy(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.AlternativeNamesCopy(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("PersonPopularList", func(t *testing.T) {
@@ -9708,6 +13007,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonPopularList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonPopularList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -9825,6 +13166,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonDetails(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonDetails(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("PersonChanges", func(t *testing.T) {
@@ -9938,6 +13321,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonChanges(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonChanges(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -10055,6 +13480,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonCombinedCredits(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonCombinedCredits(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("PersonExternalIds", func(t *testing.T) {
@@ -10168,6 +13635,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonExternalIds(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonExternalIds(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -10285,6 +13794,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonImages(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonImages(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("PersonLatestID", func(t *testing.T) {
@@ -10398,6 +13949,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonLatestID(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonLatestID(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -10515,6 +14108,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonMovieCredits(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonMovieCredits(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("PersonTvCredits", func(t *testing.T) {
@@ -10628,6 +14263,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonTvCredits(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonTvCredits(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -10745,6 +14422,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonTaggedImages(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.PersonTaggedImages(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("Translations", func(t *testing.T) {
@@ -10858,6 +14577,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.Translations(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.Translations(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -10975,6 +14736,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ReviewDetails(t.Context(), ""); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ReviewDetails(t.Context(), ""); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("SearchCollection", func(t *testing.T) {
@@ -11088,6 +14891,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.SearchCollection(t.Context(), SearchCollectionParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.SearchCollection(t.Context(), SearchCollectionParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -11205,6 +15050,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.SearchCompany(t.Context(), SearchCompanyParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.SearchCompany(t.Context(), SearchCompanyParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("SearchKeyword", func(t *testing.T) {
@@ -11320,6 +15207,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.SearchKeyword(t.Context(), SearchKeywordParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.SearchKeyword(t.Context(), SearchKeywordParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("SearchMovies", func(t *testing.T) {
@@ -11412,6 +15341,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.SearchMovies(t.Context(), SearchMoviesParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.SearchMovies(t.Context(), SearchMoviesParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -11529,6 +15500,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.SearchMulti(t.Context(), SearchMultiParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.SearchMulti(t.Context(), SearchMultiParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("SearchPerson", func(t *testing.T) {
@@ -11644,6 +15657,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.SearchPerson(t.Context(), SearchPersonParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.SearchPerson(t.Context(), SearchPersonParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("SearchShows", func(t *testing.T) {
@@ -11736,6 +15791,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.SearchShows(t.Context(), SearchShowsParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.SearchShows(t.Context(), SearchShowsParams{}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -11853,6 +15950,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TrendingAll(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TrendingAll(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TrendingMovies", func(t *testing.T) {
@@ -11966,6 +16105,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TrendingMovies(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TrendingMovies(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -12083,6 +16264,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TrendingPeople(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TrendingPeople(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TrendingTv", func(t *testing.T) {
@@ -12196,6 +16419,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TrendingTv(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TrendingTv(t.Context(), "", nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -12313,6 +16578,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesAiringTodayList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesAiringTodayList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeriesOnTheAirList", func(t *testing.T) {
@@ -12426,6 +16733,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesOnTheAirList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesOnTheAirList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -12543,6 +16892,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesPopularList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesPopularList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeriesTopRatedList", func(t *testing.T) {
@@ -12658,6 +17049,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesTopRatedList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesTopRatedList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("GetShow", func(t *testing.T) {
@@ -12750,6 +17183,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetShow(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetShow(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -12867,6 +17342,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesAccountStates(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesAccountStates(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeriesAggregateCredits", func(t *testing.T) {
@@ -12980,6 +17497,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesAggregateCredits(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesAggregateCredits(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -13097,6 +17656,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesAlternativeTitles(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesAlternativeTitles(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("GetShowChanges", func(t *testing.T) {
@@ -13210,6 +17811,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetShowChanges(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetShowChanges(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -13327,6 +17970,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesContentRatings(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesContentRatings(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeriesCredits", func(t *testing.T) {
@@ -13440,6 +18125,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesCredits(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesCredits(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -13557,6 +18284,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesEpisodeGroups(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesEpisodeGroups(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeriesExternalIds", func(t *testing.T) {
@@ -13670,6 +18439,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesExternalIds(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesExternalIds(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -13787,6 +18598,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesImages(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesImages(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeriesKeywords", func(t *testing.T) {
@@ -13900,6 +18753,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesKeywords(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesKeywords(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -14017,6 +18912,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesLatestID(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesLatestID(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("ListsCopy", func(t *testing.T) {
@@ -14130,6 +19067,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListsCopy(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ListsCopy(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -14247,6 +19226,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesRecommendations(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesRecommendations(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeriesReviews", func(t *testing.T) {
@@ -14360,6 +19381,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesReviews(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesReviews(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -14477,6 +19540,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesScreenedTheatrically(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesScreenedTheatrically(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeriesSimilar", func(t *testing.T) {
@@ -14590,6 +19695,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesSimilar(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesSimilar(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -14707,6 +19854,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesTranslations(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesTranslations(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeriesVideos", func(t *testing.T) {
@@ -14822,6 +20011,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesVideos(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesVideos(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeriesWatchProviders", func(t *testing.T) {
@@ -14935,6 +20166,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesWatchProviders(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesWatchProviders(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -15130,6 +20403,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesAddRating(t.Context(), 0, nil, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesAddRating(t.Context(), 0, nil, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeriesDeleteRating", func(t *testing.T) {
@@ -15245,6 +20560,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesDeleteRating(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeriesDeleteRating(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("GetShowSeason", func(t *testing.T) {
@@ -15340,6 +20697,48 @@ func TestClient_Error(t *testing.T) {
 			}
 		})
 
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetShowSeason(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetShowSeason(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
+
 		t.Run("404 response", func(t *testing.T) {
 			body, err := json.Marshal(Error{}, jsonOpts)
 			if err != nil {
@@ -15385,6 +20784,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal("expected error")
 			} else if !errors.Is(err, api.ErrUnknownContentType) {
 				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
+			}
+		})
+
+		t.Run("404 response debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusNotFound, "application/json", withUnknownMember(t, Error{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetShowSeason(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*Error](err); !ok {
+				t.Fatalf("got: %v, want the *Error decoded leniently", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
 			}
 		})
 	})
@@ -15502,6 +20922,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonAccountStates(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonAccountStates(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeasonAggregateCredits", func(t *testing.T) {
@@ -15615,6 +21077,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonAggregateCredits(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonAggregateCredits(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -15732,6 +21236,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetSeasonChanges(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetSeasonChanges(t.Context(), 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeasonCredits", func(t *testing.T) {
@@ -15845,6 +21391,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonCredits(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonCredits(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -15962,6 +21550,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonExternalIds(t.Context(), 0, 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonExternalIds(t.Context(), 0, 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeasonImages", func(t *testing.T) {
@@ -16075,6 +21705,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonImages(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonImages(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -16192,6 +21864,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonTranslations(t.Context(), 0, 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonTranslations(t.Context(), 0, 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvSeasonVideos", func(t *testing.T) {
@@ -16305,6 +22019,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonVideos(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonVideos(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -16422,6 +22178,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonWatchProviders(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvSeasonWatchProviders(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("GetEpisodeDetails", func(t *testing.T) {
@@ -16514,6 +22312,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetEpisodeDetails(t.Context(), 0, 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetEpisodeDetails(t.Context(), 0, 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -16631,6 +22471,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeAccountStates(t.Context(), 0, 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeAccountStates(t.Context(), 0, 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("GetEpisodeChanges", func(t *testing.T) {
@@ -16744,6 +22626,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetEpisodeChanges(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetEpisodeChanges(t.Context(), 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -16861,6 +22785,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeCredits(t.Context(), 0, 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeCredits(t.Context(), 0, 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvEpisodeExternalIds", func(t *testing.T) {
@@ -16974,6 +22940,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeExternalIds(t.Context(), 0, 0, ""); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeExternalIds(t.Context(), 0, 0, ""); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -17091,6 +23099,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeImages(t.Context(), 0, 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeImages(t.Context(), 0, 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvEpisodeTranslations", func(t *testing.T) {
@@ -17206,6 +23256,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeTranslations(t.Context(), 0, 0, 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeTranslations(t.Context(), 0, 0, 0); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvEpisodeVideos", func(t *testing.T) {
@@ -17319,6 +23411,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeVideos(t.Context(), 0, 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeVideos(t.Context(), 0, 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -17514,6 +23648,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeAddRating(t.Context(), 0, 0, 0, nil, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeAddRating(t.Context(), 0, 0, 0, nil, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("TvEpisodeDeleteRating", func(t *testing.T) {
@@ -17627,6 +23803,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeDeleteRating(t.Context(), 0, 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeDeleteRating(t.Context(), 0, 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -17744,6 +23962,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeGroupDetails(t.Context(), ""); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.TvEpisodeGroupDetails(t.Context(), ""); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("WatchProvidersAvailableRegions", func(t *testing.T) {
@@ -17857,6 +24117,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.WatchProvidersAvailableRegions(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.WatchProvidersAvailableRegions(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
@@ -17974,6 +24276,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.WatchProvidersMovieList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.WatchProvidersMovieList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
+			}
+		})
 	})
 
 	t.Run("WatchProviderTvList", func(t *testing.T) {
@@ -18087,6 +24431,48 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			} else if len(ias) != 1 {
 				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.WatchProviderTvList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode", len(ias))
+			}
+		})
+
+		t.Run("debug mode reports a debug file it cannot write", func(t *testing.T) {
+			// a file where the debug file's directory would be
+			blocker := filepath.Join(t.TempDir(), "file")
+			if err := os.WriteFile(blocker, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.WatchProviderTvList(t.Context(), nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want the *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*fs.PathError](err); !ok {
+				t.Fatalf("got: %v, want the failure to write the debug file beside it", err)
 			}
 		})
 	})
