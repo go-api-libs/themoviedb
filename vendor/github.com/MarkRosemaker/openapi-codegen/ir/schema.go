@@ -59,6 +59,14 @@ func SchemaGoType(s *openapi.Schema) (*GoType, error) {
 		return &GoType{Name: name, IsNilable: isNilable}, nil
 	}
 
+	// [X, "null"] is X or null, the same as a oneOf of the two
+	if s.Nullable && s.Type != openapi.TypeNull {
+		v := *s
+		v.Nullable = false
+
+		return nullableGoType(&v)
+	}
+
 	switch s.Type {
 	case openapi.TypeNull:
 		// only ever seen as null: nothing but null fits
@@ -215,11 +223,17 @@ func nullableGoType(v *openapi.Schema) (*GoType, error) {
 
 	// null otherwise reads as the zero value, which is all it needs to be when that is no value of X; a type that
 	// decodes itself, such as a union, would refuse null
-	if zeroIsAValue(v, tp) || hasJSONMethods(v) {
+	if zeroIsAValue(v, tp) || hasJSONMethods(v) || zeroIsNoNull(tp) {
 		tp.IsPointer = true
 	}
 
 	return tp, nil
+}
+
+// zeroIsNoNull reports whether the zero value of tp is written as something other than null, a date that does not
+// exist, so that only a pointer can write null back.
+func zeroIsNoNull(tp *GoType) bool {
+	return !tp.IsSlice && !tp.IsNilable && (tp.Name == "time.Time" || tp.Name == "civil.Date")
 }
 
 // isOneOfOnly reports whether s is an untagged union expressed purely via

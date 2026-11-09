@@ -211,6 +211,27 @@ func objectLiteral(p ir.Param, entries map[string]string) string {
 	return p.Type + "{" + strings.Join(fields, ", ") + "}"
 }
 
+// defaultType is the type Go gives lit, an untyped constant, where nothing else decides it; ok is false for a literal
+// that has a type of its own.
+func defaultType(lit string) (string, bool) {
+	switch {
+	case lit == "true" || lit == "false":
+		return "bool", true
+	case strings.HasPrefix(lit, `"`) || strings.HasPrefix(lit, "`"):
+		return "string", true
+	}
+
+	if _, err := strconv.ParseInt(lit, 10, 64); err == nil {
+		return "int", true
+	}
+
+	if _, err := strconv.ParseFloat(lit, 64); err == nil {
+		return "float64", true
+	}
+
+	return "", false
+}
+
 // newLiteral is a pointer to lit, the literal of the value v of m: of m's type, where lit is an untyped constant.
 func newLiteral(m ir.Param, v, lit string) string {
 	if lit == v || strings.HasPrefix(lit, `"`) {
@@ -568,7 +589,17 @@ func bodyLiteral(doc *ir.Document, goType string, v any) string {
 		// zero-value composite literal below rather than emit invalid Go.
 
 	case strings.HasPrefix(goType, "*"):
-		return fmt.Sprintf("new(%s)", bodyLiteral(doc, goType[1:], v))
+		lit := bodyLiteral(doc, goType[1:], v)
+		if def, ok := defaultType(lit); ok && def != goType[1:] {
+			// new(3) is an *int, whatever the field's type: a float64 takes 3.0, anything else a conversion
+			if def == "int" && goType[1:] == "float64" {
+				return fmt.Sprintf("new(%s.0)", lit)
+			}
+
+			return fmt.Sprintf("new(%s(%s))", goType[1:], lit)
+		}
+
+		return fmt.Sprintf("new(%s)", lit)
 
 	case strings.HasPrefix(goType, "[]"):
 		arr, ok := v.([]any)

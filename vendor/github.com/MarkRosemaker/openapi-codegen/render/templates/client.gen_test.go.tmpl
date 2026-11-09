@@ -29,6 +29,45 @@ func newTestServer(t *testing.T, status int) *httptest.Server {
 	return srv
 }
 
+{{ if or .HasErrorResponses .HasStructSuccess -}}
+// newBodyServer is the base URL of a server that answers every request with status, contentType and body.
+func newBodyServer(t *testing.T, status int, contentType string, body []byte) *url.URL {
+	t.Helper()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", contentType)
+		w.WriteHeader(status)
+		_, _ = w.Write(body)
+	}))
+	t.Cleanup(srv.Close)
+
+	u, err := url.Parse(srv.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return u
+}
+
+{{ end -}}
+{{ if .HasStructSuccess -}}
+// withUnknownMember is v as JSON, with a member no type declares added to it.
+func withUnknownMember(t *testing.T, v any) []byte {
+	t.Helper()
+
+	b, err := json.Marshal(v, jsonOpts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(b) == "{}" {
+		return []byte(`{"not_a_member_of_any_type": true}`)
+	}
+
+	return append([]byte(`{"not_a_member_of_any_type": true, `), b[1:]...)
+}
+
+{{ end -}}
 type roundTripFunc func(*http.Request) (*http.Response, error)
 
 func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) {
@@ -150,10 +189,248 @@ func TestClient_Error(t *testing.T) {
 			}
 		})
 		{{- end }}{{ end }}
+		{{- $op := . }}
+		{{- if and .RequestBody (not .RequestBody.Required) }}
+
+		t.Run("body left out", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			{{if $op.SuccessReturn}}_, {{end}}_ = c.{{$op.Name}}(t.Context(){{range $op.PathParams}}, {{ .ZeroVal }}{{end}}{{- with $op.NilParamsExpr}}, {{ . }}{{ end -}}, nil)
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) > 0 {
+				t.Fatalf("a body left out was sent as %q", sent)
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "" {
+				t.Fatalf("a body left out was sent with Content-Type %q", ct)
+			}
+		})
+
+		t.Run("body given", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			{{if $op.SuccessReturn}}_, {{end}}_ = c.{{$op.Name}}(t.Context(){{range $op.PathParams}}, {{ .ZeroVal }}{{end}}{{- with $op.NilParamsExpr}}, {{ . }}{{ end -}}, new({{$.MinimalLiteral .RequestBody.TypeName}}))
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) == 0 {
+				t.Fatal("a body given was not sent")
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != {{printf "%q" .RequestBody.ContentType}} {
+				t.Fatalf("got Content-Type %q, want %q", ct, {{printf "%q" .RequestBody.ContentType}})
+			}
+		})
+		{{- end }}
+		{{- with $.StrictSuccess . }}
+
+		t.Run("unknown member", func(t *testing.T) {
+			c, err := NewClient(WithBaseURL(newBodyServer(t, {{.GoConstant}}, {{printf "%q" .ContentType}}, withUnknownMember(t, {{$.MinimalLiteral .GoType.Name}}))))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.{{$op.Name}}(t.Context(){{range $op.PathParams}}, {{ .ZeroVal }}{{end}}
+			{{- with $op.NilParamsExpr}}, {{ . }}{{ end -}}
+			{{if $op.RequestBody}}, {{if $op.RequestBody.Required}}{{$.MinimalLiteral $op.RequestBody.TypeName}}{{else}}nil{{end}}{{end}}); err == nil {
+				t.Fatal("the package's own type accepted a member it does not declare")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+
+			if _, err := c.{{$op.Name}}WithResult[struct{}](t.Context(){{range $op.PathParams}}, {{ .ZeroVal }}{{end}}
+			{{- with $op.NilParamsExpr}}, {{ . }}{{ end -}}
+			{{if $op.RequestBody}}, {{if $op.RequestBody.Required}}{{$.MinimalLiteral $op.RequestBody.TypeName}}{{else}}nil{{end}}{{end}}); err != nil {
+				t.Fatalf("a type of the caller's own: %v", err)
+			}
+		})
+		{{- end }}
+		{{- with $.LenientSuccess . }}
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, {{.GoConstant}}, {{printf "%q" .ContentType}}, withUnknownMember(t, {{$.MinimalLiteral .GoType.Name}}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.{{$op.Name}}(t.Context(){{range $op.PathParams}}, {{ .ZeroVal }}{{end}}
+			{{- with $op.NilParamsExpr}}, {{ . }}{{ end -}}
+			{{if $op.RequestBody}}, {{if $op.RequestBody.Required}}{{$.MinimalLiteral $op.RequestBody.TypeName}}{{else}}nil{{end}}{{end}}); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+		{{- end }}
+		{{- range .ErrorResponses }}
+
+		t.Run("{{.StatusCode}} response", func(t *testing.T) {
+			body, err := json.Marshal({{$.ValueLiteral .GoType.Name}}, jsonOpts)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, {{.GoConstant}}, {{printf "%q" .ContentType}}, body)))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if {{if $op.SuccessReturn}}_, {{end}}err := c.{{$op.Name}}(t.Context(){{range $op.PathParams}}, {{ .ZeroVal }}{{end}}
+			{{- with $op.NilParamsExpr}}, {{ . }}{{ end -}}
+			{{if $op.RequestBody}}, {{if $op.RequestBody.Required}}{{$.MinimalLiteral $op.RequestBody.TypeName}}{{else}}nil{{end}}{{end}}); err == nil {
+				t.Fatal("expected error")
+			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
+				t.Fatalf("got: %T, want: *api.Error", err)
+			} else if !apiErr.IsCustom || apiErr.Response.StatusCode != {{.GoConstant}} {
+				t.Fatalf("got: custom %t, status %d, want: custom, status %d", apiErr.IsCustom, apiErr.Response.StatusCode, {{.GoConstant}})
+			} else if _, ok := errors.AsType[*{{.GoType.Name}}](err); !ok {
+				t.Fatalf("got: %v, want it to be a *{{.GoType.Name}}", err)
+			}
+		})
+
+		t.Run("{{.StatusCode}} response decoding error", func(t *testing.T) {
+			c, err := NewClient(WithBaseURL(newBodyServer(t, {{.GoConstant}}, {{printf "%q" .ContentType}}, []byte("invalid json"))))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if {{if $op.SuccessReturn}}_, {{end}}err := c.{{$op.Name}}(t.Context(){{range $op.PathParams}}, {{ .ZeroVal }}{{end}}
+			{{- with $op.NilParamsExpr}}, {{ . }}{{ end -}}
+			{{if $op.RequestBody}}, {{if $op.RequestBody.Required}}{{$.MinimalLiteral $op.RequestBody.TypeName}}{{else}}nil{{end}}{{end}}); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+		})
+
+		t.Run("{{.StatusCode}} response unknown content type", func(t *testing.T) {
+			c, err := NewClient(WithBaseURL(newBodyServer(t, {{.GoConstant}}, "foo", nil)))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if {{if $op.SuccessReturn}}_, {{end}}err := c.{{$op.Name}}(t.Context(){{range $op.PathParams}}, {{ .ZeroVal }}{{end}}
+			{{- with $op.NilParamsExpr}}, {{ . }}{{ end -}}
+			{{if $op.RequestBody}}, {{if $op.RequestBody.Required}}{{$.MinimalLiteral $op.RequestBody.TypeName}}{{else}}nil{{end}}{{end}}); err == nil {
+				t.Fatal("expected error")
+			} else if !errors.Is(err, api.ErrUnknownContentType) {
+				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
+			}
+		})
+		{{- end }}
 	})
 {{end -}}
 }
 
+{{ if .HasParamSamples }}
+// TestClient_Params sets every parameter it can to a value other than its zero value, and finds each in the request,
+// under its name and written as the client must write it.
+func TestClient_Params(t *testing.T) {
+{{- range .Operations}}{{ $samples := $.ParamSamples . }}{{ if $samples }}
+	t.Run({{printf "%q" .Name}}, func(t *testing.T) {
+		{{- with $.Auth.Bearer.Name}}
+		t.Setenv({{printf "%q" . }}, "**************************************************")
+		{{end}}
+		{{- with $.Auth.Basic.UsernameEnvName}}
+		t.Setenv({{printf "%q" . }}, "user")
+		t.Setenv({{printf "%q" $.Auth.Basic.PasswordEnvName }}, "pass")
+		{{end}}
+		{{- with $.APIKey }}
+		t.Setenv({{printf "%q" .EnvName }}, {{ or .Example `"**************************************************"` }})
+		{{end}}
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		{{if .SuccessReturn}}_, {{end}}_ = c.{{.Name}}(t.Context(){{range .PathParams}}, {{ .ZeroVal }}{{end}}, {{ if not .ParamsInStruct.Required }}&{{ end }}{{.ParamStructName}}{
+			{{- range $samples}}
+			{{.FieldName}}: {{.Literal}},
+			{{- end}}
+		}{{ if .RequestBody}}, {{if .RequestBody.Required}}{{$.MinimalLiteral .RequestBody.TypeName}}{{else}}nil{{end}}{{end}})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+		{{range $samples}}
+		{{- if eq .In "header" }}
+		if v := got.Header.Get({{printf "%q" .JSONName}}); v != {{printf "%q" .Wire}} {
+			t.Errorf("header %s: got %q, want %q", {{printf "%q" .JSONName}}, v, {{printf "%q" .Wire}})
+		}
+		{{- else }}
+		if v := got.URL.Query().Get({{printf "%q" .JSONName}}); v != {{printf "%q" .Wire}} {
+			t.Errorf("query %s: got %q, want %q", {{printf "%q" .JSONName}}, v, {{printf "%q" .Wire}})
+		}
+		{{- end }}
+		{{- end }}
+	})
+{{- end}}{{end}}
+}
+{{ end }}
 {{if .InteractionCalls}}
 func replay(t *testing.T) http.RoundTripper {
 	t.Helper()

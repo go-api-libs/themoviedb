@@ -317,7 +317,7 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 	u.RawQuery = {{ printf "%q" . }}
 	{{- end }}
 {{ end }}
-{{ if .RequestBody -}}
+{{ if and .RequestBody .RequestBody.Required -}}
 	pr, pw := io.Pipe()
 {{ end -}}
 	req := (&http.Request{
@@ -337,7 +337,7 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 			"{{ .JSONName }}": []string{ {{- .Value -}} },
 			{{ end -}}
 			"User-Agent":     []string{c.userAgent},
-			{{ if .RequestBody -}}
+			{{ if and .RequestBody .RequestBody.Required -}}
 			"Content-Type": []string{ {{printf "%q" .RequestBody.ContentType}} },
 			{{ end -}}
 		},
@@ -347,16 +347,26 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 		ProtoMajor: 1,
 		ProtoMinor: 1,
 		URL:        u,
-		{{ if .RequestBody -}}
+		{{ if and .RequestBody .RequestBody.Required -}}
 		Body:          pr,
 		ContentLength: -1,
 		{{ end -}}
 	}).WithContext(ctx)
 
-{{ if .RequestBody }}
+{{ if .RequestBody }}{{ if .RequestBody.Required }}
 	go func() { pw.CloseWithError(json.MarshalWrite(pw, body, {{ if $.HasReadOnly }}jsonOptsRequest{{ else }}jsonOpts{{ end }})) }()
 	defer pr.Close()
-{{- end}}
+{{- else }}
+	// an optional body left out is sent as no body at all, not as JSON null
+	if body != nil {
+		pr, pw := io.Pipe()
+		req.Body, req.ContentLength = pr, -1
+		req.Header["Content-Type"] = []string{ {{printf "%q" .RequestBody.ContentType}} }
+
+		go func() { pw.CloseWithError(json.MarshalWrite(pw, body, {{ if $.HasReadOnly }}jsonOptsRequest{{ else }}jsonOpts{{ end }})) }()
+		defer pr.Close()
+	}
+{{- end }}{{- end}}
 
 	{{ if $.Debug -}}
 	rsp, ia, err := c.do(req)
