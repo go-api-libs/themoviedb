@@ -18,12 +18,12 @@ github.com/MarkRosemaker/openapi-compress v0.0.0-20261109120908-3cb8186e655b h1:
 github.com/MarkRosemaker/openapi-compress v0.0.0-20261109120908-3cb8186e655b/go.mod h1:ved9rc3OuvmKWnBO1VyjRI84l1FDghQyk/2mMNiHFfQ=
 github.com/MarkRosemaker/openapi-edit v0.0.0-20261109120732-2c7515ba9190 h1:5W8FoucM5tqYFtyyIEQlIm4aC1sQrVrd3Vy7BIcs4zQ=
 github.com/MarkRosemaker/openapi-edit v0.0.0-20261109120732-2c7515ba9190/go.mod h1:18FRIAotPQsRmOUwrdQPmxzclyu6sxkf5AteRufWGoE=
-github.com/MarkRosemaker/openapi-enrich v0.0.0-20261109120838-4433908ea0be h1:vPXcVbgqqUhZzg5dGQPZjLOClS7XD6Xb54nim+hkrRg=
-github.com/MarkRosemaker/openapi-enrich v0.0.0-20261109120838-4433908ea0be/go.mod h1:lps8mtaYsJVGAyA7TAtusOxqyry1Lj/ZUUaSgAUUn/g=
+github.com/MarkRosemaker/openapi-enrich v0.0.0-20261109122850-2bc0f37ea08c h1:Uvc/uYW1Xtcfx0QXH+xLmIpROljpb52OUKudLe2bC2c=
+github.com/MarkRosemaker/openapi-enrich v0.0.0-20261109122850-2bc0f37ea08c/go.mod h1:XPkBpqkHOnKiG+UpVMpXwq7azf3YB4mYza3iC7sRej0=
 github.com/MarkRosemaker/openapi-flatten v0.0.0-20261109120733-57b21ee73d6d h1:9KBtaY6wDN6TkPDxwuzw/IFh5b9TgQQAfkhMmq13eI0=
 github.com/MarkRosemaker/openapi-flatten v0.0.0-20261109120733-57b21ee73d6d/go.mod h1:iOIHhvWDFA1C9dhL9wcUF7rH+y6+DPwc3iXVbXAputg=
-github.com/MarkRosemaker/openapi-merge v0.0.0-20261109120732-fe59ad195681 h1:cwtJuuAwxBE86Xi6c5T4WaXwzCN5YnCgVQ/2+GQDd0c=
-github.com/MarkRosemaker/openapi-merge v0.0.0-20261109120732-fe59ad195681/go.mod h1:X0H/N36RKJnUOCfwVBtG4V0RTT+ThJgZneFwecxJq8g=
+github.com/MarkRosemaker/openapi-merge v0.0.0-20261109122817-8d18ceebe8ae h1:W2UgmlKyABc1FfR6NEIvrqCzxTuP4fSbg4121yt8Okc=
+github.com/MarkRosemaker/openapi-merge v0.0.0-20261109122817-8d18ceebe8ae/go.mod h1:X0H/N36RKJnUOCfwVBtG4V0RTT+ThJgZneFwecxJq8g=
 github.com/MarkRosemaker/ordmap v0.0.0-20261109120513-91fe4bc7e3db h1:+DyvHqRv5C1PcrOo/4MU1Om5U1MW20ljpX2MkXT0jz0=
 github.com/MarkRosemaker/ordmap v0.0.0-20261109120513-91fe4bc7e3db/go.mod h1:00yYFZepjv5bupHBSZYRR/4y2kHr8DU56nu4Rn9jDvE=
 github.com/MarkRosemaker/yaml v0.0.0-20261109120525-183cb2f5021f h1:E25FxMtk2y/H76HCd3surSeBxVe+YOJrZHqAqzuuucw=
