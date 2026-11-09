@@ -306,25 +306,28 @@ func (c *Client) AccountAddFavoriteWithResult[R any](ctx context.Context, accoun
 		u.RawQuery = q.Encode()
 	}
 
-	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
 			"User-Agent":    []string{c.userAgent},
-			"Content-Type":  []string{"application/json"},
 		},
-		Host:          u.Host,
-		Method:        http.MethodPost,
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		URL:           u,
-		Body:          pr,
-		ContentLength: -1,
+		Host:       u.Host,
+		Method:     http.MethodPost,
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		URL:        u,
 	}).WithContext(ctx)
 
-	go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
-	defer pr.Close()
+	// an optional body left out is sent as no body at all, not as JSON null
+	if body != nil {
+		pr, pw := io.Pipe()
+		req.Body, req.ContentLength = pr, -1
+		req.Header["Content-Type"] = []string{"application/json"}
+
+		go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
+		defer pr.Close()
+	}
 
 	rsp, ia, err := c.do(req)
 	if err != nil {
@@ -392,25 +395,28 @@ func (c *Client) AccountAddToWatchlistWithResult[R any](ctx context.Context, acc
 		u.RawQuery = q.Encode()
 	}
 
-	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
 			"User-Agent":    []string{c.userAgent},
-			"Content-Type":  []string{"application/json"},
 		},
-		Host:          u.Host,
-		Method:        http.MethodPost,
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		URL:           u,
-		Body:          pr,
-		ContentLength: -1,
+		Host:       u.Host,
+		Method:     http.MethodPost,
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		URL:        u,
 	}).WithContext(ctx)
 
-	go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
-	defer pr.Close()
+	// an optional body left out is sent as no body at all, not as JSON null
+	if body != nil {
+		pr, pw := io.Pipe()
+		req.Body, req.ContentLength = pr, -1
+		req.Header["Content-Type"] = []string{"application/json"}
+
+		go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
+		defer pr.Close()
+	}
 
 	rsp, ia, err := c.do(req)
 	if err != nil {
@@ -1326,25 +1332,28 @@ func (c *Client) AuthenticationCreateSession(ctx context.Context, body *ListCrea
 //	POST /authentication/session/new
 func (c *Client) AuthenticationCreateSessionWithResult[R any](ctx context.Context, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("authentication", "session", "new")
-	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
 			"User-Agent":    []string{c.userAgent},
-			"Content-Type":  []string{"application/json"},
 		},
-		Host:          u.Host,
-		Method:        http.MethodPost,
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		URL:           u,
-		Body:          pr,
-		ContentLength: -1,
+		Host:       u.Host,
+		Method:     http.MethodPost,
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		URL:        u,
 	}).WithContext(ctx)
 
-	go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
-	defer pr.Close()
+	// an optional body left out is sent as no body at all, not as JSON null
+	if body != nil {
+		pr, pw := io.Pipe()
+		req.Body, req.ContentLength = pr, -1
+		req.Header["Content-Type"] = []string{"application/json"}
+
+		go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
+		defer pr.Close()
+	}
 
 	rsp, ia, err := c.do(req)
 	if err != nil {
@@ -1402,25 +1411,28 @@ func (c *Client) AuthenticationCreateSessionFromV4Token(ctx context.Context, bod
 //	POST /authentication/session/convert/4
 func (c *Client) AuthenticationCreateSessionFromV4TokenWithResult[R any](ctx context.Context, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("authentication", "session", "convert", "4")
-	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
 			"User-Agent":    []string{c.userAgent},
-			"Content-Type":  []string{"application/json"},
 		},
-		Host:          u.Host,
-		Method:        http.MethodPost,
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		URL:           u,
-		Body:          pr,
-		ContentLength: -1,
+		Host:       u.Host,
+		Method:     http.MethodPost,
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		URL:        u,
 	}).WithContext(ctx)
 
-	go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
-	defer pr.Close()
+	// an optional body left out is sent as no body at all, not as JSON null
+	if body != nil {
+		pr, pw := io.Pipe()
+		req.Body, req.ContentLength = pr, -1
+		req.Header["Content-Type"] = []string{"application/json"}
+
+		go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
+		defer pr.Close()
+	}
 
 	rsp, ia, err := c.do(req)
 	if err != nil {
@@ -1478,25 +1490,28 @@ func (c *Client) AuthenticationCreateSessionFromLogin(ctx context.Context, body 
 //	POST /authentication/token/validate_with_login
 func (c *Client) AuthenticationCreateSessionFromLoginWithResult[R any](ctx context.Context, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("authentication", "token", "validate_with_login")
-	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
 			"User-Agent":    []string{c.userAgent},
-			"Content-Type":  []string{"application/json"},
 		},
-		Host:          u.Host,
-		Method:        http.MethodPost,
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		URL:           u,
-		Body:          pr,
-		ContentLength: -1,
+		Host:       u.Host,
+		Method:     http.MethodPost,
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		URL:        u,
 	}).WithContext(ctx)
 
-	go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
-	defer pr.Close()
+	// an optional body left out is sent as no body at all, not as JSON null
+	if body != nil {
+		pr, pw := io.Pipe()
+		req.Body, req.ContentLength = pr, -1
+		req.Header["Content-Type"] = []string{"application/json"}
+
+		go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
+		defer pr.Close()
+	}
 
 	rsp, ia, err := c.do(req)
 	if err != nil {
@@ -1554,25 +1569,28 @@ func (c *Client) AuthenticationDeleteSession(ctx context.Context, body *ListCrea
 //	DELETE /authentication/session
 func (c *Client) AuthenticationDeleteSessionWithResult[R any](ctx context.Context, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("authentication", "session")
-	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
 			"User-Agent":    []string{c.userAgent},
-			"Content-Type":  []string{"application/json"},
 		},
-		Host:          u.Host,
-		Method:        http.MethodDelete,
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		URL:           u,
-		Body:          pr,
-		ContentLength: -1,
+		Host:       u.Host,
+		Method:     http.MethodDelete,
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		URL:        u,
 	}).WithContext(ctx)
 
-	go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
-	defer pr.Close()
+	// an optional body left out is sent as no body at all, not as JSON null
+	if body != nil {
+		pr, pw := io.Pipe()
+		req.Body, req.ContentLength = pr, -1
+		req.Header["Content-Type"] = []string{"application/json"}
+
+		go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
+		defer pr.Close()
+	}
 
 	rsp, ia, err := c.do(req)
 	if err != nil {
@@ -4091,25 +4109,28 @@ func (c *Client) ListAddMovieWithResult[R any](ctx context.Context, listID int32
 
 	u.RawQuery = q.Encode()
 
-	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
 			"User-Agent":    []string{c.userAgent},
-			"Content-Type":  []string{"application/json"},
 		},
-		Host:          u.Host,
-		Method:        http.MethodPost,
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		URL:           u,
-		Body:          pr,
-		ContentLength: -1,
+		Host:       u.Host,
+		Method:     http.MethodPost,
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		URL:        u,
 	}).WithContext(ctx)
 
-	go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
-	defer pr.Close()
+	// an optional body left out is sent as no body at all, not as JSON null
+	if body != nil {
+		pr, pw := io.Pipe()
+		req.Body, req.ContentLength = pr, -1
+		req.Header["Content-Type"] = []string{"application/json"}
+
+		go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
+		defer pr.Close()
+	}
 
 	rsp, ia, err := c.do(req)
 	if err != nil {
@@ -4335,25 +4356,28 @@ func (c *Client) ListCreateWithResult[R any](ctx context.Context, params ListCre
 
 	u.RawQuery = q.Encode()
 
-	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
 			"User-Agent":    []string{c.userAgent},
-			"Content-Type":  []string{"application/json"},
 		},
-		Host:          u.Host,
-		Method:        http.MethodPost,
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		URL:           u,
-		Body:          pr,
-		ContentLength: -1,
+		Host:       u.Host,
+		Method:     http.MethodPost,
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		URL:        u,
 	}).WithContext(ctx)
 
-	go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
-	defer pr.Close()
+	// an optional body left out is sent as no body at all, not as JSON null
+	if body != nil {
+		pr, pw := io.Pipe()
+		req.Body, req.ContentLength = pr, -1
+		req.Header["Content-Type"] = []string{"application/json"}
+
+		go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
+		defer pr.Close()
+	}
 
 	rsp, ia, err := c.do(req)
 	if err != nil {
@@ -4577,25 +4601,28 @@ func (c *Client) ListRemoveMovieWithResult[R any](ctx context.Context, listID in
 
 	u.RawQuery = q.Encode()
 
-	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
 			"User-Agent":    []string{c.userAgent},
-			"Content-Type":  []string{"application/json"},
 		},
-		Host:          u.Host,
-		Method:        http.MethodPost,
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		URL:           u,
-		Body:          pr,
-		ContentLength: -1,
+		Host:       u.Host,
+		Method:     http.MethodPost,
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		URL:        u,
 	}).WithContext(ctx)
 
-	go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
-	defer pr.Close()
+	// an optional body left out is sent as no body at all, not as JSON null
+	if body != nil {
+		pr, pw := io.Pipe()
+		req.Body, req.ContentLength = pr, -1
+		req.Header["Content-Type"] = []string{"application/json"}
+
+		go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
+		defer pr.Close()
+	}
 
 	rsp, ia, err := c.do(req)
 	if err != nil {
@@ -6319,25 +6346,28 @@ func (c *Client) MovieAddRatingWithResult[R any](ctx context.Context, movieID Mo
 		u.RawQuery = q.Encode()
 	}
 
-	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
 			"User-Agent":    []string{c.userAgent},
-			"Content-Type":  []string{"application/json"},
 		},
-		Host:          u.Host,
-		Method:        http.MethodPost,
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		URL:           u,
-		Body:          pr,
-		ContentLength: -1,
+		Host:       u.Host,
+		Method:     http.MethodPost,
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		URL:        u,
 	}).WithContext(ctx)
 
-	go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
-	defer pr.Close()
+	// an optional body left out is sent as no body at all, not as JSON null
+	if body != nil {
+		pr, pw := io.Pipe()
+		req.Body, req.ContentLength = pr, -1
+		req.Header["Content-Type"] = []string{"application/json"}
+
+		go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
+		defer pr.Close()
+	}
 
 	rsp, ia, err := c.do(req)
 	if err != nil {
@@ -10423,25 +10453,28 @@ func (c *Client) TvSeriesAddRatingWithResult[R any](ctx context.Context, seriesI
 		u.RawQuery = q.Encode()
 	}
 
-	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
 			"User-Agent":    []string{c.userAgent},
-			"Content-Type":  []string{"application/json"},
 		},
-		Host:          u.Host,
-		Method:        http.MethodPost,
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		URL:           u,
-		Body:          pr,
-		ContentLength: -1,
+		Host:       u.Host,
+		Method:     http.MethodPost,
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		URL:        u,
 	}).WithContext(ctx)
 
-	go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
-	defer pr.Close()
+	// an optional body left out is sent as no body at all, not as JSON null
+	if body != nil {
+		pr, pw := io.Pipe()
+		req.Body, req.ContentLength = pr, -1
+		req.Header["Content-Type"] = []string{"application/json"}
+
+		go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
+		defer pr.Close()
+	}
 
 	rsp, ia, err := c.do(req)
 	if err != nil {
@@ -12032,25 +12065,28 @@ func (c *Client) TvEpisodeAddRatingWithResult[R any](ctx context.Context, series
 		u.RawQuery = q.Encode()
 	}
 
-	pr, pw := io.Pipe()
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
 			"User-Agent":    []string{c.userAgent},
-			"Content-Type":  []string{"application/json"},
 		},
-		Host:          u.Host,
-		Method:        http.MethodPost,
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		URL:           u,
-		Body:          pr,
-		ContentLength: -1,
+		Host:       u.Host,
+		Method:     http.MethodPost,
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		URL:        u,
 	}).WithContext(ctx)
 
-	go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
-	defer pr.Close()
+	// an optional body left out is sent as no body at all, not as JSON null
+	if body != nil {
+		pr, pw := io.Pipe()
+		req.Body, req.ContentLength = pr, -1
+		req.Header["Content-Type"] = []string{"application/json"}
+
+		go func() { pw.CloseWithError(json.MarshalWrite(pw, body, jsonOpts)) }()
+		defer pr.Close()
+	}
 
 	rsp, ia, err := c.do(req)
 	if err != nil {

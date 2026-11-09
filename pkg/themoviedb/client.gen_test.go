@@ -6,11 +6,13 @@ package themoviedb
 
 import (
 	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"path/filepath"
 	"testing"
 
 	"github.com/MarkRosemaker/cassette"
@@ -25,6 +27,41 @@ func newTestServer(t *testing.T, status int) *httptest.Server {
 	}))
 	t.Cleanup(srv.Close)
 	return srv
+}
+
+// newBodyServer is the base URL of a server that answers every request with status, contentType and body.
+func newBodyServer(t *testing.T, status int, contentType string, body []byte) *url.URL {
+	t.Helper()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", contentType)
+		w.WriteHeader(status)
+		_, _ = w.Write(body)
+	}))
+	t.Cleanup(srv.Close)
+
+	u, err := url.Parse(srv.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return u
+}
+
+// withUnknownMember is v as JSON, with a member no type declares added to it.
+func withUnknownMember(t *testing.T, v any) []byte {
+	t.Helper()
+
+	b, err := json.Marshal(v, jsonOpts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(b) == "{}" {
+		return []byte(`{"not_a_member_of_any_type": true}`)
+	}
+
+	return append([]byte(`{"not_a_member_of_any_type": true, `), b[1:]...)
 }
 
 type roundTripFunc func(*http.Request) (*http.Response, error)
@@ -126,6 +163,75 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ValidKey{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.ValidateKey(t.Context()); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+
+		t.Run("401 response", func(t *testing.T) {
+			body, err := json.Marshal(Error{}, jsonOpts)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusUnauthorized, "application/json", body)))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ValidateKey(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
+				t.Fatalf("got: %T, want: *api.Error", err)
+			} else if !apiErr.IsCustom || apiErr.Response.StatusCode != http.StatusUnauthorized {
+				t.Fatalf("got: custom %t, status %d, want: custom, status %d", apiErr.IsCustom, apiErr.Response.StatusCode, http.StatusUnauthorized)
+			} else if _, ok := errors.AsType[*Error](err); !ok {
+				t.Fatalf("got: %v, want it to be a *Error", err)
+			}
+		})
+
+		t.Run("401 response decoding error", func(t *testing.T) {
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusUnauthorized, "application/json", []byte("invalid json"))))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ValidateKey(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+		})
+
+		t.Run("401 response unknown content type", func(t *testing.T) {
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusUnauthorized, "foo", nil)))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.ValidateKey(t.Context()); err == nil {
+				t.Fatal("expected error")
+			} else if !errors.Is(err, api.ErrUnknownContentType) {
+				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
+			}
+		})
 	})
 
 	t.Run("AccountDetails", func(t *testing.T) {
@@ -218,6 +324,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AccountDetailsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.AccountDetails(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -314,6 +441,105 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("body left out", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.AccountAddFavorite(t.Context(), 0, nil, nil)
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) > 0 {
+				t.Fatalf("a body left out was sent as %q", sent)
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "" {
+				t.Fatalf("a body left out was sent with Content-Type %q", ct)
+			}
+		})
+
+		t.Run("body given", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.AccountAddFavorite(t.Context(), 0, nil, new(ListCreate{}))
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) == 0 {
+				t.Fatal("a body given was not sent")
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "application/json" {
+				t.Fatalf("got Content-Type %q, want %q", ct, "application/json")
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.AccountAddFavorite(t.Context(), 0, nil, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("AccountAddToWatchlist", func(t *testing.T) {
@@ -406,6 +632,105 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("body left out", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.AccountAddToWatchlist(t.Context(), 0, nil, nil)
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) > 0 {
+				t.Fatalf("a body left out was sent as %q", sent)
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "" {
+				t.Fatalf("a body left out was sent with Content-Type %q", ct)
+			}
+		})
+
+		t.Run("body given", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.AccountAddToWatchlist(t.Context(), 0, nil, new(ListCreate{}))
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) == 0 {
+				t.Fatal("a body given was not sent")
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "application/json" {
+				t.Fatalf("got Content-Type %q, want %q", ct, "application/json")
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.AccountAddToWatchlist(t.Context(), 0, nil, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -690,6 +1015,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AccountListsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.AccountLists(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("AccountRatedMovies", func(t *testing.T) {
@@ -784,6 +1130,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AccountRatedMoviesOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.AccountRatedMovies(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("AccountRatedTv", func(t *testing.T) {
@@ -876,6 +1243,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AccountRatedTvOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.AccountRatedTv(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -1254,6 +1642,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AuthenticationCreateGuestSessionOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.AuthenticationCreateGuestSession(t.Context()); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("AuthenticationCreateRequestToken", func(t *testing.T) {
@@ -1346,6 +1755,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AuthenticationCreateToken{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.AuthenticationCreateRequestToken(t.Context()); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -1442,6 +1872,105 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("body left out", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.AuthenticationCreateSession(t.Context(), nil)
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) > 0 {
+				t.Fatalf("a body left out was sent as %q", sent)
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "" {
+				t.Fatalf("a body left out was sent with Content-Type %q", ct)
+			}
+		})
+
+		t.Run("body given", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.AuthenticationCreateSession(t.Context(), new(ListCreate{}))
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) == 0 {
+				t.Fatal("a body given was not sent")
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "application/json" {
+				t.Fatalf("got Content-Type %q, want %q", ct, "application/json")
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AuthenticationCreateSession{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.AuthenticationCreateSession(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("AuthenticationCreateSessionFromV4Token", func(t *testing.T) {
@@ -1534,6 +2063,105 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("body left out", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.AuthenticationCreateSessionFromV4Token(t.Context(), nil)
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) > 0 {
+				t.Fatalf("a body left out was sent as %q", sent)
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "" {
+				t.Fatalf("a body left out was sent with Content-Type %q", ct)
+			}
+		})
+
+		t.Run("body given", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.AuthenticationCreateSessionFromV4Token(t.Context(), new(ListCreate{}))
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) == 0 {
+				t.Fatal("a body given was not sent")
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "application/json" {
+				t.Fatalf("got Content-Type %q, want %q", ct, "application/json")
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AuthenticationCreateSession{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.AuthenticationCreateSessionFromV4Token(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -1630,6 +2258,105 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("body left out", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.AuthenticationCreateSessionFromLogin(t.Context(), nil)
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) > 0 {
+				t.Fatalf("a body left out was sent as %q", sent)
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "" {
+				t.Fatalf("a body left out was sent with Content-Type %q", ct)
+			}
+		})
+
+		t.Run("body given", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.AuthenticationCreateSessionFromLogin(t.Context(), new(ListCreate{}))
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) == 0 {
+				t.Fatal("a body given was not sent")
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "application/json" {
+				t.Fatalf("got Content-Type %q, want %q", ct, "application/json")
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AuthenticationCreateToken{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.AuthenticationCreateSessionFromLogin(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("AuthenticationDeleteSession", func(t *testing.T) {
@@ -1722,6 +2449,105 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("body left out", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.AuthenticationDeleteSession(t.Context(), nil)
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) > 0 {
+				t.Fatalf("a body left out was sent as %q", sent)
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "" {
+				t.Fatalf("a body left out was sent with Content-Type %q", ct)
+			}
+		})
+
+		t.Run("body given", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.AuthenticationDeleteSession(t.Context(), new(ListCreate{}))
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) == 0 {
+				t.Fatal("a body given was not sent")
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "application/json" {
+				t.Fatalf("got Content-Type %q, want %q", ct, "application/json")
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AuthenticationDeleteSessionOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.AuthenticationDeleteSession(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -1818,6 +2644,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CertificationMovieListOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.CertificationMovieList(t.Context()); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("CertificationsTvList", func(t *testing.T) {
@@ -1910,6 +2757,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CertificationsByRegionWrapper{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.CertificationsTvList(t.Context()); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -2006,6 +2874,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ChangesTvList{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.ChangesMovieList(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("ChangesPeopleList", func(t *testing.T) {
@@ -2098,6 +2987,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ChangesTvList{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.ChangesPeopleList(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -2194,6 +3104,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ChangesTvList{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.ChangesTvList(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("CollectionDetails", func(t *testing.T) {
@@ -2286,6 +3217,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CollectionDetailsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.CollectionDetails(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -2382,6 +3334,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CollectionImagesOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.CollectionImages(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("CollectionTranslations", func(t *testing.T) {
@@ -2474,6 +3447,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CollectionTranslationsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.CollectionTranslations(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -2570,6 +3564,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CompanyDetailsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.CompanyDetails(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("CompanyAlternativeNames", func(t *testing.T) {
@@ -2662,6 +3677,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, DetailsCopy{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.CompanyAlternativeNames(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -2758,6 +3794,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CompanyImages{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.CompanyImages(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("ConfigurationDetails", func(t *testing.T) {
@@ -2850,6 +3907,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ConfigurationDetailsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.ConfigurationDetails(t.Context()); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -3416,6 +4494,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CreditDetailsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.CreditDetails(t.Context(), "", nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("DiscoverMovie", func(t *testing.T) {
@@ -3604,6 +4703,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, DiscoverTv{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.DiscoverTv(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("FindByID", func(t *testing.T) {
@@ -3696,6 +4816,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, FindByIDOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.FindByID(t.Context(), "", FindByIDParams{}); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -3792,6 +4933,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, GenreTvList{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.GenreMovieList(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("GenreTvList", func(t *testing.T) {
@@ -3884,6 +5046,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, GenreTvList{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.GenreTvList(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -3980,6 +5163,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, GuestSessionRatedMoviesOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.GuestSessionRatedMovies(t.Context(), "", nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("GuestSessionRatedTv", func(t *testing.T) {
@@ -4072,6 +5276,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, GuestSessionRatedTvOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.GuestSessionRatedTv(t.Context(), "", nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -4168,6 +5393,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, GuestSessionRatedTvEpisodesOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.GuestSessionRatedTvEpisodes(t.Context(), "", nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("KeywordDetails", func(t *testing.T) {
@@ -4260,6 +5506,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, Keyword{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.KeywordDetails(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -4356,6 +5623,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, KeywordMoviesOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.KeywordMovies(t.Context(), "", nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("ListAddMovie", func(t *testing.T) {
@@ -4448,6 +5736,105 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("body left out", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.ListAddMovie(t.Context(), 0, ListAddMovieParams{}, nil)
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) > 0 {
+				t.Fatalf("a body left out was sent as %q", sent)
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "" {
+				t.Fatalf("a body left out was sent with Content-Type %q", ct)
+			}
+		})
+
+		t.Run("body given", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.ListAddMovie(t.Context(), 0, ListAddMovieParams{}, new(ListAddMovie{}))
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) == 0 {
+				t.Fatal("a body given was not sent")
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "application/json" {
+				t.Fatalf("got Content-Type %q, want %q", ct, "application/json")
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.ListAddMovie(t.Context(), 0, ListAddMovieParams{}, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -4544,6 +5931,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListCheckItemStatusOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.ListCheckItemStatus(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("ListClear", func(t *testing.T) {
@@ -4636,6 +6044,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.ListClear(t.Context(), 0, ListClearParams{}); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -4732,6 +6161,105 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("body left out", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.ListCreate(t.Context(), ListCreateParams{}, nil)
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) > 0 {
+				t.Fatalf("a body left out was sent as %q", sent)
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "" {
+				t.Fatalf("a body left out was sent with Content-Type %q", ct)
+			}
+		})
+
+		t.Run("body given", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.ListCreate(t.Context(), ListCreateParams{}, new(ListCreate{}))
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) == 0 {
+				t.Fatal("a body given was not sent")
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "application/json" {
+				t.Fatalf("got Content-Type %q, want %q", ct, "application/json")
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListCreateOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.ListCreate(t.Context(), ListCreateParams{}, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("ListDetails", func(t *testing.T) {
@@ -4824,6 +6352,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListDetailsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.ListDetails(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -4920,6 +6469,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.ListDelete(t.Context(), 0, ListDeleteParams{}); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("ListRemoveMovie", func(t *testing.T) {
@@ -5014,6 +6584,105 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("body left out", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.ListRemoveMovie(t.Context(), 0, ListRemoveMovieParams{}, nil)
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) > 0 {
+				t.Fatalf("a body left out was sent as %q", sent)
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "" {
+				t.Fatalf("a body left out was sent with Content-Type %q", ct)
+			}
+		})
+
+		t.Run("body given", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.ListRemoveMovie(t.Context(), 0, ListRemoveMovieParams{}, new(ListCreate{}))
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) == 0 {
+				t.Fatal("a body given was not sent")
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "application/json" {
+				t.Fatalf("got Content-Type %q, want %q", ct, "application/json")
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.ListRemoveMovie(t.Context(), 0, ListRemoveMovieParams{}, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("GetNowPlaying", func(t *testing.T) {
@@ -5106,6 +6775,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieNowPlayingListOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.GetNowPlaying(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -5390,6 +7080,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieUpcomingListOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.GetUpcoming(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("GetMovie", func(t *testing.T) {
@@ -5578,6 +7289,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieAccountStates{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.MovieAccountStates(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("GetAlternativeTitles", func(t *testing.T) {
@@ -5670,6 +7402,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AlternativeTitlesOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.GetAlternativeTitles(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -5766,6 +7519,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieChangesOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.MovieChanges(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("MovieCredits", func(t *testing.T) {
@@ -5858,6 +7632,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieCreditsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.MovieCredits(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -5954,6 +7749,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieExternalIdsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.MovieExternalIds(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("GetMovieImages", func(t *testing.T) {
@@ -6046,6 +7862,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieImages{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.GetMovieImages(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -6142,6 +7979,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieKeywordsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.MovieKeywords(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("MovieLatestID", func(t *testing.T) {
@@ -6236,6 +8094,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieLatestIDOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.MovieLatestID(t.Context()); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("MovieLists", func(t *testing.T) {
@@ -6328,6 +8207,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieListsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.MovieLists(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -6467,6 +8367,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieReleaseDatesOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.MovieReleaseDates(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("MovieReviews", func(t *testing.T) {
@@ -6559,6 +8480,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieReviewsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.MovieReviews(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -6749,6 +8691,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieTranslationsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.MovieTranslations(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("MovieVideos", func(t *testing.T) {
@@ -6841,6 +8804,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieVideos{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.MovieVideos(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -6937,6 +8921,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieWatchProvidersOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.MovieWatchProviders(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("MovieAddRating", func(t *testing.T) {
@@ -7029,6 +9034,105 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("body left out", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.MovieAddRating(t.Context(), 0, nil, nil)
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) > 0 {
+				t.Fatalf("a body left out was sent as %q", sent)
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "" {
+				t.Fatalf("a body left out was sent with Content-Type %q", ct)
+			}
+		})
+
+		t.Run("body given", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.MovieAddRating(t.Context(), 0, nil, new(ListCreate{}))
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) == 0 {
+				t.Fatal("a body given was not sent")
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "application/json" {
+				t.Fatalf("got Content-Type %q, want %q", ct, "application/json")
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.MovieAddRating(t.Context(), 0, nil, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -7125,6 +9229,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.MovieDeleteRating(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("NetworkDetails", func(t *testing.T) {
@@ -7217,6 +9342,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, NetworkDetailsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.NetworkDetails(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -7313,6 +9459,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, DetailsCopy{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.DetailsCopy(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("AlternativeNamesCopy", func(t *testing.T) {
@@ -7405,6 +9572,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CompanyImages{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.AlternativeNamesCopy(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -7501,6 +9689,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonPopularListOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.PersonPopularList(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("PersonDetails", func(t *testing.T) {
@@ -7593,6 +9802,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonDetailsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.PersonDetails(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -7689,6 +9919,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonChangesOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.PersonChanges(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("PersonCombinedCredits", func(t *testing.T) {
@@ -7781,6 +10032,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonCombinedCreditsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.PersonCombinedCredits(t.Context(), "", nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -7877,6 +10149,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonExternalIdsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.PersonExternalIds(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("PersonImages", func(t *testing.T) {
@@ -7969,6 +10262,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonImagesOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.PersonImages(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -8065,6 +10379,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonLatestIDOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.PersonLatestID(t.Context()); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("PersonMovieCredits", func(t *testing.T) {
@@ -8157,6 +10492,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonMovieCreditsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.PersonMovieCredits(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -8253,6 +10609,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonTvCreditsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.PersonTvCredits(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("PersonTaggedImages", func(t *testing.T) {
@@ -8345,6 +10722,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonTaggedImagesOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.PersonTaggedImages(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -8441,6 +10839,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TranslationsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.Translations(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("ReviewDetails", func(t *testing.T) {
@@ -8533,6 +10952,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ReviewDetailsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.ReviewDetails(t.Context(), ""); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -8629,6 +11069,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, SearchCollectionOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.SearchCollection(t.Context(), SearchCollectionParams{}); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("SearchCompany", func(t *testing.T) {
@@ -8723,6 +11184,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, SearchCompanyOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.SearchCompany(t.Context(), SearchCompanyParams{}); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("SearchKeyword", func(t *testing.T) {
@@ -8815,6 +11297,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, SearchKeywordOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.SearchKeyword(t.Context(), SearchKeywordParams{}); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -9005,6 +11508,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, SearchMultiOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.SearchMulti(t.Context(), SearchMultiParams{}); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("SearchPerson", func(t *testing.T) {
@@ -9097,6 +11621,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, SearchPersonOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.SearchPerson(t.Context(), SearchPersonParams{}); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -9287,6 +11832,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TrendingAll{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TrendingAll(t.Context(), "", nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TrendingMovies", func(t *testing.T) {
@@ -9379,6 +11945,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TrendingAll{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TrendingMovies(t.Context(), "", nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -9475,6 +12062,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TrendingPeopleOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TrendingPeople(t.Context(), "", nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TrendingTv", func(t *testing.T) {
@@ -9567,6 +12175,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TrendingTv{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TrendingTv(t.Context(), "", nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -9663,6 +12292,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, DiscoverTv{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesAiringTodayList(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeriesOnTheAirList", func(t *testing.T) {
@@ -9755,6 +12405,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, DiscoverTv{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesOnTheAirList(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -9851,6 +12522,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, DiscoverTv{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesPopularList(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeriesTopRatedList", func(t *testing.T) {
@@ -9943,6 +12635,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesTopRatedListOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesTopRatedList(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -10133,6 +12846,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieAccountStates{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesAccountStates(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeriesAggregateCredits", func(t *testing.T) {
@@ -10225,6 +12959,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesAggregateCreditsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesAggregateCredits(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -10321,6 +13076,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AlternativeTitlesWrapper{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesAlternativeTitles(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("GetShowChanges", func(t *testing.T) {
@@ -10413,6 +13189,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ShowChangesWrapper{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.GetShowChanges(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -10509,6 +13306,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesContentRatingsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesContentRatings(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeriesCredits", func(t *testing.T) {
@@ -10601,6 +13419,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesCreditsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesCredits(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -10697,6 +13536,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesEpisodeGroupsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesEpisodeGroups(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeriesExternalIds", func(t *testing.T) {
@@ -10789,6 +13649,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesExternalIdsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesExternalIds(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -10885,6 +13766,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieImages{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesImages(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeriesKeywords", func(t *testing.T) {
@@ -10977,6 +13879,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesKeywordsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesKeywords(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -11073,6 +13996,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesLatestIDOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesLatestID(t.Context()); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("ListsCopy", func(t *testing.T) {
@@ -11165,6 +14109,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListsCopyOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.ListsCopy(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -11261,6 +14226,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TrendingTv{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesRecommendations(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeriesReviews", func(t *testing.T) {
@@ -11353,6 +14339,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesReviewsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesReviews(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -11449,6 +14456,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesScreenedTheatricallyOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesScreenedTheatrically(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeriesSimilar", func(t *testing.T) {
@@ -11541,6 +14569,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesSimilarOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesSimilar(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -11637,6 +14686,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesTranslationsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesTranslations(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeriesVideos", func(t *testing.T) {
@@ -11729,6 +14799,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieVideos{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesVideos(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -11825,6 +14916,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesWatchProvidersOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesWatchProviders(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeriesAddRating", func(t *testing.T) {
@@ -11917,6 +15029,105 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("body left out", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.TvSeriesAddRating(t.Context(), 0, nil, nil)
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) > 0 {
+				t.Fatalf("a body left out was sent as %q", sent)
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "" {
+				t.Fatalf("a body left out was sent with Content-Type %q", ct)
+			}
+		})
+
+		t.Run("body given", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.TvSeriesAddRating(t.Context(), 0, nil, new(ListCreate{}))
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) == 0 {
+				t.Fatal("a body given was not sent")
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "application/json" {
+				t.Fatalf("got Content-Type %q, want %q", ct, "application/json")
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesAddRating(t.Context(), 0, nil, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -12013,6 +15224,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeriesDeleteRating(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("GetShowSeason", func(t *testing.T) {
@@ -12105,6 +15337,54 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("404 response", func(t *testing.T) {
+			body, err := json.Marshal(Error{}, jsonOpts)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusNotFound, "application/json", body)))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetShowSeason(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if apiErr, ok := errors.AsType[*api.Error](err); !ok {
+				t.Fatalf("got: %T, want: *api.Error", err)
+			} else if !apiErr.IsCustom || apiErr.Response.StatusCode != http.StatusNotFound {
+				t.Fatalf("got: custom %t, status %d, want: custom, status %d", apiErr.IsCustom, apiErr.Response.StatusCode, http.StatusNotFound)
+			} else if _, ok := errors.AsType[*Error](err); !ok {
+				t.Fatalf("got: %v, want it to be a *Error", err)
+			}
+		})
+
+		t.Run("404 response decoding error", func(t *testing.T) {
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusNotFound, "application/json", []byte("invalid json"))))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetShowSeason(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			}
+		})
+
+		t.Run("404 response unknown content type", func(t *testing.T) {
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusNotFound, "foo", nil)))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.GetShowSeason(t.Context(), 0, 0, nil); err == nil {
+				t.Fatal("expected error")
+			} else if !errors.Is(err, api.ErrUnknownContentType) {
+				t.Fatalf("want: %v, got: %v", api.ErrUnknownContentType, err)
 			}
 		})
 	})
@@ -12201,6 +15481,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonAccountStatesOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeasonAccountStates(t.Context(), 0, 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeasonAggregateCredits", func(t *testing.T) {
@@ -12293,6 +15594,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonAggregateCreditsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeasonAggregateCredits(t.Context(), 0, 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -12389,6 +15711,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, SeasonChangesWrapper{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.GetSeasonChanges(t.Context(), 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeasonCredits", func(t *testing.T) {
@@ -12481,6 +15824,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonCreditsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeasonCredits(t.Context(), 0, 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -12577,6 +15941,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonExternalIdsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeasonExternalIds(t.Context(), 0, 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeasonImages", func(t *testing.T) {
@@ -12669,6 +16054,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonImagesOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeasonImages(t.Context(), 0, 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -12765,6 +16171,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonTranslations{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeasonTranslations(t.Context(), 0, 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeasonVideos", func(t *testing.T) {
@@ -12859,6 +16286,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieVideos{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeasonVideos(t.Context(), 0, 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvSeasonWatchProviders", func(t *testing.T) {
@@ -12951,6 +16399,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonWatchProvidersOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvSeasonWatchProviders(t.Context(), 0, 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -13141,6 +16610,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieAccountStates{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvEpisodeAccountStates(t.Context(), 0, 0, 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("GetEpisodeChanges", func(t *testing.T) {
@@ -13233,6 +16723,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, EpisodeChangesWrapper{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.GetEpisodeChanges(t.Context(), 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -13329,6 +16840,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvEpisodeCreditsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvEpisodeCredits(t.Context(), 0, 0, 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvEpisodeExternalIds", func(t *testing.T) {
@@ -13421,6 +16953,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvEpisodeExternalIdsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvEpisodeExternalIds(t.Context(), 0, 0, ""); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -13517,6 +17070,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvEpisodeImagesOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvEpisodeImages(t.Context(), 0, 0, 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvEpisodeTranslations", func(t *testing.T) {
@@ -13609,6 +17183,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonTranslations{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvEpisodeTranslations(t.Context(), 0, 0, 0); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -13705,6 +17300,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieVideos{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvEpisodeVideos(t.Context(), 0, 0, 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvEpisodeAddRating", func(t *testing.T) {
@@ -13797,6 +17413,105 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("body left out", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.TvEpisodeAddRating(t.Context(), 0, 0, 0, nil, nil)
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) > 0 {
+				t.Fatalf("a body left out was sent as %q", sent)
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "" {
+				t.Fatalf("a body left out was sent with Content-Type %q", ct)
+			}
+		})
+
+		t.Run("body given", func(t *testing.T) {
+			var (
+				got  *http.Request
+				sent []byte
+			)
+
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+				func(r *http.Request) (*http.Response, error) {
+					got = r
+
+					if r.Body != nil {
+						var err error
+						if sent, err = io.ReadAll(r.Body); err != nil {
+							return nil, err
+						}
+					}
+
+					return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+				},
+			)}))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			_, _ = c.TvEpisodeAddRating(t.Context(), 0, 0, 0, nil, new(ListCreate{}))
+
+			if got == nil {
+				t.Fatal("no request was sent")
+			}
+
+			if len(sent) == 0 {
+				t.Fatal("a body given was not sent")
+			}
+
+			if ct := got.Header.Get("Content-Type"); ct != "application/json" {
+				t.Fatalf("got Content-Type %q, want %q", ct, "application/json")
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvEpisodeAddRating(t.Context(), 0, 0, 0, nil, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -13893,6 +17608,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvEpisodeDeleteRating(t.Context(), 0, 0, 0, nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("TvEpisodeGroupDetails", func(t *testing.T) {
@@ -13985,6 +17721,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvEpisodeGroupDetailsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.TvEpisodeGroupDetails(t.Context(), ""); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -14081,6 +17838,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, WatchProvidersAvailableRegionsOk{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.WatchProvidersAvailableRegions(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
 	})
 
 	t.Run("WatchProvidersMovieList", func(t *testing.T) {
@@ -14173,6 +17951,27 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			} else if _, ok := errors.AsType[*jsontext.SyntacticError](decErr.Err); !ok {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
+			}
+		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, WatchProviderTvList{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.WatchProvidersMovieList(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
 			}
 		})
 	})
@@ -14269,6 +18068,3608 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+
+		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "interactions.json")
+
+			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, WatchProviderTvList{}))), WithDebugFile(file))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for range 2 {
+				if _, err := c.WatchProviderTvList(t.Context(), nil); err != nil {
+					t.Fatalf("debug mode decodes leniently: %v", err)
+				}
+			}
+
+			if ias, err := cassette.InteractionsReadFile(file); err != nil {
+				t.Fatal(err)
+			} else if len(ias) != 1 {
+				t.Fatalf("the debug file holds %d calls, want the one that failed to decode, once", len(ias))
+			}
+		})
+	})
+}
+
+// TestClient_Params sets every parameter it can to a value other than its zero value, and finds each in the request,
+// under its name and written as the client must write it.
+func TestClient_Params(t *testing.T) {
+	t.Run("AccountDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.AccountDetails(t.Context(), 0, &AccountDetailsParams{
+			SessionID: "session_id",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+	})
+	t.Run("AccountAddFavorite", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.AccountAddFavorite(t.Context(), 0, &AccountAddFavoriteParams{
+			SessionID: "session_id",
+		}, nil)
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+	})
+	t.Run("AccountAddToWatchlist", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.AccountAddToWatchlist(t.Context(), 0, &AccountAddToWatchlistParams{
+			SessionID: "session_id",
+		}, nil)
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+	})
+	t.Run("AccountGetFavorites", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.AccountGetFavorites(t.Context(), 0, &AccountGetFavoritesParams{
+			Language:  "language",
+			Page:      3,
+			SessionID: "session_id",
+			SortBy:    SortByCreatedAtDotDesc,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+		if v := got.URL.Query().Get("sort_by"); v != "created_at.desc" {
+			t.Errorf("query %s: got %q, want %q", "sort_by", v, "created_at.desc")
+		}
+	})
+	t.Run("AccountFavoriteTv", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.AccountFavoriteTv(t.Context(), 0, &AccountFavoriteTvParams{
+			Language:  "language",
+			Page:      3,
+			SessionID: "session_id",
+			SortBy:    SortByCreatedAtDotDesc,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+		if v := got.URL.Query().Get("sort_by"); v != "created_at.desc" {
+			t.Errorf("query %s: got %q, want %q", "sort_by", v, "created_at.desc")
+		}
+	})
+	t.Run("AccountLists", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.AccountLists(t.Context(), 0, &AccountListsParams{
+			Page:      2,
+			SessionID: "session_id",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("page"); v != "2" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "2")
+		}
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+	})
+	t.Run("AccountRatedMovies", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.AccountRatedMovies(t.Context(), 0, &AccountRatedMoviesParams{
+			Language:  "language",
+			Page:      3,
+			SessionID: "session_id",
+			SortBy:    SortByCreatedAtDotDesc,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+		if v := got.URL.Query().Get("sort_by"); v != "created_at.desc" {
+			t.Errorf("query %s: got %q, want %q", "sort_by", v, "created_at.desc")
+		}
+	})
+	t.Run("AccountRatedTv", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.AccountRatedTv(t.Context(), 0, &AccountRatedTvParams{
+			Language:  "language",
+			Page:      3,
+			SessionID: "session_id",
+			SortBy:    SortByCreatedAtDotDesc,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+		if v := got.URL.Query().Get("sort_by"); v != "created_at.desc" {
+			t.Errorf("query %s: got %q, want %q", "sort_by", v, "created_at.desc")
+		}
+	})
+	t.Run("GetRatedTvEpisodes", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GetRatedTvEpisodes(t.Context(), 0, &GetRatedTvEpisodesParams{
+			Language:  "language",
+			Page:      3,
+			SessionID: "session_id",
+			SortBy:    SortByCreatedAtDotDesc,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+		if v := got.URL.Query().Get("sort_by"); v != "created_at.desc" {
+			t.Errorf("query %s: got %q, want %q", "sort_by", v, "created_at.desc")
+		}
+	})
+	t.Run("AccountWatchlistMovies", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.AccountWatchlistMovies(t.Context(), 0, &AccountWatchlistMoviesParams{
+			Language:  "language",
+			Page:      3,
+			SessionID: "session_id",
+			SortBy:    SortByCreatedAtDotDesc,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+		if v := got.URL.Query().Get("sort_by"); v != "created_at.desc" {
+			t.Errorf("query %s: got %q, want %q", "sort_by", v, "created_at.desc")
+		}
+	})
+	t.Run("AccountWatchlistTv", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.AccountWatchlistTv(t.Context(), 0, &AccountWatchlistTvParams{
+			Language:  "language",
+			Page:      3,
+			SessionID: "session_id",
+			SortBy:    SortByCreatedAtDotDesc,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+		if v := got.URL.Query().Get("sort_by"); v != "created_at.desc" {
+			t.Errorf("query %s: got %q, want %q", "sort_by", v, "created_at.desc")
+		}
+	})
+	t.Run("ChangesMovieList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.ChangesMovieList(t.Context(), &ChangesMovieListParams{
+			Page: 2,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("page"); v != "2" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "2")
+		}
+	})
+	t.Run("ChangesPeopleList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.ChangesPeopleList(t.Context(), &ChangesPeopleListParams{
+			Page: 2,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("page"); v != "2" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "2")
+		}
+	})
+	t.Run("ChangesTvList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.ChangesTvList(t.Context(), &ChangesTvListParams{
+			Page: 2,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("page"); v != "2" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "2")
+		}
+	})
+	t.Run("CollectionDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.CollectionDetails(t.Context(), 0, &CollectionDetailsParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("CollectionImages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.CollectionImages(t.Context(), 0, &CollectionImagesParams{
+			IncludeImageLanguage: "include_image_language",
+			Language:             "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("include_image_language"); v != "include_image_language" {
+			t.Errorf("query %s: got %q, want %q", "include_image_language", v, "include_image_language")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("ConfigurationCountries", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.ConfigurationCountries(t.Context(), &ConfigurationCountriesParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("CreditDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.CreditDetails(t.Context(), "", &CreditDetailsParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("DiscoverMovie", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.DiscoverMovie(t.Context(), &DiscoverMovieParams{
+			Certification:              "certification",
+			CertificationGte:           "certification.gte",
+			CertificationLte:           "certification.lte",
+			CertificationCountry:       "certification_country",
+			IncludeAdult:               true,
+			IncludeVideo:               true,
+			Language:                   "language",
+			Page:                       9,
+			PrimaryReleaseYear:         10,
+			Region:                     "region",
+			SortBy:                     SortBy8VoteCountDotDesc,
+			VoteAverageGte:             13.5,
+			VoteAverageLte:             14.5,
+			VoteCountGte:               15.5,
+			VoteCountLte:               16.5,
+			WatchRegion:                "watch_region",
+			WithCast:                   "with_cast",
+			WithCompanies:              "with_companies",
+			WithCrew:                   "with_crew",
+			WithGenres:                 "with_genres",
+			WithKeywords:               "with_keywords",
+			WithOriginCountry:          "with_origin_country",
+			WithOriginalLanguage:       "with_original_language",
+			WithPeople:                 "with_people",
+			WithReleaseType:            26,
+			WithRuntimeGte:             27,
+			WithRuntimeLte:             28,
+			WithWatchMonetizationTypes: "with_watch_monetization_types",
+			WithWatchProviders:         "with_watch_providers",
+			WithoutCompanies:           "without_companies",
+			WithoutGenres:              "without_genres",
+			WithoutKeywords:            "without_keywords",
+			WithoutWatchProviders:      "without_watch_providers",
+			Year:                       35,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("certification"); v != "certification" {
+			t.Errorf("query %s: got %q, want %q", "certification", v, "certification")
+		}
+		if v := got.URL.Query().Get("certification.gte"); v != "certification.gte" {
+			t.Errorf("query %s: got %q, want %q", "certification.gte", v, "certification.gte")
+		}
+		if v := got.URL.Query().Get("certification.lte"); v != "certification.lte" {
+			t.Errorf("query %s: got %q, want %q", "certification.lte", v, "certification.lte")
+		}
+		if v := got.URL.Query().Get("certification_country"); v != "certification_country" {
+			t.Errorf("query %s: got %q, want %q", "certification_country", v, "certification_country")
+		}
+		if v := got.URL.Query().Get("include_adult"); v != "true" {
+			t.Errorf("query %s: got %q, want %q", "include_adult", v, "true")
+		}
+		if v := got.URL.Query().Get("include_video"); v != "true" {
+			t.Errorf("query %s: got %q, want %q", "include_video", v, "true")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "9" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "9")
+		}
+		if v := got.URL.Query().Get("primary_release_year"); v != "10" {
+			t.Errorf("query %s: got %q, want %q", "primary_release_year", v, "10")
+		}
+		if v := got.URL.Query().Get("region"); v != "region" {
+			t.Errorf("query %s: got %q, want %q", "region", v, "region")
+		}
+		if v := got.URL.Query().Get("sort_by"); v != "vote_count.desc" {
+			t.Errorf("query %s: got %q, want %q", "sort_by", v, "vote_count.desc")
+		}
+		if v := got.URL.Query().Get("vote_average.gte"); v != "13.5" {
+			t.Errorf("query %s: got %q, want %q", "vote_average.gte", v, "13.5")
+		}
+		if v := got.URL.Query().Get("vote_average.lte"); v != "14.5" {
+			t.Errorf("query %s: got %q, want %q", "vote_average.lte", v, "14.5")
+		}
+		if v := got.URL.Query().Get("vote_count.gte"); v != "15.5" {
+			t.Errorf("query %s: got %q, want %q", "vote_count.gte", v, "15.5")
+		}
+		if v := got.URL.Query().Get("vote_count.lte"); v != "16.5" {
+			t.Errorf("query %s: got %q, want %q", "vote_count.lte", v, "16.5")
+		}
+		if v := got.URL.Query().Get("watch_region"); v != "watch_region" {
+			t.Errorf("query %s: got %q, want %q", "watch_region", v, "watch_region")
+		}
+		if v := got.URL.Query().Get("with_cast"); v != "with_cast" {
+			t.Errorf("query %s: got %q, want %q", "with_cast", v, "with_cast")
+		}
+		if v := got.URL.Query().Get("with_companies"); v != "with_companies" {
+			t.Errorf("query %s: got %q, want %q", "with_companies", v, "with_companies")
+		}
+		if v := got.URL.Query().Get("with_crew"); v != "with_crew" {
+			t.Errorf("query %s: got %q, want %q", "with_crew", v, "with_crew")
+		}
+		if v := got.URL.Query().Get("with_genres"); v != "with_genres" {
+			t.Errorf("query %s: got %q, want %q", "with_genres", v, "with_genres")
+		}
+		if v := got.URL.Query().Get("with_keywords"); v != "with_keywords" {
+			t.Errorf("query %s: got %q, want %q", "with_keywords", v, "with_keywords")
+		}
+		if v := got.URL.Query().Get("with_origin_country"); v != "with_origin_country" {
+			t.Errorf("query %s: got %q, want %q", "with_origin_country", v, "with_origin_country")
+		}
+		if v := got.URL.Query().Get("with_original_language"); v != "with_original_language" {
+			t.Errorf("query %s: got %q, want %q", "with_original_language", v, "with_original_language")
+		}
+		if v := got.URL.Query().Get("with_people"); v != "with_people" {
+			t.Errorf("query %s: got %q, want %q", "with_people", v, "with_people")
+		}
+		if v := got.URL.Query().Get("with_release_type"); v != "26" {
+			t.Errorf("query %s: got %q, want %q", "with_release_type", v, "26")
+		}
+		if v := got.URL.Query().Get("with_runtime.gte"); v != "27" {
+			t.Errorf("query %s: got %q, want %q", "with_runtime.gte", v, "27")
+		}
+		if v := got.URL.Query().Get("with_runtime.lte"); v != "28" {
+			t.Errorf("query %s: got %q, want %q", "with_runtime.lte", v, "28")
+		}
+		if v := got.URL.Query().Get("with_watch_monetization_types"); v != "with_watch_monetization_types" {
+			t.Errorf("query %s: got %q, want %q", "with_watch_monetization_types", v, "with_watch_monetization_types")
+		}
+		if v := got.URL.Query().Get("with_watch_providers"); v != "with_watch_providers" {
+			t.Errorf("query %s: got %q, want %q", "with_watch_providers", v, "with_watch_providers")
+		}
+		if v := got.URL.Query().Get("without_companies"); v != "without_companies" {
+			t.Errorf("query %s: got %q, want %q", "without_companies", v, "without_companies")
+		}
+		if v := got.URL.Query().Get("without_genres"); v != "without_genres" {
+			t.Errorf("query %s: got %q, want %q", "without_genres", v, "without_genres")
+		}
+		if v := got.URL.Query().Get("without_keywords"); v != "without_keywords" {
+			t.Errorf("query %s: got %q, want %q", "without_keywords", v, "without_keywords")
+		}
+		if v := got.URL.Query().Get("without_watch_providers"); v != "without_watch_providers" {
+			t.Errorf("query %s: got %q, want %q", "without_watch_providers", v, "without_watch_providers")
+		}
+		if v := got.URL.Query().Get("year"); v != "35" {
+			t.Errorf("query %s: got %q, want %q", "year", v, "35")
+		}
+	})
+	t.Run("DiscoverTv", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.DiscoverTv(t.Context(), &DiscoverTvParams{
+			FirstAirDateYear:           2,
+			IncludeAdult:               true,
+			IncludeNullFirstAirDates:   true,
+			Language:                   "language",
+			Page:                       6,
+			ScreenedTheatrically:       true,
+			SortBy:                     SortBy9VoteCountDotDesc,
+			Timezone:                   "timezone",
+			VoteAverageGte:             10.5,
+			VoteAverageLte:             11.5,
+			VoteCountGte:               12.5,
+			VoteCountLte:               13.5,
+			WatchRegion:                "watch_region",
+			WithCompanies:              "with_companies",
+			WithGenres:                 "with_genres",
+			WithKeywords:               "with_keywords",
+			WithNetworks:               18,
+			WithOriginCountry:          "with_origin_country",
+			WithOriginalLanguage:       "with_original_language",
+			WithRuntimeGte:             21,
+			WithRuntimeLte:             22,
+			WithStatus:                 "with_status",
+			WithWatchMonetizationTypes: "with_watch_monetization_types",
+			WithWatchProviders:         "with_watch_providers",
+			WithoutCompanies:           "without_companies",
+			WithoutGenres:              "without_genres",
+			WithoutKeywords:            "without_keywords",
+			WithoutWatchProviders:      "without_watch_providers",
+			WithType:                   "with_type",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("first_air_date_year"); v != "2" {
+			t.Errorf("query %s: got %q, want %q", "first_air_date_year", v, "2")
+		}
+		if v := got.URL.Query().Get("include_adult"); v != "true" {
+			t.Errorf("query %s: got %q, want %q", "include_adult", v, "true")
+		}
+		if v := got.URL.Query().Get("include_null_first_air_dates"); v != "true" {
+			t.Errorf("query %s: got %q, want %q", "include_null_first_air_dates", v, "true")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "6" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "6")
+		}
+		if v := got.URL.Query().Get("screened_theatrically"); v != "true" {
+			t.Errorf("query %s: got %q, want %q", "screened_theatrically", v, "true")
+		}
+		if v := got.URL.Query().Get("sort_by"); v != "vote_count.desc" {
+			t.Errorf("query %s: got %q, want %q", "sort_by", v, "vote_count.desc")
+		}
+		if v := got.URL.Query().Get("timezone"); v != "timezone" {
+			t.Errorf("query %s: got %q, want %q", "timezone", v, "timezone")
+		}
+		if v := got.URL.Query().Get("vote_average.gte"); v != "10.5" {
+			t.Errorf("query %s: got %q, want %q", "vote_average.gte", v, "10.5")
+		}
+		if v := got.URL.Query().Get("vote_average.lte"); v != "11.5" {
+			t.Errorf("query %s: got %q, want %q", "vote_average.lte", v, "11.5")
+		}
+		if v := got.URL.Query().Get("vote_count.gte"); v != "12.5" {
+			t.Errorf("query %s: got %q, want %q", "vote_count.gte", v, "12.5")
+		}
+		if v := got.URL.Query().Get("vote_count.lte"); v != "13.5" {
+			t.Errorf("query %s: got %q, want %q", "vote_count.lte", v, "13.5")
+		}
+		if v := got.URL.Query().Get("watch_region"); v != "watch_region" {
+			t.Errorf("query %s: got %q, want %q", "watch_region", v, "watch_region")
+		}
+		if v := got.URL.Query().Get("with_companies"); v != "with_companies" {
+			t.Errorf("query %s: got %q, want %q", "with_companies", v, "with_companies")
+		}
+		if v := got.URL.Query().Get("with_genres"); v != "with_genres" {
+			t.Errorf("query %s: got %q, want %q", "with_genres", v, "with_genres")
+		}
+		if v := got.URL.Query().Get("with_keywords"); v != "with_keywords" {
+			t.Errorf("query %s: got %q, want %q", "with_keywords", v, "with_keywords")
+		}
+		if v := got.URL.Query().Get("with_networks"); v != "18" {
+			t.Errorf("query %s: got %q, want %q", "with_networks", v, "18")
+		}
+		if v := got.URL.Query().Get("with_origin_country"); v != "with_origin_country" {
+			t.Errorf("query %s: got %q, want %q", "with_origin_country", v, "with_origin_country")
+		}
+		if v := got.URL.Query().Get("with_original_language"); v != "with_original_language" {
+			t.Errorf("query %s: got %q, want %q", "with_original_language", v, "with_original_language")
+		}
+		if v := got.URL.Query().Get("with_runtime.gte"); v != "21" {
+			t.Errorf("query %s: got %q, want %q", "with_runtime.gte", v, "21")
+		}
+		if v := got.URL.Query().Get("with_runtime.lte"); v != "22" {
+			t.Errorf("query %s: got %q, want %q", "with_runtime.lte", v, "22")
+		}
+		if v := got.URL.Query().Get("with_status"); v != "with_status" {
+			t.Errorf("query %s: got %q, want %q", "with_status", v, "with_status")
+		}
+		if v := got.URL.Query().Get("with_watch_monetization_types"); v != "with_watch_monetization_types" {
+			t.Errorf("query %s: got %q, want %q", "with_watch_monetization_types", v, "with_watch_monetization_types")
+		}
+		if v := got.URL.Query().Get("with_watch_providers"); v != "with_watch_providers" {
+			t.Errorf("query %s: got %q, want %q", "with_watch_providers", v, "with_watch_providers")
+		}
+		if v := got.URL.Query().Get("without_companies"); v != "without_companies" {
+			t.Errorf("query %s: got %q, want %q", "without_companies", v, "without_companies")
+		}
+		if v := got.URL.Query().Get("without_genres"); v != "without_genres" {
+			t.Errorf("query %s: got %q, want %q", "without_genres", v, "without_genres")
+		}
+		if v := got.URL.Query().Get("without_keywords"); v != "without_keywords" {
+			t.Errorf("query %s: got %q, want %q", "without_keywords", v, "without_keywords")
+		}
+		if v := got.URL.Query().Get("without_watch_providers"); v != "without_watch_providers" {
+			t.Errorf("query %s: got %q, want %q", "without_watch_providers", v, "without_watch_providers")
+		}
+		if v := got.URL.Query().Get("with_type"); v != "with_type" {
+			t.Errorf("query %s: got %q, want %q", "with_type", v, "with_type")
+		}
+	})
+	t.Run("FindByID", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.FindByID(t.Context(), "", FindByIDParams{
+			ExternalSource: ExternalSourceYoutubeID,
+			Language:       "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("external_source"); v != "youtube_id" {
+			t.Errorf("query %s: got %q, want %q", "external_source", v, "youtube_id")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("GenreMovieList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GenreMovieList(t.Context(), &GenreMovieListParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("GenreTvList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GenreTvList(t.Context(), &GenreTvListParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("GuestSessionRatedMovies", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GuestSessionRatedMovies(t.Context(), "", &GuestSessionRatedMoviesParams{
+			Language: "language",
+			Page:     3,
+			SortBy:   SortByCreatedAtDotDesc,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("sort_by"); v != "created_at.desc" {
+			t.Errorf("query %s: got %q, want %q", "sort_by", v, "created_at.desc")
+		}
+	})
+	t.Run("GuestSessionRatedTv", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GuestSessionRatedTv(t.Context(), "", &GuestSessionRatedTvParams{
+			Language: "language",
+			Page:     3,
+			SortBy:   SortByCreatedAtDotDesc,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("sort_by"); v != "created_at.desc" {
+			t.Errorf("query %s: got %q, want %q", "sort_by", v, "created_at.desc")
+		}
+	})
+	t.Run("GuestSessionRatedTvEpisodes", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GuestSessionRatedTvEpisodes(t.Context(), "", &GuestSessionRatedTvEpisodesParams{
+			Language: "language",
+			Page:     3,
+			SortBy:   SortByCreatedAtDotDesc,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("sort_by"); v != "created_at.desc" {
+			t.Errorf("query %s: got %q, want %q", "sort_by", v, "created_at.desc")
+		}
+	})
+	t.Run("KeywordMovies", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.KeywordMovies(t.Context(), "", &KeywordMoviesParams{
+			IncludeAdult: true,
+			Language:     "language",
+			Page:         4,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("include_adult"); v != "true" {
+			t.Errorf("query %s: got %q, want %q", "include_adult", v, "true")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "4" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "4")
+		}
+	})
+	t.Run("ListAddMovie", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.ListAddMovie(t.Context(), 0, ListAddMovieParams{
+			SessionID: "session_id",
+		}, nil)
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+	})
+	t.Run("ListCheckItemStatus", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.ListCheckItemStatus(t.Context(), 0, &ListCheckItemStatusParams{
+			Language: "language",
+			MovieID:  MovieID(3),
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("movie_id"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "movie_id", v, "3")
+		}
+	})
+	t.Run("ListClear", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.ListClear(t.Context(), 0, ListClearParams{
+			SessionID: "session_id",
+			Confirm:   true,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+		if v := got.URL.Query().Get("confirm"); v != "true" {
+			t.Errorf("query %s: got %q, want %q", "confirm", v, "true")
+		}
+	})
+	t.Run("ListCreate", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.ListCreate(t.Context(), ListCreateParams{
+			SessionID: "session_id",
+		}, nil)
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+	})
+	t.Run("ListDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.ListDetails(t.Context(), 0, &ListDetailsParams{
+			Language: "language",
+			Page:     3,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+	})
+	t.Run("ListDelete", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.ListDelete(t.Context(), 0, ListDeleteParams{
+			SessionID: "session_id",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+	})
+	t.Run("ListRemoveMovie", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.ListRemoveMovie(t.Context(), 0, ListRemoveMovieParams{
+			SessionID: "session_id",
+		}, nil)
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+	})
+	t.Run("GetNowPlaying", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GetNowPlaying(t.Context(), &GetNowPlayingParams{
+			Language: "language",
+			Page:     3,
+			Region:   "region",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("region"); v != "region" {
+			t.Errorf("query %s: got %q, want %q", "region", v, "region")
+		}
+	})
+	t.Run("GetPopular", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GetPopular(t.Context(), &GetPopularParams{
+			Language: "language",
+			Page:     3,
+			Region:   "region",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("region"); v != "region" {
+			t.Errorf("query %s: got %q, want %q", "region", v, "region")
+		}
+	})
+	t.Run("GetTopRated", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GetTopRated(t.Context(), &GetTopRatedParams{
+			Language: "language",
+			Page:     3,
+			Region:   "region",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("region"); v != "region" {
+			t.Errorf("query %s: got %q, want %q", "region", v, "region")
+		}
+	})
+	t.Run("GetUpcoming", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GetUpcoming(t.Context(), &GetUpcomingParams{
+			Language: "language",
+			Page:     3,
+			Region:   "region",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("region"); v != "region" {
+			t.Errorf("query %s: got %q, want %q", "region", v, "region")
+		}
+	})
+	t.Run("GetMovie", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GetMovie(t.Context(), 0, &GetMovieParams{
+			AppendToResponse: "append_to_response",
+			Language:         "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("append_to_response"); v != "append_to_response" {
+			t.Errorf("query %s: got %q, want %q", "append_to_response", v, "append_to_response")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("MovieAccountStates", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.MovieAccountStates(t.Context(), 0, &MovieAccountStatesParams{
+			SessionID:      "session_id",
+			GuestSessionID: "guest_session_id",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+		if v := got.URL.Query().Get("guest_session_id"); v != "guest_session_id" {
+			t.Errorf("query %s: got %q, want %q", "guest_session_id", v, "guest_session_id")
+		}
+	})
+	t.Run("GetAlternativeTitles", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GetAlternativeTitles(t.Context(), 0, &GetAlternativeTitlesParams{
+			Country: "country",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("country"); v != "country" {
+			t.Errorf("query %s: got %q, want %q", "country", v, "country")
+		}
+	})
+	t.Run("MovieChanges", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.MovieChanges(t.Context(), 0, &MovieChangesParams{
+			Page: 2,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("page"); v != "2" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "2")
+		}
+	})
+	t.Run("MovieCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.MovieCredits(t.Context(), 0, &MovieCreditsParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("GetMovieImages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GetMovieImages(t.Context(), 0, &GetMovieImagesParams{
+			IncludeImageLanguage: "include_image_language",
+			Language:             "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("include_image_language"); v != "include_image_language" {
+			t.Errorf("query %s: got %q, want %q", "include_image_language", v, "include_image_language")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("MovieLists", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.MovieLists(t.Context(), 0, &MovieListsParams{
+			Language: "language",
+			Page:     3,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+	})
+	t.Run("MovieRecommendations", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_ = c.MovieRecommendations(t.Context(), 0, &MovieRecommendationsParams{
+			Language: "language",
+			Page:     3,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+	})
+	t.Run("MovieReviews", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.MovieReviews(t.Context(), 0, &MovieReviewsParams{
+			Language: "language",
+			Page:     3,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+	})
+	t.Run("MovieSimilar", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.MovieSimilar(t.Context(), 0, &MovieSimilarParams{
+			Language: "language",
+			Page:     3,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+	})
+	t.Run("MovieVideos", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.MovieVideos(t.Context(), 0, &MovieVideosParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("MovieAddRating", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.MovieAddRating(t.Context(), 0, &MovieAddRatingParams{
+			GuestSessionID: "guest_session_id",
+			SessionID:      "session_id",
+		}, nil)
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("guest_session_id"); v != "guest_session_id" {
+			t.Errorf("query %s: got %q, want %q", "guest_session_id", v, "guest_session_id")
+		}
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+	})
+	t.Run("MovieDeleteRating", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.MovieDeleteRating(t.Context(), 0, &MovieDeleteRatingParams{
+			GuestSessionID: "guest_session_id",
+			SessionID:      "session_id",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("guest_session_id"); v != "guest_session_id" {
+			t.Errorf("query %s: got %q, want %q", "guest_session_id", v, "guest_session_id")
+		}
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+	})
+	t.Run("PersonPopularList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.PersonPopularList(t.Context(), &PersonPopularListParams{
+			Language: "language",
+			Page:     3,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+	})
+	t.Run("PersonDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.PersonDetails(t.Context(), 0, &PersonDetailsParams{
+			AppendToResponse: "append_to_response",
+			Language:         "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("append_to_response"); v != "append_to_response" {
+			t.Errorf("query %s: got %q, want %q", "append_to_response", v, "append_to_response")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("PersonChanges", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.PersonChanges(t.Context(), 0, &PersonChangesParams{
+			Page: 2,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("page"); v != "2" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "2")
+		}
+	})
+	t.Run("PersonCombinedCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.PersonCombinedCredits(t.Context(), "", &PersonCombinedCreditsParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("PersonMovieCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.PersonMovieCredits(t.Context(), 0, &PersonMovieCreditsParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("PersonTvCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.PersonTvCredits(t.Context(), 0, &PersonTvCreditsParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("PersonTaggedImages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.PersonTaggedImages(t.Context(), 0, &PersonTaggedImagesParams{
+			Page: 2,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("page"); v != "2" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "2")
+		}
+	})
+	t.Run("SearchCollection", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.SearchCollection(t.Context(), SearchCollectionParams{
+			Query:        "query",
+			IncludeAdult: true,
+			Language:     "language",
+			Page:         5,
+			Region:       "region",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("query"); v != "query" {
+			t.Errorf("query %s: got %q, want %q", "query", v, "query")
+		}
+		if v := got.URL.Query().Get("include_adult"); v != "true" {
+			t.Errorf("query %s: got %q, want %q", "include_adult", v, "true")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "5" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "5")
+		}
+		if v := got.URL.Query().Get("region"); v != "region" {
+			t.Errorf("query %s: got %q, want %q", "region", v, "region")
+		}
+	})
+	t.Run("SearchCompany", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.SearchCompany(t.Context(), SearchCompanyParams{
+			Query: "query",
+			Page:  3,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("query"); v != "query" {
+			t.Errorf("query %s: got %q, want %q", "query", v, "query")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+	})
+	t.Run("SearchKeyword", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.SearchKeyword(t.Context(), SearchKeywordParams{
+			Query: "query",
+			Page:  3,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("query"); v != "query" {
+			t.Errorf("query %s: got %q, want %q", "query", v, "query")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+	})
+	t.Run("SearchMovies", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.SearchMovies(t.Context(), SearchMoviesParams{
+			Query:              "query",
+			IncludeAdult:       true,
+			Language:           "language",
+			PrimaryReleaseYear: "primary_release_year",
+			Page:               6,
+			Region:             "region",
+			Year:               8,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("query"); v != "query" {
+			t.Errorf("query %s: got %q, want %q", "query", v, "query")
+		}
+		if v := got.URL.Query().Get("include_adult"); v != "true" {
+			t.Errorf("query %s: got %q, want %q", "include_adult", v, "true")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("primary_release_year"); v != "primary_release_year" {
+			t.Errorf("query %s: got %q, want %q", "primary_release_year", v, "primary_release_year")
+		}
+		if v := got.URL.Query().Get("page"); v != "6" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "6")
+		}
+		if v := got.URL.Query().Get("region"); v != "region" {
+			t.Errorf("query %s: got %q, want %q", "region", v, "region")
+		}
+		if v := got.URL.Query().Get("year"); v != "8" {
+			t.Errorf("query %s: got %q, want %q", "year", v, "8")
+		}
+	})
+	t.Run("SearchMulti", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.SearchMulti(t.Context(), SearchMultiParams{
+			Query:        "query",
+			IncludeAdult: true,
+			Language:     "language",
+			Page:         5,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("query"); v != "query" {
+			t.Errorf("query %s: got %q, want %q", "query", v, "query")
+		}
+		if v := got.URL.Query().Get("include_adult"); v != "true" {
+			t.Errorf("query %s: got %q, want %q", "include_adult", v, "true")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "5" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "5")
+		}
+	})
+	t.Run("SearchPerson", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.SearchPerson(t.Context(), SearchPersonParams{
+			Query:        "query",
+			IncludeAdult: true,
+			Language:     "language",
+			Page:         5,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("query"); v != "query" {
+			t.Errorf("query %s: got %q, want %q", "query", v, "query")
+		}
+		if v := got.URL.Query().Get("include_adult"); v != "true" {
+			t.Errorf("query %s: got %q, want %q", "include_adult", v, "true")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "5" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "5")
+		}
+	})
+	t.Run("SearchShows", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.SearchShows(t.Context(), SearchShowsParams{
+			Query:            "query",
+			FirstAirDateYear: 3,
+			IncludeAdult:     true,
+			Language:         "language",
+			Page:             6,
+			Year:             7,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("query"); v != "query" {
+			t.Errorf("query %s: got %q, want %q", "query", v, "query")
+		}
+		if v := got.URL.Query().Get("first_air_date_year"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "first_air_date_year", v, "3")
+		}
+		if v := got.URL.Query().Get("include_adult"); v != "true" {
+			t.Errorf("query %s: got %q, want %q", "include_adult", v, "true")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "6" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "6")
+		}
+		if v := got.URL.Query().Get("year"); v != "7" {
+			t.Errorf("query %s: got %q, want %q", "year", v, "7")
+		}
+	})
+	t.Run("TrendingAll", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TrendingAll(t.Context(), "", &TrendingAllParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TrendingMovies", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TrendingMovies(t.Context(), "", &TrendingMoviesParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TrendingPeople", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TrendingPeople(t.Context(), "", &TrendingPeopleParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TrendingTv", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TrendingTv(t.Context(), "", &TrendingTvParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TvSeriesAiringTodayList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeriesAiringTodayList(t.Context(), &TvSeriesAiringTodayListParams{
+			Language: "language",
+			Page:     3,
+			Timezone: "timezone",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("timezone"); v != "timezone" {
+			t.Errorf("query %s: got %q, want %q", "timezone", v, "timezone")
+		}
+	})
+	t.Run("TvSeriesOnTheAirList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeriesOnTheAirList(t.Context(), &TvSeriesOnTheAirListParams{
+			Language: "language",
+			Page:     3,
+			Timezone: "timezone",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+		if v := got.URL.Query().Get("timezone"); v != "timezone" {
+			t.Errorf("query %s: got %q, want %q", "timezone", v, "timezone")
+		}
+	})
+	t.Run("TvSeriesPopularList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeriesPopularList(t.Context(), &TvSeriesPopularListParams{
+			Language: "language",
+			Page:     3,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+	})
+	t.Run("TvSeriesTopRatedList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeriesTopRatedList(t.Context(), &TvSeriesTopRatedListParams{
+			Language: "language",
+			Page:     3,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+	})
+	t.Run("GetShow", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GetShow(t.Context(), 0, &GetShowParams{
+			AppendToResponse: "append_to_response",
+			Language:         "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("append_to_response"); v != "append_to_response" {
+			t.Errorf("query %s: got %q, want %q", "append_to_response", v, "append_to_response")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TvSeriesAccountStates", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeriesAccountStates(t.Context(), 0, &TvSeriesAccountStatesParams{
+			SessionID:      "session_id",
+			GuestSessionID: "guest_session_id",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+		if v := got.URL.Query().Get("guest_session_id"); v != "guest_session_id" {
+			t.Errorf("query %s: got %q, want %q", "guest_session_id", v, "guest_session_id")
+		}
+	})
+	t.Run("TvSeriesAggregateCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeriesAggregateCredits(t.Context(), 0, &TvSeriesAggregateCreditsParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("GetShowChanges", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GetShowChanges(t.Context(), 0, &GetShowChangesParams{
+			Page: 2,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("page"); v != "2" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "2")
+		}
+	})
+	t.Run("TvSeriesCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeriesCredits(t.Context(), 0, &TvSeriesCreditsParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TvSeriesImages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeriesImages(t.Context(), 0, &TvSeriesImagesParams{
+			IncludeImageLanguage: "include_image_language",
+			Language:             "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("include_image_language"); v != "include_image_language" {
+			t.Errorf("query %s: got %q, want %q", "include_image_language", v, "include_image_language")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("ListsCopy", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.ListsCopy(t.Context(), 0, &ListsCopyParams{
+			Language: "language",
+			Page:     3,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+	})
+	t.Run("TvSeriesRecommendations", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeriesRecommendations(t.Context(), 0, &TvSeriesRecommendationsParams{
+			Language: "language",
+			Page:     3,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+	})
+	t.Run("TvSeriesReviews", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeriesReviews(t.Context(), 0, &TvSeriesReviewsParams{
+			Language: "language",
+			Page:     3,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+	})
+	t.Run("TvSeriesSimilar", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeriesSimilar(t.Context(), 0, &TvSeriesSimilarParams{
+			Language: "language",
+			Page:     3,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("page"); v != "3" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "3")
+		}
+	})
+	t.Run("TvSeriesVideos", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeriesVideos(t.Context(), 0, &TvSeriesVideosParams{
+			IncludeVideoLanguage: "include_video_language",
+			Language:             "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("include_video_language"); v != "include_video_language" {
+			t.Errorf("query %s: got %q, want %q", "include_video_language", v, "include_video_language")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TvSeriesAddRating", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeriesAddRating(t.Context(), 0, &TvSeriesAddRatingParams{
+			GuestSessionID: "guest_session_id",
+			SessionID:      "session_id",
+		}, nil)
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("guest_session_id"); v != "guest_session_id" {
+			t.Errorf("query %s: got %q, want %q", "guest_session_id", v, "guest_session_id")
+		}
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+	})
+	t.Run("TvSeriesDeleteRating", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeriesDeleteRating(t.Context(), 0, &TvSeriesDeleteRatingParams{
+			GuestSessionID: "guest_session_id",
+			SessionID:      "session_id",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("guest_session_id"); v != "guest_session_id" {
+			t.Errorf("query %s: got %q, want %q", "guest_session_id", v, "guest_session_id")
+		}
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+	})
+	t.Run("GetShowSeason", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GetShowSeason(t.Context(), 0, 0, &GetShowSeasonParams{
+			AppendToResponse: "append_to_response",
+			Language:         "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("append_to_response"); v != "append_to_response" {
+			t.Errorf("query %s: got %q, want %q", "append_to_response", v, "append_to_response")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TvSeasonAccountStates", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeasonAccountStates(t.Context(), 0, 0, &TvSeasonAccountStatesParams{
+			SessionID:      "session_id",
+			GuestSessionID: "guest_session_id",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+		if v := got.URL.Query().Get("guest_session_id"); v != "guest_session_id" {
+			t.Errorf("query %s: got %q, want %q", "guest_session_id", v, "guest_session_id")
+		}
+	})
+	t.Run("TvSeasonAggregateCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeasonAggregateCredits(t.Context(), 0, 0, &TvSeasonAggregateCreditsParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("GetSeasonChanges", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GetSeasonChanges(t.Context(), 0, &GetSeasonChangesParams{
+			Page: 2,
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("page"); v != "2" {
+			t.Errorf("query %s: got %q, want %q", "page", v, "2")
+		}
+	})
+	t.Run("TvSeasonCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeasonCredits(t.Context(), 0, 0, &TvSeasonCreditsParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TvSeasonImages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeasonImages(t.Context(), 0, 0, &TvSeasonImagesParams{
+			IncludeImageLanguage: "include_image_language",
+			Language:             "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("include_image_language"); v != "include_image_language" {
+			t.Errorf("query %s: got %q, want %q", "include_image_language", v, "include_image_language")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TvSeasonVideos", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeasonVideos(t.Context(), 0, 0, &TvSeasonVideosParams{
+			IncludeVideoLanguage: "include_video_language",
+			Language:             "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("include_video_language"); v != "include_video_language" {
+			t.Errorf("query %s: got %q, want %q", "include_video_language", v, "include_video_language")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TvSeasonWatchProviders", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvSeasonWatchProviders(t.Context(), 0, 0, &TvSeasonWatchProvidersParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("GetEpisodeDetails", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.GetEpisodeDetails(t.Context(), 0, 0, 0, &GetEpisodeDetailsParams{
+			AppendToResponse: "append_to_response",
+			Language:         "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("append_to_response"); v != "append_to_response" {
+			t.Errorf("query %s: got %q, want %q", "append_to_response", v, "append_to_response")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TvEpisodeAccountStates", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvEpisodeAccountStates(t.Context(), 0, 0, 0, &TvEpisodeAccountStatesParams{
+			SessionID:      "session_id",
+			GuestSessionID: "guest_session_id",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+		if v := got.URL.Query().Get("guest_session_id"); v != "guest_session_id" {
+			t.Errorf("query %s: got %q, want %q", "guest_session_id", v, "guest_session_id")
+		}
+	})
+	t.Run("TvEpisodeCredits", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvEpisodeCredits(t.Context(), 0, 0, 0, &TvEpisodeCreditsParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TvEpisodeImages", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvEpisodeImages(t.Context(), 0, 0, 0, &TvEpisodeImagesParams{
+			IncludeImageLanguage: "include_image_language",
+			Language:             "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("include_image_language"); v != "include_image_language" {
+			t.Errorf("query %s: got %q, want %q", "include_image_language", v, "include_image_language")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TvEpisodeVideos", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvEpisodeVideos(t.Context(), 0, 0, 0, &TvEpisodeVideosParams{
+			IncludeVideoLanguage: "include_video_language",
+			Language:             "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("include_video_language"); v != "include_video_language" {
+			t.Errorf("query %s: got %q, want %q", "include_video_language", v, "include_video_language")
+		}
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("TvEpisodeAddRating", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvEpisodeAddRating(t.Context(), 0, 0, 0, &TvEpisodeAddRatingParams{
+			GuestSessionID: "guest_session_id",
+			SessionID:      "session_id",
+		}, nil)
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("guest_session_id"); v != "guest_session_id" {
+			t.Errorf("query %s: got %q, want %q", "guest_session_id", v, "guest_session_id")
+		}
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+	})
+	t.Run("TvEpisodeDeleteRating", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.TvEpisodeDeleteRating(t.Context(), 0, 0, 0, &TvEpisodeDeleteRatingParams{
+			GuestSessionID: "guest_session_id",
+			SessionID:      "session_id",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("guest_session_id"); v != "guest_session_id" {
+			t.Errorf("query %s: got %q, want %q", "guest_session_id", v, "guest_session_id")
+		}
+		if v := got.URL.Query().Get("session_id"); v != "session_id" {
+			t.Errorf("query %s: got %q, want %q", "session_id", v, "session_id")
+		}
+	})
+	t.Run("WatchProvidersAvailableRegions", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.WatchProvidersAvailableRegions(t.Context(), &WatchProvidersAvailableRegionsParams{
+			Language: "language",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+	})
+	t.Run("WatchProvidersMovieList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.WatchProvidersMovieList(t.Context(), &WatchProvidersMovieListParams{
+			Language:    "language",
+			WatchRegion: "watch_region",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("watch_region"); v != "watch_region" {
+			t.Errorf("query %s: got %q, want %q", "watch_region", v, "watch_region")
+		}
+	})
+	t.Run("WatchProviderTvList", func(t *testing.T) {
+		t.Setenv("TMDB_API_TOKEN", "**************************************************")
+
+		var got *http.Request
+
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			func(r *http.Request) (*http.Response, error) {
+				got = r
+
+				return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody, Request: r}, nil
+			},
+		)}))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, _ = c.WatchProviderTvList(t.Context(), &WatchProviderTvListParams{
+			Language:    "language",
+			WatchRegion: "watch_region",
+		})
+
+		if got == nil {
+			t.Fatal("no request was sent")
+		}
+
+		if v := got.URL.Query().Get("language"); v != "language" {
+			t.Errorf("query %s: got %q, want %q", "language", v, "language")
+		}
+		if v := got.URL.Query().Get("watch_region"); v != "watch_region" {
+			t.Errorf("query %s: got %q, want %q", "watch_region", v, "watch_region")
+		}
 	})
 }
 
