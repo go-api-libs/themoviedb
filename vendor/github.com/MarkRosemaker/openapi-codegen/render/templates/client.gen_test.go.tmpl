@@ -285,12 +285,6 @@ func TestClient_Error(t *testing.T) {
 			} else if _, ok := errors.AsType[*api.DecodingError](err); !ok {
 				t.Fatalf("got: %T, want: *api.DecodingError", err)
 			}
-
-			if _, err := c.{{$op.Name}}WithResult[struct{}](t.Context(){{range $op.PathParams}}, {{ .ZeroVal }}{{end}}
-			{{- with $op.NilParamsExpr}}, {{ . }}{{ end -}}
-			{{if $op.RequestBody}}, {{if $op.RequestBody.Required}}{{$.MinimalLiteral $op.RequestBody.TypeName}}{{else}}nil{{end}}{{end}}); err != nil {
-				t.Fatalf("a type of the caller's own: %v", err)
-			}
 		})
 		{{- end }}
 		{{- with $.LenientSuccess . }}

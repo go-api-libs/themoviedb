@@ -262,12 +262,36 @@ func fieldVariants(variants openapi.SchemaList) ([]UnionVariant, []*openapi.Sche
 
 		uv := UnionVariant{FieldName: fieldName, Type: tp.String(), Zero: unsetValue(v, tp)}
 		uv.Members, uv.Required, uv.Object = objectShape(v)
+		uv.Nullable = nullableMembers(v, uv.Required)
 		uv.Pinned, uv.Enums = allowedValues(v)
 		out = append(out, uv)
 		schemas = append(schemas, v)
 	}
 
 	return out, schemas, nil
+}
+
+// nullableMembers returns those of names, members of the object s, whose schema allows null.
+func nullableMembers(s *openapi.Schema, names []string) []string {
+	var out []string
+
+	for _, name := range names {
+		if allowsNull(propertyOf(s, name)) {
+			out = append(out, name)
+		}
+	}
+
+	return out
+}
+
+// allowsNull reports whether s allows null: it is null, nullable, or a union with null among its alternatives.
+func allowsNull(s *openapi.Schema) bool {
+	s = deref(s)
+	if s == nil {
+		return false
+	}
+
+	return isNull(s) || s.Nullable || slices.ContainsFunc(s.OneOf, isNull) || slices.ContainsFunc(s.AnyOf, isNull)
 }
 
 // unionVariants builds the fields of the union u, one per alternative but null, and the choices decoding picks from:

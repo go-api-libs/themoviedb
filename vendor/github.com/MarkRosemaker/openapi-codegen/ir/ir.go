@@ -309,6 +309,9 @@ type UnionVariant struct {
 	// Members and Required are the JSON members the variant declares and requires, if it is a plain Object.
 	Members  []string `json:"members,omitempty"`
 	Required []string `json:"required,omitempty"`
+	// Nullable are the members of Required whose schema allows null: only for these does a null value count as
+	// present.
+	Nullable []string `json:"nullable,omitempty"`
 	Object   bool     `json:"object,omitzero"`
 	// Pinned are the members the variant allows one value for, by its const or a one-value enum.
 	Pinned []PinnedMember `json:"pinned,omitempty"`

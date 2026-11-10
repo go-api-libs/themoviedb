@@ -31,8 +31,7 @@ func (doc Document) HasErrorResponses() bool {
 }
 
 // StrictSuccess is the success response of op the client decodes into a struct of the package's own, which rejects a
-// member it does not declare where a caller's type passed to the WithResult variant accepts it, or nil. In debug mode
-// every type is decoded leniently, so there is none.
+// member it does not declare, or nil. In debug mode every type is decoded leniently once that fails, so there is none.
 func (doc Document) StrictSuccess(op Operation) *Response {
 	if doc.Debug {
 		return nil

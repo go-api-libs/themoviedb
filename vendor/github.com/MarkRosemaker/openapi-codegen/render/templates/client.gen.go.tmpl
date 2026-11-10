@@ -224,47 +224,12 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 {{range .Operations}}
 {{$op := .}}
 
-{{ if and .SuccessReturn (not .RawBytesSuccess) (not .StreamSuccess) }}
-{{ with .Description }}
-	{{- toGoComment . }}
-	//
-{{- else }}
-	{{- if .Summary -}}
-	{{ toGoComment .Summary }}
-	{{- end }}
-{{- end }}
-//	{{ .Method }} {{ .PathTemplate }}
-{{- if .Deprecated}}
-//
-// Deprecated.
-{{- end}}
-func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}} {{.Type}}{{end}}{{if .ParamsInStruct}}, params {{ if not .ParamsInStruct.Required }}*{{ end }}{{.ParamStructName}}{{end}}{{if .RequestBody}}, body {{if .RequestBody.Required}}{{.RequestBody.TypeName}}{{else}}*{{.RequestBody.TypeName}}{{end}}{{end}}) ({{.SuccessReturn.Nilable}}, error) {
-	{{- if .SuccessReturn.NilByItself}}
-	out, err := c.{{.Name}}WithResult[{{.SuccessReturn}}](ctx{{range .PathParams}}, {{.GoName}}{{end}}{{if .ParamsInStruct}}, params{{end}}{{if .RequestBody}}, body{{end}})
-	if err != nil {
-		return nil, err
-	}
-
-	return *out, nil
-	{{- else}}
-	return c.{{.Name}}WithResult[{{.SuccessReturn}}](ctx{{range .PathParams}}, {{.GoName}}{{end}}{{if .ParamsInStruct}}, params{{end}}{{if .RequestBody}}, body{{end}})
-	{{- end}}
-}
-{{ end }}
-
-{{- $withResult := and .SuccessReturn (not .RawBytesSuccess) (not .StreamSuccess) }}
 {{ with .Description}}
 	{{- toGoComment . }}
-	{{- if $withResult }}
-	// You can define a custom result to unmarshal the response into.
-	{{- end }}
 	//
 {{- else }}
 	{{- with .Summary -}}
 	{{ toGoComment . }}
-	{{- if $withResult }}
-	// You can define a custom result to unmarshal the response into.
-	{{- end }}
 	//
 	{{- end }}
 {{- end }}
@@ -276,7 +241,7 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 {{ if or .RawBytesSuccess .StreamSuccess -}}
 func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}} {{.Type}}{{end}}{{if .ParamsInStruct}}, params {{ if not .ParamsInStruct.Required }}*{{ end }}{{.ParamStructName}}{{end}}{{if .RequestBody}}, body {{if .RequestBody.Required}}{{.RequestBody.TypeName}}{{else}}*{{.RequestBody.TypeName}}{{end}}{{end}}) ({{.SuccessReturn}}, error) {
 {{- else if .SuccessReturn -}}
-func (c *Client) {{.Name}}WithResult[R any](ctx context.Context{{range .PathParams}}, {{.GoName}} {{.Type}}{{end}}{{if .ParamsInStruct}}, params {{ if not .ParamsInStruct.Required }}*{{ end }}{{.ParamStructName}}{{end}}{{if .RequestBody}}, body {{if .RequestBody.Required}}{{.RequestBody.TypeName}}{{else}}*{{.RequestBody.TypeName}}{{end}}{{end}}) (*R, error) {
+func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}} {{.Type}}{{end}}{{if .ParamsInStruct}}, params {{ if not .ParamsInStruct.Required }}*{{ end }}{{.ParamStructName}}{{end}}{{if .RequestBody}}, body {{if .RequestBody.Required}}{{.RequestBody.TypeName}}{{else}}*{{.RequestBody.TypeName}}{{end}}{{end}}) ({{.SuccessReturn.Nilable}}, error) {
 {{- else -}}
 func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}} {{.Type}}{{end}}{{if .ParamsInStruct}}, params {{ if not .ParamsInStruct.Required }}*{{ end }}{{.ParamStructName}}{{end}}{{if .RequestBody}}, body {{if .RequestBody.Required}}{{.RequestBody.TypeName}}{{else}}*{{.RequestBody.TypeName}}{{end}}{{end}}) error {
 {{- end }}
@@ -407,20 +372,9 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "{{ .ContentType }}":
 			{{- if .IsJSON }}
-			{{- if and .IsSuccess $op.SuccessReturn }}
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*{{ $op.SuccessReturn }}); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
-			{{- else }}
-			var out {{ .GoType }}
+			{{- /* every success is decoded into what the method returns */}}
+			var out {{ if and .IsSuccess $op.SuccessReturn }}{{ $op.SuccessReturn }}{{ else }}{{ .GoType }}{{ end }}
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-			{{- end }}
 				{{ if $.Debug -}}
 				if ia == nil {
 					return {{if $op.SuccessReturn}}nil, {{end}}api.WrapDecodingError(rsp, err)
@@ -432,7 +386,7 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 
 				{{/* recorded for enrich to learn from, the response is still of use if all it holds beyond the
 				     specification is members it does not know yet */ -}}
-				out = *new({{ if and .IsSuccess $op.SuccessReturn }}R{{ else }}{{ .GoType }}{{ end }})
+				out = *new({{ if and .IsSuccess $op.SuccessReturn }}{{ $op.SuccessReturn }}{{ else }}{{ .GoType }}{{ end }})
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return {{if $op.SuccessReturn}}nil, {{end}}api.WrapDecodingError(rsp, err)
 				}
@@ -442,7 +396,7 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 			}
 
 			{{ if and .IsSuccess $op.SuccessReturn -}}
-			return &out, nil
+			return {{ if not $op.SuccessReturn.NilByItself }}&{{ end }}out, nil
 			{{ else if .IsSuccess -}}
 			return nil
 			{{ else -}}
