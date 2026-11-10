@@ -390,10 +390,15 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 	{{- end }}
 
 
-	switch rsp.StatusCode {
-{{- range .Responses }}
-	{{ if ne .GoConstant "default" -}}
-		case {{ end }}{{ .GoConstant }}:
+	switch {{ if not .Responses.HasRange }}rsp.StatusCode {{ end }}{
+{{- range .Responses.InMatchOrder }}
+	{{ if eq .GoConstant "default" -}}
+		default:
+	{{- else if $op.Responses.HasRange -}}
+		case {{ .Condition }}:
+	{{- else -}}
+		case {{ .GoConstant }}:
+	{{- end }}
 		{{ with .Description }}{{ toGoComment . }}{{ end }}
 {{- if and .IsSuccess $op.EmptySuccess (not $.Debug) }}
 		{{- /* an empty object holds nothing to return, so the body is not read */}}

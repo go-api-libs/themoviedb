@@ -703,6 +703,7 @@ func fromResponses(responses openapi.OperationResponses) (Responses, *GoType, bo
 		result = append(result, Response{
 			StatusCode:  string(code),
 			GoConstant:  goConst,
+			IsRange:     isRange(code),
 			Description: cmp.Or(respRef.Description, r.Description),
 			ContentType: contentType,
 			GoType:      goType,
@@ -726,10 +727,44 @@ func fromResponses(responses openapi.OperationResponses) (Responses, *GoType, bo
 	return result, successReturn, rawBytesSuccess, streamSuccess, emptySuccess, nil
 }
 
+func isRange(code openapi.StatusCode) bool {
+	_, ok := statusRange(code)
+	return ok
+}
+
+// statusRange is the first code of a range such as 2XX, and whether code is one.
+func statusRange(code openapi.StatusCode) (int, bool) {
+	if len(code) != 3 || code[1] != 'X' || code[2] != 'X' || code[0] < '1' || code[0] > '5' {
+		return 0, false
+	}
+
+	return int(code[0]-'0') * 100, true
+}
+
+// Condition is the Go condition the status code of a response of r's code meets, as rsp.StatusCode == http.StatusOK
+// or, for a range, rsp.StatusCode >= 200 && rsp.StatusCode < 300. It is empty for the default.
+func (r Response) Condition() string {
+	code := openapi.StatusCode(r.StatusCode)
+	if code == openapi.StatusCodeDefault {
+		return ""
+	}
+
+	if lo, ok := statusRange(code); ok {
+		return fmt.Sprintf("rsp.StatusCode >= %d && rsp.StatusCode < %d", lo, lo+100)
+	}
+
+	return "rsp.StatusCode == " + r.GoConstant
+}
+
 // statusCodeToConst converts an OpenAPI status code to its net/http constant name.
 func statusCodeToConst(code openapi.StatusCode) string {
 	if code == openapi.StatusCodeDefault {
 		return "default"
+	}
+
+	// a range, as 2XX, is written as the first code in it, which the server answers with
+	if lo, ok := statusRange(code); ok {
+		return statusCodeToConst(openapi.StatusCode(strconv.Itoa(lo)))
 	}
 
 	n, err := strconv.Atoi(string(code))

@@ -598,10 +598,35 @@ func (rs Responses) HasDefault() bool {
 	return slices.ContainsFunc(rs, func(r Response) bool { return r.StatusCode == "default" })
 }
 
+// InMatchOrder is the responses in the order a status code is matched against them: an exact code takes precedence
+// over the range it is in, so the ranges come after the codes.
+func (rs Responses) InMatchOrder() Responses {
+	out := slices.Clone(rs)
+	slices.SortStableFunc(out, func(a, b Response) int {
+		switch {
+		case a.IsRange == b.IsRange:
+			return 0
+		case a.IsRange:
+			return 1
+		default:
+			return -1
+		}
+	})
+
+	return out
+}
+
+// HasRange reports whether a response is for a range of codes, as 2XX, which a switch on the code alone cannot match.
+func (rs Responses) HasRange() bool {
+	return slices.ContainsFunc(rs, func(r Response) bool { return r.IsRange })
+}
+
 // Response represents one expected HTTP response from an operation.
 type Response struct {
-	StatusCode  string  `json:"statusCode,omitzero"`
-	GoConstant  string  `json:"goConstant,omitzero"`
+	StatusCode string `json:"statusCode,omitzero"`
+	GoConstant string `json:"goConstant,omitzero"`
+	// IsRange is true for a range of codes, as 2XX, whose GoConstant is the first code in it.
+	IsRange     bool    `json:"isRange,omitzero"`
 	Description string  `json:"description,omitzero"`
 	ContentType string  `json:"contentType,omitzero"`
 	GoType      *GoType `json:"goType,omitempty"`
