@@ -115,14 +115,6 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 //
 //	GET /authentication
 func (c *Client) ValidateKey(ctx context.Context) (*ValidKey, error) {
-	return c.ValidateKeyWithResult[ValidKey](ctx)
-}
-
-// Test your API Key to see if it's valid.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /authentication
-func (c *Client) ValidateKeyWithResult[R any](ctx context.Context) (*R, error) {
 	u := c.baseURL.JoinPath("authentication")
 	req := (&http.Request{
 		Header: http.Header{
@@ -148,15 +140,8 @@ func (c *Client) ValidateKeyWithResult[R any](ctx context.Context) (*R, error) {
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ValidKey); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ValidKey
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -165,7 +150,7 @@ func (c *Client) ValidateKeyWithResult[R any](ctx context.Context) (*R, error) {
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ValidKey)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -208,14 +193,6 @@ func (c *Client) ValidateKeyWithResult[R any](ctx context.Context) (*R, error) {
 //
 //	GET /account/{account_id}
 func (c *Client) AccountDetails(ctx context.Context, accountID int32, params *AccountDetailsParams) (*AccountDetailsOk, error) {
-	return c.AccountDetailsWithResult[AccountDetailsOk](ctx, accountID, params)
-}
-
-// Get the public details of an account on TMDB.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /account/{account_id}
-func (c *Client) AccountDetailsWithResult[R any](ctx context.Context, accountID int32, params *AccountDetailsParams) (*R, error) {
 	u := c.baseURL.JoinPath("account", strconv.FormatInt(int64(accountID), 10))
 	if params != nil {
 		q := make(url.Values, 1)
@@ -251,15 +228,8 @@ func (c *Client) AccountDetailsWithResult[R any](ctx context.Context, accountID 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*AccountDetailsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out AccountDetailsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -268,7 +238,7 @@ func (c *Client) AccountDetailsWithResult[R any](ctx context.Context, accountID 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(AccountDetailsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -287,14 +257,6 @@ func (c *Client) AccountDetailsWithResult[R any](ctx context.Context, accountID 
 //
 //	POST /account/{account_id}/favorite
 func (c *Client) AccountAddFavorite(ctx context.Context, accountID int32, params *AccountAddFavoriteParams, body *ListCreate) (*ListClear, error) {
-	return c.AccountAddFavoriteWithResult[ListClear](ctx, accountID, params, body)
-}
-
-// Mark a movie or TV show as a favourite.
-// You can define a custom result to unmarshal the response into.
-//
-//	POST /account/{account_id}/favorite
-func (c *Client) AccountAddFavoriteWithResult[R any](ctx context.Context, accountID int32, params *AccountAddFavoriteParams, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("account", strconv.FormatInt(int64(accountID), 10), "favorite")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -340,15 +302,8 @@ func (c *Client) AccountAddFavoriteWithResult[R any](ctx context.Context, accoun
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListClear); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListClear
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -357,7 +312,7 @@ func (c *Client) AccountAddFavoriteWithResult[R any](ctx context.Context, accoun
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListClear)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -376,14 +331,6 @@ func (c *Client) AccountAddFavoriteWithResult[R any](ctx context.Context, accoun
 //
 //	POST /account/{account_id}/watchlist
 func (c *Client) AccountAddToWatchlist(ctx context.Context, accountID int32, params *AccountAddToWatchlistParams, body *ListCreate) (*ListClear, error) {
-	return c.AccountAddToWatchlistWithResult[ListClear](ctx, accountID, params, body)
-}
-
-// Add a movie or TV show to your watchlist.
-// You can define a custom result to unmarshal the response into.
-//
-//	POST /account/{account_id}/watchlist
-func (c *Client) AccountAddToWatchlistWithResult[R any](ctx context.Context, accountID int32, params *AccountAddToWatchlistParams, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("account", strconv.FormatInt(int64(accountID), 10), "watchlist")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -429,15 +376,8 @@ func (c *Client) AccountAddToWatchlistWithResult[R any](ctx context.Context, acc
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListClear); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListClear
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -446,7 +386,7 @@ func (c *Client) AccountAddToWatchlistWithResult[R any](ctx context.Context, acc
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListClear)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -465,14 +405,6 @@ func (c *Client) AccountAddToWatchlistWithResult[R any](ctx context.Context, acc
 //
 //	GET /account/{account_id}/favorite/movies
 func (c *Client) AccountGetFavorites(ctx context.Context, accountID int32, params *AccountGetFavoritesParams) (*MoviesResultPage, error) {
-	return c.AccountGetFavoritesWithResult[MoviesResultPage](ctx, accountID, params)
-}
-
-// Get a users list of favourite movies.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /account/{account_id}/favorite/movies
-func (c *Client) AccountGetFavoritesWithResult[R any](ctx context.Context, accountID int32, params *AccountGetFavoritesParams) (*R, error) {
 	u := c.baseURL.JoinPath("account", strconv.FormatInt(int64(accountID), 10), "favorite", "movies")
 	if params != nil {
 		q := make(url.Values, 4)
@@ -520,15 +452,8 @@ func (c *Client) AccountGetFavoritesWithResult[R any](ctx context.Context, accou
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MoviesResultPage); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MoviesResultPage
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -537,7 +462,7 @@ func (c *Client) AccountGetFavoritesWithResult[R any](ctx context.Context, accou
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MoviesResultPage)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -556,14 +481,6 @@ func (c *Client) AccountGetFavoritesWithResult[R any](ctx context.Context, accou
 //
 //	GET /account/{account_id}/favorite/tv
 func (c *Client) AccountFavoriteTv(ctx context.Context, accountID int32, params *AccountFavoriteTvParams) (*ShowsResultPage, error) {
-	return c.AccountFavoriteTvWithResult[ShowsResultPage](ctx, accountID, params)
-}
-
-// Get a users list of favourite TV shows.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /account/{account_id}/favorite/tv
-func (c *Client) AccountFavoriteTvWithResult[R any](ctx context.Context, accountID int32, params *AccountFavoriteTvParams) (*R, error) {
 	u := c.baseURL.JoinPath("account", strconv.FormatInt(int64(accountID), 10), "favorite", "tv")
 	if params != nil {
 		q := make(url.Values, 4)
@@ -611,15 +528,8 @@ func (c *Client) AccountFavoriteTvWithResult[R any](ctx context.Context, account
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ShowsResultPage); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ShowsResultPage
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -628,7 +538,7 @@ func (c *Client) AccountFavoriteTvWithResult[R any](ctx context.Context, account
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ShowsResultPage)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -647,14 +557,6 @@ func (c *Client) AccountFavoriteTvWithResult[R any](ctx context.Context, account
 //
 //	GET /account/{account_id}/lists
 func (c *Client) AccountLists(ctx context.Context, accountID int32, params *AccountListsParams) (*AccountListsOk, error) {
-	return c.AccountListsWithResult[AccountListsOk](ctx, accountID, params)
-}
-
-// Get a users list of custom lists.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /account/{account_id}/lists
-func (c *Client) AccountListsWithResult[R any](ctx context.Context, accountID int32, params *AccountListsParams) (*R, error) {
 	u := c.baseURL.JoinPath("account", strconv.FormatInt(int64(accountID), 10), "lists")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -694,15 +596,8 @@ func (c *Client) AccountListsWithResult[R any](ctx context.Context, accountID in
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*AccountListsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out AccountListsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -711,7 +606,7 @@ func (c *Client) AccountListsWithResult[R any](ctx context.Context, accountID in
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(AccountListsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -730,14 +625,6 @@ func (c *Client) AccountListsWithResult[R any](ctx context.Context, accountID in
 //
 //	GET /account/{account_id}/rated/movies
 func (c *Client) AccountRatedMovies(ctx context.Context, accountID int32, params *AccountRatedMoviesParams) (*AccountRatedMoviesOk, error) {
-	return c.AccountRatedMoviesWithResult[AccountRatedMoviesOk](ctx, accountID, params)
-}
-
-// Get a users list of rated movies.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /account/{account_id}/rated/movies
-func (c *Client) AccountRatedMoviesWithResult[R any](ctx context.Context, accountID int32, params *AccountRatedMoviesParams) (*R, error) {
 	u := c.baseURL.JoinPath("account", strconv.FormatInt(int64(accountID), 10), "rated", "movies")
 	if params != nil {
 		q := make(url.Values, 4)
@@ -785,15 +672,8 @@ func (c *Client) AccountRatedMoviesWithResult[R any](ctx context.Context, accoun
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*AccountRatedMoviesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out AccountRatedMoviesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -802,7 +682,7 @@ func (c *Client) AccountRatedMoviesWithResult[R any](ctx context.Context, accoun
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(AccountRatedMoviesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -821,14 +701,6 @@ func (c *Client) AccountRatedMoviesWithResult[R any](ctx context.Context, accoun
 //
 //	GET /account/{account_id}/rated/tv
 func (c *Client) AccountRatedTv(ctx context.Context, accountID int32, params *AccountRatedTvParams) (*AccountRatedTvOk, error) {
-	return c.AccountRatedTvWithResult[AccountRatedTvOk](ctx, accountID, params)
-}
-
-// Get a users list of rated TV shows.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /account/{account_id}/rated/tv
-func (c *Client) AccountRatedTvWithResult[R any](ctx context.Context, accountID int32, params *AccountRatedTvParams) (*R, error) {
 	u := c.baseURL.JoinPath("account", strconv.FormatInt(int64(accountID), 10), "rated", "tv")
 	if params != nil {
 		q := make(url.Values, 4)
@@ -876,15 +748,8 @@ func (c *Client) AccountRatedTvWithResult[R any](ctx context.Context, accountID 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*AccountRatedTvOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out AccountRatedTvOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -893,7 +758,7 @@ func (c *Client) AccountRatedTvWithResult[R any](ctx context.Context, accountID 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(AccountRatedTvOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -912,14 +777,6 @@ func (c *Client) AccountRatedTvWithResult[R any](ctx context.Context, accountID 
 //
 //	GET /account/{account_id}/rated/tv/episodes
 func (c *Client) GetRatedTvEpisodes(ctx context.Context, accountID int32, params *GetRatedTvEpisodesParams) (*RatedEpisodesPage, error) {
-	return c.GetRatedTvEpisodesWithResult[RatedEpisodesPage](ctx, accountID, params)
-}
-
-// Get a users list of rated TV episodes.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /account/{account_id}/rated/tv/episodes
-func (c *Client) GetRatedTvEpisodesWithResult[R any](ctx context.Context, accountID int32, params *GetRatedTvEpisodesParams) (*R, error) {
 	u := c.baseURL.JoinPath("account", strconv.FormatInt(int64(accountID), 10), "rated", "tv", "episodes")
 	if params != nil {
 		q := make(url.Values, 4)
@@ -967,15 +824,8 @@ func (c *Client) GetRatedTvEpisodesWithResult[R any](ctx context.Context, accoun
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*RatedEpisodesPage); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out RatedEpisodesPage
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -984,7 +834,7 @@ func (c *Client) GetRatedTvEpisodesWithResult[R any](ctx context.Context, accoun
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(RatedEpisodesPage)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1003,14 +853,6 @@ func (c *Client) GetRatedTvEpisodesWithResult[R any](ctx context.Context, accoun
 //
 //	GET /account/{account_id}/watchlist/movies
 func (c *Client) AccountWatchlistMovies(ctx context.Context, accountID int32, params *AccountWatchlistMoviesParams) (*MoviesResultPage, error) {
-	return c.AccountWatchlistMoviesWithResult[MoviesResultPage](ctx, accountID, params)
-}
-
-// Get a list of movies added to a users watchlist.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /account/{account_id}/watchlist/movies
-func (c *Client) AccountWatchlistMoviesWithResult[R any](ctx context.Context, accountID int32, params *AccountWatchlistMoviesParams) (*R, error) {
 	u := c.baseURL.JoinPath("account", strconv.FormatInt(int64(accountID), 10), "watchlist", "movies")
 	if params != nil {
 		q := make(url.Values, 4)
@@ -1058,15 +900,8 @@ func (c *Client) AccountWatchlistMoviesWithResult[R any](ctx context.Context, ac
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MoviesResultPage); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MoviesResultPage
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1075,7 +910,7 @@ func (c *Client) AccountWatchlistMoviesWithResult[R any](ctx context.Context, ac
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MoviesResultPage)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1094,14 +929,6 @@ func (c *Client) AccountWatchlistMoviesWithResult[R any](ctx context.Context, ac
 //
 //	GET /account/{account_id}/watchlist/tv
 func (c *Client) AccountWatchlistTv(ctx context.Context, accountID int32, params *AccountWatchlistTvParams) (*ShowsResultPage, error) {
-	return c.AccountWatchlistTvWithResult[ShowsResultPage](ctx, accountID, params)
-}
-
-// Get a list of TV shows added to a users watchlist.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /account/{account_id}/watchlist/tv
-func (c *Client) AccountWatchlistTvWithResult[R any](ctx context.Context, accountID int32, params *AccountWatchlistTvParams) (*R, error) {
 	u := c.baseURL.JoinPath("account", strconv.FormatInt(int64(accountID), 10), "watchlist", "tv")
 	if params != nil {
 		q := make(url.Values, 4)
@@ -1149,15 +976,8 @@ func (c *Client) AccountWatchlistTvWithResult[R any](ctx context.Context, accoun
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ShowsResultPage); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ShowsResultPage
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1166,7 +986,7 @@ func (c *Client) AccountWatchlistTvWithResult[R any](ctx context.Context, accoun
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ShowsResultPage)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1185,14 +1005,6 @@ func (c *Client) AccountWatchlistTvWithResult[R any](ctx context.Context, accoun
 //
 //	GET /authentication/guest_session/new
 func (c *Client) AuthenticationCreateGuestSession(ctx context.Context) (*AuthenticationCreateGuestSessionOk, error) {
-	return c.AuthenticationCreateGuestSessionWithResult[AuthenticationCreateGuestSessionOk](ctx)
-}
-
-// Create Guest Session
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /authentication/guest_session/new
-func (c *Client) AuthenticationCreateGuestSessionWithResult[R any](ctx context.Context) (*R, error) {
 	u := c.baseURL.JoinPath("authentication", "guest_session", "new")
 	req := (&http.Request{
 		Header: http.Header{
@@ -1218,15 +1030,8 @@ func (c *Client) AuthenticationCreateGuestSessionWithResult[R any](ctx context.C
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*AuthenticationCreateGuestSessionOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out AuthenticationCreateGuestSessionOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1235,7 +1040,7 @@ func (c *Client) AuthenticationCreateGuestSessionWithResult[R any](ctx context.C
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(AuthenticationCreateGuestSessionOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1254,14 +1059,6 @@ func (c *Client) AuthenticationCreateGuestSessionWithResult[R any](ctx context.C
 //
 //	GET /authentication/token/new
 func (c *Client) AuthenticationCreateRequestToken(ctx context.Context) (*AuthenticationCreateToken, error) {
-	return c.AuthenticationCreateRequestTokenWithResult[AuthenticationCreateToken](ctx)
-}
-
-// Create Request Token
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /authentication/token/new
-func (c *Client) AuthenticationCreateRequestTokenWithResult[R any](ctx context.Context) (*R, error) {
 	u := c.baseURL.JoinPath("authentication", "token", "new")
 	req := (&http.Request{
 		Header: http.Header{
@@ -1287,15 +1084,8 @@ func (c *Client) AuthenticationCreateRequestTokenWithResult[R any](ctx context.C
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*AuthenticationCreateToken); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out AuthenticationCreateToken
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1304,7 +1094,7 @@ func (c *Client) AuthenticationCreateRequestTokenWithResult[R any](ctx context.C
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(AuthenticationCreateToken)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1323,14 +1113,6 @@ func (c *Client) AuthenticationCreateRequestTokenWithResult[R any](ctx context.C
 //
 //	POST /authentication/session/new
 func (c *Client) AuthenticationCreateSession(ctx context.Context, body *ListCreate) (*AuthenticationCreateSession, error) {
-	return c.AuthenticationCreateSessionWithResult[AuthenticationCreateSession](ctx, body)
-}
-
-// Create Session
-// You can define a custom result to unmarshal the response into.
-//
-//	POST /authentication/session/new
-func (c *Client) AuthenticationCreateSessionWithResult[R any](ctx context.Context, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("authentication", "session", "new")
 	req := (&http.Request{
 		Header: http.Header{
@@ -1366,15 +1148,8 @@ func (c *Client) AuthenticationCreateSessionWithResult[R any](ctx context.Contex
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*AuthenticationCreateSession); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out AuthenticationCreateSession
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1383,7 +1158,7 @@ func (c *Client) AuthenticationCreateSessionWithResult[R any](ctx context.Contex
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(AuthenticationCreateSession)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1402,14 +1177,6 @@ func (c *Client) AuthenticationCreateSessionWithResult[R any](ctx context.Contex
 //
 //	POST /authentication/session/convert/4
 func (c *Client) AuthenticationCreateSessionFromV4Token(ctx context.Context, body *ListCreate) (*AuthenticationCreateSession, error) {
-	return c.AuthenticationCreateSessionFromV4TokenWithResult[AuthenticationCreateSession](ctx, body)
-}
-
-// Create Session (from v4 token)
-// You can define a custom result to unmarshal the response into.
-//
-//	POST /authentication/session/convert/4
-func (c *Client) AuthenticationCreateSessionFromV4TokenWithResult[R any](ctx context.Context, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("authentication", "session", "convert", "4")
 	req := (&http.Request{
 		Header: http.Header{
@@ -1445,15 +1212,8 @@ func (c *Client) AuthenticationCreateSessionFromV4TokenWithResult[R any](ctx con
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*AuthenticationCreateSession); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out AuthenticationCreateSession
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1462,7 +1222,7 @@ func (c *Client) AuthenticationCreateSessionFromV4TokenWithResult[R any](ctx con
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(AuthenticationCreateSession)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1481,14 +1241,6 @@ func (c *Client) AuthenticationCreateSessionFromV4TokenWithResult[R any](ctx con
 //
 //	POST /authentication/token/validate_with_login
 func (c *Client) AuthenticationCreateSessionFromLogin(ctx context.Context, body *ListCreate) (*AuthenticationCreateToken, error) {
-	return c.AuthenticationCreateSessionFromLoginWithResult[AuthenticationCreateToken](ctx, body)
-}
-
-// This method allows an application to validate a request token by entering a username and password.
-// You can define a custom result to unmarshal the response into.
-//
-//	POST /authentication/token/validate_with_login
-func (c *Client) AuthenticationCreateSessionFromLoginWithResult[R any](ctx context.Context, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("authentication", "token", "validate_with_login")
 	req := (&http.Request{
 		Header: http.Header{
@@ -1524,15 +1276,8 @@ func (c *Client) AuthenticationCreateSessionFromLoginWithResult[R any](ctx conte
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*AuthenticationCreateToken); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out AuthenticationCreateToken
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1541,7 +1286,7 @@ func (c *Client) AuthenticationCreateSessionFromLoginWithResult[R any](ctx conte
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(AuthenticationCreateToken)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1560,14 +1305,6 @@ func (c *Client) AuthenticationCreateSessionFromLoginWithResult[R any](ctx conte
 //
 //	DELETE /authentication/session
 func (c *Client) AuthenticationDeleteSession(ctx context.Context, body *ListCreate) (*AuthenticationDeleteSessionOk, error) {
-	return c.AuthenticationDeleteSessionWithResult[AuthenticationDeleteSessionOk](ctx, body)
-}
-
-// Delete Session
-// You can define a custom result to unmarshal the response into.
-//
-//	DELETE /authentication/session
-func (c *Client) AuthenticationDeleteSessionWithResult[R any](ctx context.Context, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("authentication", "session")
 	req := (&http.Request{
 		Header: http.Header{
@@ -1603,15 +1340,8 @@ func (c *Client) AuthenticationDeleteSessionWithResult[R any](ctx context.Contex
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*AuthenticationDeleteSessionOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out AuthenticationDeleteSessionOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1620,7 +1350,7 @@ func (c *Client) AuthenticationDeleteSessionWithResult[R any](ctx context.Contex
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(AuthenticationDeleteSessionOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1639,14 +1369,6 @@ func (c *Client) AuthenticationDeleteSessionWithResult[R any](ctx context.Contex
 //
 //	GET /certification/movie/list
 func (c *Client) CertificationMovieList(ctx context.Context) (*CertificationMovieListOk, error) {
-	return c.CertificationMovieListWithResult[CertificationMovieListOk](ctx)
-}
-
-// Get an up to date list of the officially supported movie certifications on TMDB.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /certification/movie/list
-func (c *Client) CertificationMovieListWithResult[R any](ctx context.Context) (*R, error) {
 	u := c.baseURL.JoinPath("certification", "movie", "list")
 	req := (&http.Request{
 		Header: http.Header{
@@ -1672,15 +1394,8 @@ func (c *Client) CertificationMovieListWithResult[R any](ctx context.Context) (*
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*CertificationMovieListOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out CertificationMovieListOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1689,7 +1404,7 @@ func (c *Client) CertificationMovieListWithResult[R any](ctx context.Context) (*
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(CertificationMovieListOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1708,14 +1423,6 @@ func (c *Client) CertificationMovieListWithResult[R any](ctx context.Context) (*
 //
 //	GET /certification/tv/list
 func (c *Client) CertificationsTvList(ctx context.Context) (*CertificationsByRegionWrapper, error) {
-	return c.CertificationsTvListWithResult[CertificationsByRegionWrapper](ctx)
-}
-
-// TV Certifications
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /certification/tv/list
-func (c *Client) CertificationsTvListWithResult[R any](ctx context.Context) (*R, error) {
 	u := c.baseURL.JoinPath("certification", "tv", "list")
 	req := (&http.Request{
 		Header: http.Header{
@@ -1741,15 +1448,8 @@ func (c *Client) CertificationsTvListWithResult[R any](ctx context.Context) (*R,
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*CertificationsByRegionWrapper); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out CertificationsByRegionWrapper
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1758,7 +1458,7 @@ func (c *Client) CertificationsTvListWithResult[R any](ctx context.Context) (*R,
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(CertificationsByRegionWrapper)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1777,14 +1477,6 @@ func (c *Client) CertificationsTvListWithResult[R any](ctx context.Context) (*R,
 //
 //	GET /movie/changes
 func (c *Client) ChangesMovieList(ctx context.Context, params *ChangesMovieListParams) (*ChangesTvList, error) {
-	return c.ChangesMovieListWithResult[ChangesTvList](ctx, params)
-}
-
-// Get a list of all of the movie ids that have been changed in the past 24 hours.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/changes
-func (c *Client) ChangesMovieListWithResult[R any](ctx context.Context, params *ChangesMovieListParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", "changes")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -1828,15 +1520,8 @@ func (c *Client) ChangesMovieListWithResult[R any](ctx context.Context, params *
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ChangesTvList); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ChangesTvList
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1845,7 +1530,7 @@ func (c *Client) ChangesMovieListWithResult[R any](ctx context.Context, params *
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ChangesTvList)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1864,14 +1549,6 @@ func (c *Client) ChangesMovieListWithResult[R any](ctx context.Context, params *
 //
 //	GET /person/changes
 func (c *Client) ChangesPeopleList(ctx context.Context, params *ChangesPeopleListParams) (*ChangesTvList, error) {
-	return c.ChangesPeopleListWithResult[ChangesTvList](ctx, params)
-}
-
-// People List
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /person/changes
-func (c *Client) ChangesPeopleListWithResult[R any](ctx context.Context, params *ChangesPeopleListParams) (*R, error) {
 	u := c.baseURL.JoinPath("person", "changes")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -1915,15 +1592,8 @@ func (c *Client) ChangesPeopleListWithResult[R any](ctx context.Context, params 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ChangesTvList); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ChangesTvList
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1932,7 +1602,7 @@ func (c *Client) ChangesPeopleListWithResult[R any](ctx context.Context, params 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ChangesTvList)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -1951,14 +1621,6 @@ func (c *Client) ChangesPeopleListWithResult[R any](ctx context.Context, params 
 //
 //	GET /tv/changes
 func (c *Client) ChangesTvList(ctx context.Context, params *ChangesTvListParams) (*ChangesTvList, error) {
-	return c.ChangesTvListWithResult[ChangesTvList](ctx, params)
-}
-
-// TV List
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/changes
-func (c *Client) ChangesTvListWithResult[R any](ctx context.Context, params *ChangesTvListParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", "changes")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -2002,15 +1664,8 @@ func (c *Client) ChangesTvListWithResult[R any](ctx context.Context, params *Cha
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ChangesTvList); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ChangesTvList
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2019,7 +1674,7 @@ func (c *Client) ChangesTvListWithResult[R any](ctx context.Context, params *Cha
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ChangesTvList)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2038,14 +1693,6 @@ func (c *Client) ChangesTvListWithResult[R any](ctx context.Context, params *Cha
 //
 //	GET /collection/{collection_id}
 func (c *Client) CollectionDetails(ctx context.Context, collectionID int32, params *CollectionDetailsParams) (*CollectionDetailsOk, error) {
-	return c.CollectionDetailsWithResult[CollectionDetailsOk](ctx, collectionID, params)
-}
-
-// Get collection details by ID.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /collection/{collection_id}
-func (c *Client) CollectionDetailsWithResult[R any](ctx context.Context, collectionID int32, params *CollectionDetailsParams) (*R, error) {
 	u := c.baseURL.JoinPath("collection", strconv.FormatInt(int64(collectionID), 10))
 	if params != nil {
 		q := make(url.Values, 1)
@@ -2081,15 +1728,8 @@ func (c *Client) CollectionDetailsWithResult[R any](ctx context.Context, collect
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*CollectionDetailsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out CollectionDetailsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2098,7 +1738,7 @@ func (c *Client) CollectionDetailsWithResult[R any](ctx context.Context, collect
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(CollectionDetailsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2117,14 +1757,6 @@ func (c *Client) CollectionDetailsWithResult[R any](ctx context.Context, collect
 //
 //	GET /collection/{collection_id}/images
 func (c *Client) CollectionImages(ctx context.Context, collectionID int32, params *CollectionImagesParams) (*CollectionImagesOk, error) {
-	return c.CollectionImagesWithResult[CollectionImagesOk](ctx, collectionID, params)
-}
-
-// Get the images that belong to a collection.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /collection/{collection_id}/images
-func (c *Client) CollectionImagesWithResult[R any](ctx context.Context, collectionID int32, params *CollectionImagesParams) (*R, error) {
 	u := c.baseURL.JoinPath("collection", strconv.FormatInt(int64(collectionID), 10), "images")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -2164,15 +1796,8 @@ func (c *Client) CollectionImagesWithResult[R any](ctx context.Context, collecti
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*CollectionImagesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out CollectionImagesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2181,7 +1806,7 @@ func (c *Client) CollectionImagesWithResult[R any](ctx context.Context, collecti
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(CollectionImagesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2200,14 +1825,6 @@ func (c *Client) CollectionImagesWithResult[R any](ctx context.Context, collecti
 //
 //	GET /collection/{collection_id}/translations
 func (c *Client) CollectionTranslations(ctx context.Context, collectionID int32) (*CollectionTranslationsOk, error) {
-	return c.CollectionTranslationsWithResult[CollectionTranslationsOk](ctx, collectionID)
-}
-
-// Translations
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /collection/{collection_id}/translations
-func (c *Client) CollectionTranslationsWithResult[R any](ctx context.Context, collectionID int32) (*R, error) {
 	u := c.baseURL.JoinPath("collection", strconv.FormatInt(int64(collectionID), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
@@ -2233,15 +1850,8 @@ func (c *Client) CollectionTranslationsWithResult[R any](ctx context.Context, co
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*CollectionTranslationsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out CollectionTranslationsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2250,7 +1860,7 @@ func (c *Client) CollectionTranslationsWithResult[R any](ctx context.Context, co
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(CollectionTranslationsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2269,14 +1879,6 @@ func (c *Client) CollectionTranslationsWithResult[R any](ctx context.Context, co
 //
 //	GET /company/{company_id}
 func (c *Client) CompanyDetails(ctx context.Context, companyID int32) (*CompanyDetailsOk, error) {
-	return c.CompanyDetailsWithResult[CompanyDetailsOk](ctx, companyID)
-}
-
-// Get the company details by ID.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /company/{company_id}
-func (c *Client) CompanyDetailsWithResult[R any](ctx context.Context, companyID int32) (*R, error) {
 	u := c.baseURL.JoinPath("company", strconv.FormatInt(int64(companyID), 10))
 	req := (&http.Request{
 		Header: http.Header{
@@ -2302,15 +1904,8 @@ func (c *Client) CompanyDetailsWithResult[R any](ctx context.Context, companyID 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*CompanyDetailsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out CompanyDetailsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2319,7 +1914,7 @@ func (c *Client) CompanyDetailsWithResult[R any](ctx context.Context, companyID 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(CompanyDetailsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2338,14 +1933,6 @@ func (c *Client) CompanyDetailsWithResult[R any](ctx context.Context, companyID 
 //
 //	GET /company/{company_id}/alternative_names
 func (c *Client) CompanyAlternativeNames(ctx context.Context, companyID int32) (*DetailsCopy, error) {
-	return c.CompanyAlternativeNamesWithResult[DetailsCopy](ctx, companyID)
-}
-
-// Get the company details by ID.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /company/{company_id}/alternative_names
-func (c *Client) CompanyAlternativeNamesWithResult[R any](ctx context.Context, companyID int32) (*R, error) {
 	u := c.baseURL.JoinPath("company", strconv.FormatInt(int64(companyID), 10), "alternative_names")
 	req := (&http.Request{
 		Header: http.Header{
@@ -2371,15 +1958,8 @@ func (c *Client) CompanyAlternativeNamesWithResult[R any](ctx context.Context, c
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*DetailsCopy); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out DetailsCopy
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2388,7 +1968,7 @@ func (c *Client) CompanyAlternativeNamesWithResult[R any](ctx context.Context, c
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(DetailsCopy)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2407,14 +1987,6 @@ func (c *Client) CompanyAlternativeNamesWithResult[R any](ctx context.Context, c
 //
 //	GET /company/{company_id}/images
 func (c *Client) CompanyImages(ctx context.Context, companyID int32) (*CompanyImages, error) {
-	return c.CompanyImagesWithResult[CompanyImages](ctx, companyID)
-}
-
-// Get the company logos by id.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /company/{company_id}/images
-func (c *Client) CompanyImagesWithResult[R any](ctx context.Context, companyID int32) (*R, error) {
 	u := c.baseURL.JoinPath("company", strconv.FormatInt(int64(companyID), 10), "images")
 	req := (&http.Request{
 		Header: http.Header{
@@ -2440,15 +2012,8 @@ func (c *Client) CompanyImagesWithResult[R any](ctx context.Context, companyID i
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*CompanyImages); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out CompanyImages
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2457,7 +2022,7 @@ func (c *Client) CompanyImagesWithResult[R any](ctx context.Context, companyID i
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(CompanyImages)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2476,14 +2041,6 @@ func (c *Client) CompanyImagesWithResult[R any](ctx context.Context, companyID i
 //
 //	GET /configuration
 func (c *Client) ConfigurationDetails(ctx context.Context) (*ConfigurationDetailsOk, error) {
-	return c.ConfigurationDetailsWithResult[ConfigurationDetailsOk](ctx)
-}
-
-// Query the API configuration details.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /configuration
-func (c *Client) ConfigurationDetailsWithResult[R any](ctx context.Context) (*R, error) {
 	u := c.baseURL.JoinPath("configuration")
 	req := (&http.Request{
 		Header: http.Header{
@@ -2509,15 +2066,8 @@ func (c *Client) ConfigurationDetailsWithResult[R any](ctx context.Context) (*R,
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ConfigurationDetailsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ConfigurationDetailsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2526,7 +2076,7 @@ func (c *Client) ConfigurationDetailsWithResult[R any](ctx context.Context) (*R,
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ConfigurationDetailsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2545,19 +2095,6 @@ func (c *Client) ConfigurationDetailsWithResult[R any](ctx context.Context) (*R,
 //
 //	GET /configuration/countries
 func (c *Client) ConfigurationCountries(ctx context.Context, params *ConfigurationCountriesParams) (ConfigurationCountries, error) {
-	out, err := c.ConfigurationCountriesWithResult[ConfigurationCountries](ctx, params)
-	if err != nil {
-		return nil, err
-	}
-
-	return *out, nil
-}
-
-// Get the list of countries (ISO 3166-1 tags) used throughout TMDB.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /configuration/countries
-func (c *Client) ConfigurationCountriesWithResult[R any](ctx context.Context, params *ConfigurationCountriesParams) (*R, error) {
 	u := c.baseURL.JoinPath("configuration", "countries")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -2593,15 +2130,8 @@ func (c *Client) ConfigurationCountriesWithResult[R any](ctx context.Context, pa
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ConfigurationCountries); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ConfigurationCountries
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2610,13 +2140,13 @@ func (c *Client) ConfigurationCountriesWithResult[R any](ctx context.Context, pa
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ConfigurationCountries)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
 			}
 
-			return &out, nil
+			return out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
 		}
@@ -2629,19 +2159,6 @@ func (c *Client) ConfigurationCountriesWithResult[R any](ctx context.Context, pa
 //
 //	GET /configuration/jobs
 func (c *Client) ConfigurationJobs(ctx context.Context) (ConfigurationJobsOk, error) {
-	out, err := c.ConfigurationJobsWithResult[ConfigurationJobsOk](ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return *out, nil
-}
-
-// Get the list of the jobs and departments we use on TMDB.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /configuration/jobs
-func (c *Client) ConfigurationJobsWithResult[R any](ctx context.Context) (*R, error) {
 	u := c.baseURL.JoinPath("configuration", "jobs")
 	req := (&http.Request{
 		Header: http.Header{
@@ -2667,15 +2184,8 @@ func (c *Client) ConfigurationJobsWithResult[R any](ctx context.Context) (*R, er
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ConfigurationJobsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ConfigurationJobsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2684,13 +2194,13 @@ func (c *Client) ConfigurationJobsWithResult[R any](ctx context.Context) (*R, er
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ConfigurationJobsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
 			}
 
-			return &out, nil
+			return out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
 		}
@@ -2703,19 +2213,6 @@ func (c *Client) ConfigurationJobsWithResult[R any](ctx context.Context) (*R, er
 //
 //	GET /configuration/languages
 func (c *Client) ConfigurationLanguages(ctx context.Context) (Languages, error) {
-	out, err := c.ConfigurationLanguagesWithResult[Languages](ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return *out, nil
-}
-
-// Get the list of languages (ISO 639-1 tags) used throughout TMDB.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /configuration/languages
-func (c *Client) ConfigurationLanguagesWithResult[R any](ctx context.Context) (*R, error) {
 	u := c.baseURL.JoinPath("configuration", "languages")
 	req := (&http.Request{
 		Header: http.Header{
@@ -2741,15 +2238,8 @@ func (c *Client) ConfigurationLanguagesWithResult[R any](ctx context.Context) (*
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*Languages); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out Languages
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2758,13 +2248,13 @@ func (c *Client) ConfigurationLanguagesWithResult[R any](ctx context.Context) (*
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(Languages)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
 			}
 
-			return &out, nil
+			return out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
 		}
@@ -2777,19 +2267,6 @@ func (c *Client) ConfigurationLanguagesWithResult[R any](ctx context.Context) (*
 //
 //	GET /configuration/primary_translations
 func (c *Client) ConfigurationPrimaryTranslations(ctx context.Context) ([]string, error) {
-	out, err := c.ConfigurationPrimaryTranslationsWithResult[[]string](ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return *out, nil
-}
-
-// Get a list of the officially supported translations on TMDB.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /configuration/primary_translations
-func (c *Client) ConfigurationPrimaryTranslationsWithResult[R any](ctx context.Context) (*R, error) {
 	u := c.baseURL.JoinPath("configuration", "primary_translations")
 	req := (&http.Request{
 		Header: http.Header{
@@ -2815,15 +2292,8 @@ func (c *Client) ConfigurationPrimaryTranslationsWithResult[R any](ctx context.C
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*[]string); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out []string
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2832,13 +2302,13 @@ func (c *Client) ConfigurationPrimaryTranslationsWithResult[R any](ctx context.C
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new([]string)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
 			}
 
-			return &out, nil
+			return out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
 		}
@@ -2851,19 +2321,6 @@ func (c *Client) ConfigurationPrimaryTranslationsWithResult[R any](ctx context.C
 //
 //	GET /configuration/timezones
 func (c *Client) ConfigurationTimezones(ctx context.Context) (ConfigurationTimezonesOk, error) {
-	out, err := c.ConfigurationTimezonesWithResult[ConfigurationTimezonesOk](ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return *out, nil
-}
-
-// Get the list of timezones used throughout TMDB.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /configuration/timezones
-func (c *Client) ConfigurationTimezonesWithResult[R any](ctx context.Context) (*R, error) {
 	u := c.baseURL.JoinPath("configuration", "timezones")
 	req := (&http.Request{
 		Header: http.Header{
@@ -2889,15 +2346,8 @@ func (c *Client) ConfigurationTimezonesWithResult[R any](ctx context.Context) (*
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ConfigurationTimezonesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ConfigurationTimezonesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2906,13 +2356,13 @@ func (c *Client) ConfigurationTimezonesWithResult[R any](ctx context.Context) (*
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ConfigurationTimezonesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
 			}
 
-			return &out, nil
+			return out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
 		}
@@ -2925,14 +2375,6 @@ func (c *Client) ConfigurationTimezonesWithResult[R any](ctx context.Context) (*
 //
 //	GET /credit/{credit_id}
 func (c *Client) CreditDetails(ctx context.Context, creditID string, params *CreditDetailsParams) (*CreditDetailsOk, error) {
-	return c.CreditDetailsWithResult[CreditDetailsOk](ctx, creditID, params)
-}
-
-// Get a movie or TV credit details by ID.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /credit/{credit_id}
-func (c *Client) CreditDetailsWithResult[R any](ctx context.Context, creditID string, params *CreditDetailsParams) (*R, error) {
 	u := c.baseURL.JoinPath("credit", url.PathEscape(creditID))
 	if params != nil {
 		q := make(url.Values, 1)
@@ -2968,15 +2410,8 @@ func (c *Client) CreditDetailsWithResult[R any](ctx context.Context, creditID st
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*CreditDetailsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out CreditDetailsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -2985,7 +2420,7 @@ func (c *Client) CreditDetailsWithResult[R any](ctx context.Context, creditID st
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(CreditDetailsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3004,14 +2439,6 @@ func (c *Client) CreditDetailsWithResult[R any](ctx context.Context, creditID st
 //
 //	GET /discover/movie
 func (c *Client) DiscoverMovie(ctx context.Context, params *DiscoverMovieParams) (*MoviesResultPage, error) {
-	return c.DiscoverMovieWithResult[MoviesResultPage](ctx, params)
-}
-
-// Find movies using over 30 filters and sort options.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /discover/movie
-func (c *Client) DiscoverMovieWithResult[R any](ctx context.Context, params *DiscoverMovieParams) (*R, error) {
 	u := c.baseURL.JoinPath("discover", "movie")
 	if params != nil {
 		q := make(url.Values, 38)
@@ -3195,15 +2622,8 @@ func (c *Client) DiscoverMovieWithResult[R any](ctx context.Context, params *Dis
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MoviesResultPage); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MoviesResultPage
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3212,7 +2632,7 @@ func (c *Client) DiscoverMovieWithResult[R any](ctx context.Context, params *Dis
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MoviesResultPage)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3231,14 +2651,6 @@ func (c *Client) DiscoverMovieWithResult[R any](ctx context.Context, params *Dis
 //
 //	GET /discover/tv
 func (c *Client) DiscoverTv(ctx context.Context, params *DiscoverTvParams) (*DiscoverTv, error) {
-	return c.DiscoverTvWithResult[DiscoverTv](ctx, params)
-}
-
-// Find TV shows using over 30 filters and sort options.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /discover/tv
-func (c *Client) DiscoverTvWithResult[R any](ctx context.Context, params *DiscoverTvParams) (*R, error) {
 	u := c.baseURL.JoinPath("discover", "tv")
 	if params != nil {
 		q := make(url.Values, 33)
@@ -3402,15 +2814,8 @@ func (c *Client) DiscoverTvWithResult[R any](ctx context.Context, params *Discov
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*DiscoverTv); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out DiscoverTv
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3419,7 +2824,7 @@ func (c *Client) DiscoverTvWithResult[R any](ctx context.Context, params *Discov
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(DiscoverTv)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3438,14 +2843,6 @@ func (c *Client) DiscoverTvWithResult[R any](ctx context.Context, params *Discov
 //
 //	GET /find/{external_id}
 func (c *Client) FindByID(ctx context.Context, externalID string, params FindByIDParams) (*FindByIDOk, error) {
-	return c.FindByIDWithResult[FindByIDOk](ctx, externalID, params)
-}
-
-// Find data by external ID's.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /find/{external_id}
-func (c *Client) FindByIDWithResult[R any](ctx context.Context, externalID string, params FindByIDParams) (*R, error) {
 	u := c.baseURL.JoinPath("find", url.PathEscape(externalID))
 
 	q := make(url.Values, 2)
@@ -3482,15 +2879,8 @@ func (c *Client) FindByIDWithResult[R any](ctx context.Context, externalID strin
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*FindByIDOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out FindByIDOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3499,7 +2889,7 @@ func (c *Client) FindByIDWithResult[R any](ctx context.Context, externalID strin
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(FindByIDOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3518,14 +2908,6 @@ func (c *Client) FindByIDWithResult[R any](ctx context.Context, externalID strin
 //
 //	GET /genre/movie/list
 func (c *Client) GenreMovieList(ctx context.Context, params *GenreMovieListParams) (*GenreTvList, error) {
-	return c.GenreMovieListWithResult[GenreTvList](ctx, params)
-}
-
-// Get the list of official genres for movies.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /genre/movie/list
-func (c *Client) GenreMovieListWithResult[R any](ctx context.Context, params *GenreMovieListParams) (*R, error) {
 	u := c.baseURL.JoinPath("genre", "movie", "list")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -3561,15 +2943,8 @@ func (c *Client) GenreMovieListWithResult[R any](ctx context.Context, params *Ge
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*GenreTvList); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out GenreTvList
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3578,7 +2953,7 @@ func (c *Client) GenreMovieListWithResult[R any](ctx context.Context, params *Ge
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(GenreTvList)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3597,14 +2972,6 @@ func (c *Client) GenreMovieListWithResult[R any](ctx context.Context, params *Ge
 //
 //	GET /genre/tv/list
 func (c *Client) GenreTvList(ctx context.Context, params *GenreTvListParams) (*GenreTvList, error) {
-	return c.GenreTvListWithResult[GenreTvList](ctx, params)
-}
-
-// Get the list of official genres for TV shows.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /genre/tv/list
-func (c *Client) GenreTvListWithResult[R any](ctx context.Context, params *GenreTvListParams) (*R, error) {
 	u := c.baseURL.JoinPath("genre", "tv", "list")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -3640,15 +3007,8 @@ func (c *Client) GenreTvListWithResult[R any](ctx context.Context, params *Genre
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*GenreTvList); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out GenreTvList
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3657,7 +3017,7 @@ func (c *Client) GenreTvListWithResult[R any](ctx context.Context, params *Genre
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(GenreTvList)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3676,14 +3036,6 @@ func (c *Client) GenreTvListWithResult[R any](ctx context.Context, params *Genre
 //
 //	GET /guest_session/{guest_session_id}/rated/movies
 func (c *Client) GuestSessionRatedMovies(ctx context.Context, guestSessionID string, params *GuestSessionRatedMoviesParams) (*GuestSessionRatedMoviesOk, error) {
-	return c.GuestSessionRatedMoviesWithResult[GuestSessionRatedMoviesOk](ctx, guestSessionID, params)
-}
-
-// Get the rated movies for a guest session.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /guest_session/{guest_session_id}/rated/movies
-func (c *Client) GuestSessionRatedMoviesWithResult[R any](ctx context.Context, guestSessionID string, params *GuestSessionRatedMoviesParams) (*R, error) {
 	u := c.baseURL.JoinPath("guest_session", url.PathEscape(guestSessionID), "rated", "movies")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -3727,15 +3079,8 @@ func (c *Client) GuestSessionRatedMoviesWithResult[R any](ctx context.Context, g
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*GuestSessionRatedMoviesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out GuestSessionRatedMoviesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3744,7 +3089,7 @@ func (c *Client) GuestSessionRatedMoviesWithResult[R any](ctx context.Context, g
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(GuestSessionRatedMoviesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3763,14 +3108,6 @@ func (c *Client) GuestSessionRatedMoviesWithResult[R any](ctx context.Context, g
 //
 //	GET /guest_session/{guest_session_id}/rated/tv
 func (c *Client) GuestSessionRatedTv(ctx context.Context, guestSessionID string, params *GuestSessionRatedTvParams) (*GuestSessionRatedTvOk, error) {
-	return c.GuestSessionRatedTvWithResult[GuestSessionRatedTvOk](ctx, guestSessionID, params)
-}
-
-// Get the rated TV shows for a guest session.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /guest_session/{guest_session_id}/rated/tv
-func (c *Client) GuestSessionRatedTvWithResult[R any](ctx context.Context, guestSessionID string, params *GuestSessionRatedTvParams) (*R, error) {
 	u := c.baseURL.JoinPath("guest_session", url.PathEscape(guestSessionID), "rated", "tv")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -3814,15 +3151,8 @@ func (c *Client) GuestSessionRatedTvWithResult[R any](ctx context.Context, guest
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*GuestSessionRatedTvOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out GuestSessionRatedTvOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3831,7 +3161,7 @@ func (c *Client) GuestSessionRatedTvWithResult[R any](ctx context.Context, guest
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(GuestSessionRatedTvOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3850,14 +3180,6 @@ func (c *Client) GuestSessionRatedTvWithResult[R any](ctx context.Context, guest
 //
 //	GET /guest_session/{guest_session_id}/rated/tv/episodes
 func (c *Client) GuestSessionRatedTvEpisodes(ctx context.Context, guestSessionID string, params *GuestSessionRatedTvEpisodesParams) (*GuestSessionRatedTvEpisodesOk, error) {
-	return c.GuestSessionRatedTvEpisodesWithResult[GuestSessionRatedTvEpisodesOk](ctx, guestSessionID, params)
-}
-
-// Get the rated TV episodes for a guest session.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /guest_session/{guest_session_id}/rated/tv/episodes
-func (c *Client) GuestSessionRatedTvEpisodesWithResult[R any](ctx context.Context, guestSessionID string, params *GuestSessionRatedTvEpisodesParams) (*R, error) {
 	u := c.baseURL.JoinPath("guest_session", url.PathEscape(guestSessionID), "rated", "tv", "episodes")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -3901,15 +3223,8 @@ func (c *Client) GuestSessionRatedTvEpisodesWithResult[R any](ctx context.Contex
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*GuestSessionRatedTvEpisodesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out GuestSessionRatedTvEpisodesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3918,7 +3233,7 @@ func (c *Client) GuestSessionRatedTvEpisodesWithResult[R any](ctx context.Contex
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(GuestSessionRatedTvEpisodesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3937,14 +3252,6 @@ func (c *Client) GuestSessionRatedTvEpisodesWithResult[R any](ctx context.Contex
 //
 //	GET /keyword/{keyword_id}
 func (c *Client) KeywordDetails(ctx context.Context, keywordID int32) (*Keyword, error) {
-	return c.KeywordDetailsWithResult[Keyword](ctx, keywordID)
-}
-
-// Details
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /keyword/{keyword_id}
-func (c *Client) KeywordDetailsWithResult[R any](ctx context.Context, keywordID int32) (*R, error) {
 	u := c.baseURL.JoinPath("keyword", strconv.FormatInt(int64(keywordID), 10))
 	req := (&http.Request{
 		Header: http.Header{
@@ -3970,15 +3277,8 @@ func (c *Client) KeywordDetailsWithResult[R any](ctx context.Context, keywordID 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*Keyword); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out Keyword
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -3987,7 +3287,7 @@ func (c *Client) KeywordDetailsWithResult[R any](ctx context.Context, keywordID 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(Keyword)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4006,14 +3306,6 @@ func (c *Client) KeywordDetailsWithResult[R any](ctx context.Context, keywordID 
 //
 //	GET /keyword/{keyword_id}/movies
 func (c *Client) KeywordMovies(ctx context.Context, keywordID string, params *KeywordMoviesParams) (*KeywordMoviesOk, error) {
-	return c.KeywordMoviesWithResult[KeywordMoviesOk](ctx, keywordID, params)
-}
-
-// Movies
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /keyword/{keyword_id}/movies
-func (c *Client) KeywordMoviesWithResult[R any](ctx context.Context, keywordID string, params *KeywordMoviesParams) (*R, error) {
 	u := c.baseURL.JoinPath("keyword", url.PathEscape(keywordID), "movies")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -4057,15 +3349,8 @@ func (c *Client) KeywordMoviesWithResult[R any](ctx context.Context, keywordID s
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*KeywordMoviesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out KeywordMoviesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4074,7 +3359,7 @@ func (c *Client) KeywordMoviesWithResult[R any](ctx context.Context, keywordID s
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(KeywordMoviesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4093,14 +3378,6 @@ func (c *Client) KeywordMoviesWithResult[R any](ctx context.Context, keywordID s
 //
 //	POST /list/{list_id}/add_item
 func (c *Client) ListAddMovie(ctx context.Context, listID int32, params ListAddMovieParams, body *ListAddMovie) (*ListClear, error) {
-	return c.ListAddMovieWithResult[ListClear](ctx, listID, params, body)
-}
-
-// Add a movie to a list.
-// You can define a custom result to unmarshal the response into.
-//
-//	POST /list/{list_id}/add_item
-func (c *Client) ListAddMovieWithResult[R any](ctx context.Context, listID int32, params ListAddMovieParams, body *ListAddMovie) (*R, error) {
 	u := c.baseURL.JoinPath("list", strconv.FormatInt(int64(listID), 10), "add_item")
 
 	q := make(url.Values, 1)
@@ -4143,15 +3420,8 @@ func (c *Client) ListAddMovieWithResult[R any](ctx context.Context, listID int32
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListClear); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListClear
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4160,7 +3430,7 @@ func (c *Client) ListAddMovieWithResult[R any](ctx context.Context, listID int32
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListClear)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4179,14 +3449,6 @@ func (c *Client) ListAddMovieWithResult[R any](ctx context.Context, listID int32
 //
 //	GET /list/{list_id}/item_status
 func (c *Client) ListCheckItemStatus(ctx context.Context, listID int32, params *ListCheckItemStatusParams) (*ListCheckItemStatusOk, error) {
-	return c.ListCheckItemStatusWithResult[ListCheckItemStatusOk](ctx, listID, params)
-}
-
-// Use this method to check if an item has already been added to the list.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /list/{list_id}/item_status
-func (c *Client) ListCheckItemStatusWithResult[R any](ctx context.Context, listID int32, params *ListCheckItemStatusParams) (*R, error) {
 	u := c.baseURL.JoinPath("list", strconv.FormatInt(int64(listID), 10), "item_status")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -4226,15 +3488,8 @@ func (c *Client) ListCheckItemStatusWithResult[R any](ctx context.Context, listI
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListCheckItemStatusOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListCheckItemStatusOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4243,7 +3498,7 @@ func (c *Client) ListCheckItemStatusWithResult[R any](ctx context.Context, listI
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListCheckItemStatusOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4262,14 +3517,6 @@ func (c *Client) ListCheckItemStatusWithResult[R any](ctx context.Context, listI
 //
 //	POST /list/{list_id}/clear
 func (c *Client) ListClear(ctx context.Context, listID int32, params ListClearParams) (*ListClear, error) {
-	return c.ListClearWithResult[ListClear](ctx, listID, params)
-}
-
-// Clear all items from a list.
-// You can define a custom result to unmarshal the response into.
-//
-//	POST /list/{list_id}/clear
-func (c *Client) ListClearWithResult[R any](ctx context.Context, listID int32, params ListClearParams) (*R, error) {
 	u := c.baseURL.JoinPath("list", strconv.FormatInt(int64(listID), 10), "clear")
 
 	q := make(url.Values, 2)
@@ -4304,15 +3551,8 @@ func (c *Client) ListClearWithResult[R any](ctx context.Context, listID int32, p
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListClear); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListClear
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4321,7 +3561,7 @@ func (c *Client) ListClearWithResult[R any](ctx context.Context, listID int32, p
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListClear)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4340,14 +3580,6 @@ func (c *Client) ListClearWithResult[R any](ctx context.Context, listID int32, p
 //
 //	POST /list
 func (c *Client) ListCreate(ctx context.Context, params ListCreateParams, body *ListCreate) (*ListCreateOk, error) {
-	return c.ListCreateWithResult[ListCreateOk](ctx, params, body)
-}
-
-// Create
-// You can define a custom result to unmarshal the response into.
-//
-//	POST /list
-func (c *Client) ListCreateWithResult[R any](ctx context.Context, params ListCreateParams, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("list")
 
 	q := make(url.Values, 1)
@@ -4390,15 +3622,8 @@ func (c *Client) ListCreateWithResult[R any](ctx context.Context, params ListCre
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListCreateOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListCreateOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4407,7 +3632,7 @@ func (c *Client) ListCreateWithResult[R any](ctx context.Context, params ListCre
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListCreateOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4426,14 +3651,6 @@ func (c *Client) ListCreateWithResult[R any](ctx context.Context, params ListCre
 //
 //	GET /list/{list_id}
 func (c *Client) ListDetails(ctx context.Context, listID int32, params *ListDetailsParams) (*ListDetailsOk, error) {
-	return c.ListDetailsWithResult[ListDetailsOk](ctx, listID, params)
-}
-
-// Details
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /list/{list_id}
-func (c *Client) ListDetailsWithResult[R any](ctx context.Context, listID int32, params *ListDetailsParams) (*R, error) {
 	u := c.baseURL.JoinPath("list", strconv.FormatInt(int64(listID), 10))
 	if params != nil {
 		q := make(url.Values, 2)
@@ -4473,15 +3690,8 @@ func (c *Client) ListDetailsWithResult[R any](ctx context.Context, listID int32,
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListDetailsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListDetailsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4490,7 +3700,7 @@ func (c *Client) ListDetailsWithResult[R any](ctx context.Context, listID int32,
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListDetailsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4509,14 +3719,6 @@ func (c *Client) ListDetailsWithResult[R any](ctx context.Context, listID int32,
 //
 //	DELETE /list/{list_id}
 func (c *Client) ListDelete(ctx context.Context, listID int32, params ListDeleteParams) (*ListClear, error) {
-	return c.ListDeleteWithResult[ListClear](ctx, listID, params)
-}
-
-// Delete a list.
-// You can define a custom result to unmarshal the response into.
-//
-//	DELETE /list/{list_id}
-func (c *Client) ListDeleteWithResult[R any](ctx context.Context, listID int32, params ListDeleteParams) (*R, error) {
 	u := c.baseURL.JoinPath("list", strconv.FormatInt(int64(listID), 10))
 
 	q := make(url.Values, 1)
@@ -4549,15 +3751,8 @@ func (c *Client) ListDeleteWithResult[R any](ctx context.Context, listID int32, 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListClear); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListClear
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4566,7 +3761,7 @@ func (c *Client) ListDeleteWithResult[R any](ctx context.Context, listID int32, 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListClear)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4585,14 +3780,6 @@ func (c *Client) ListDeleteWithResult[R any](ctx context.Context, listID int32, 
 //
 //	POST /list/{list_id}/remove_item
 func (c *Client) ListRemoveMovie(ctx context.Context, listID int32, params ListRemoveMovieParams, body *ListCreate) (*ListClear, error) {
-	return c.ListRemoveMovieWithResult[ListClear](ctx, listID, params, body)
-}
-
-// Remove a movie from a list.
-// You can define a custom result to unmarshal the response into.
-//
-//	POST /list/{list_id}/remove_item
-func (c *Client) ListRemoveMovieWithResult[R any](ctx context.Context, listID int32, params ListRemoveMovieParams, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("list", strconv.FormatInt(int64(listID), 10), "remove_item")
 
 	q := make(url.Values, 1)
@@ -4635,15 +3822,8 @@ func (c *Client) ListRemoveMovieWithResult[R any](ctx context.Context, listID in
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListClear); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListClear
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4652,7 +3832,7 @@ func (c *Client) ListRemoveMovieWithResult[R any](ctx context.Context, listID in
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListClear)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4671,14 +3851,6 @@ func (c *Client) ListRemoveMovieWithResult[R any](ctx context.Context, listID in
 //
 //	GET /movie/now_playing
 func (c *Client) GetNowPlaying(ctx context.Context, params *GetNowPlayingParams) (*MovieNowPlayingListOk, error) {
-	return c.GetNowPlayingWithResult[MovieNowPlayingListOk](ctx, params)
-}
-
-// Get a list of movies that are currently in theatres.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/now_playing
-func (c *Client) GetNowPlayingWithResult[R any](ctx context.Context, params *GetNowPlayingParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", "now_playing")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -4722,15 +3894,8 @@ func (c *Client) GetNowPlayingWithResult[R any](ctx context.Context, params *Get
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieNowPlayingListOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieNowPlayingListOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4739,7 +3904,7 @@ func (c *Client) GetNowPlayingWithResult[R any](ctx context.Context, params *Get
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieNowPlayingListOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4758,14 +3923,6 @@ func (c *Client) GetNowPlayingWithResult[R any](ctx context.Context, params *Get
 //
 //	GET /movie/popular
 func (c *Client) GetPopular(ctx context.Context, params *GetPopularParams) (*MoviesResultPage, error) {
-	return c.GetPopularWithResult[MoviesResultPage](ctx, params)
-}
-
-// Get a list of movies ordered by popularity.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/popular
-func (c *Client) GetPopularWithResult[R any](ctx context.Context, params *GetPopularParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", "popular")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -4809,15 +3966,8 @@ func (c *Client) GetPopularWithResult[R any](ctx context.Context, params *GetPop
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MoviesResultPage); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MoviesResultPage
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4826,7 +3976,7 @@ func (c *Client) GetPopularWithResult[R any](ctx context.Context, params *GetPop
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MoviesResultPage)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4845,14 +3995,6 @@ func (c *Client) GetPopularWithResult[R any](ctx context.Context, params *GetPop
 //
 //	GET /movie/top_rated
 func (c *Client) GetTopRated(ctx context.Context, params *GetTopRatedParams) (*MoviesResultPage, error) {
-	return c.GetTopRatedWithResult[MoviesResultPage](ctx, params)
-}
-
-// Get a list of movies ordered by rating.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/top_rated
-func (c *Client) GetTopRatedWithResult[R any](ctx context.Context, params *GetTopRatedParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", "top_rated")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -4896,15 +4038,8 @@ func (c *Client) GetTopRatedWithResult[R any](ctx context.Context, params *GetTo
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MoviesResultPage); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MoviesResultPage
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4913,7 +4048,7 @@ func (c *Client) GetTopRatedWithResult[R any](ctx context.Context, params *GetTo
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MoviesResultPage)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -4932,14 +4067,6 @@ func (c *Client) GetTopRatedWithResult[R any](ctx context.Context, params *GetTo
 //
 //	GET /movie/upcoming
 func (c *Client) GetUpcoming(ctx context.Context, params *GetUpcomingParams) (*MovieUpcomingListOk, error) {
-	return c.GetUpcomingWithResult[MovieUpcomingListOk](ctx, params)
-}
-
-// Get a list of movies that are being released soon.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/upcoming
-func (c *Client) GetUpcomingWithResult[R any](ctx context.Context, params *GetUpcomingParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", "upcoming")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -4983,15 +4110,8 @@ func (c *Client) GetUpcomingWithResult[R any](ctx context.Context, params *GetUp
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieUpcomingListOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieUpcomingListOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5000,7 +4120,7 @@ func (c *Client) GetUpcomingWithResult[R any](ctx context.Context, params *GetUp
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieUpcomingListOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5019,14 +4139,6 @@ func (c *Client) GetUpcomingWithResult[R any](ctx context.Context, params *GetUp
 //
 //	GET /movie/{movie_id}
 func (c *Client) GetMovie(ctx context.Context, movieID MovieID, params *GetMovieParams) (*MovieDetails, error) {
-	return c.GetMovieWithResult[MovieDetails](ctx, movieID, params)
-}
-
-// Get the top level details of a movie by ID.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}
-func (c *Client) GetMovieWithResult[R any](ctx context.Context, movieID MovieID, params *GetMovieParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10))
 	if params != nil {
 		q := make(url.Values, 2)
@@ -5066,15 +4178,8 @@ func (c *Client) GetMovieWithResult[R any](ctx context.Context, movieID MovieID,
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieDetails); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieDetails
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5083,7 +4188,7 @@ func (c *Client) GetMovieWithResult[R any](ctx context.Context, movieID MovieID,
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieDetails)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5102,14 +4207,6 @@ func (c *Client) GetMovieWithResult[R any](ctx context.Context, movieID MovieID,
 //
 //	GET /movie/{movie_id}/account_states
 func (c *Client) MovieAccountStates(ctx context.Context, movieID MovieID, params *MovieAccountStatesParams) (*MovieAccountStates, error) {
-	return c.MovieAccountStatesWithResult[MovieAccountStates](ctx, movieID, params)
-}
-
-// Get the rating, watchlist and favourite status of an account.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}/account_states
-func (c *Client) MovieAccountStatesWithResult[R any](ctx context.Context, movieID MovieID, params *MovieAccountStatesParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "account_states")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -5149,15 +4246,8 @@ func (c *Client) MovieAccountStatesWithResult[R any](ctx context.Context, movieI
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieAccountStates); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieAccountStates
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5166,7 +4256,7 @@ func (c *Client) MovieAccountStatesWithResult[R any](ctx context.Context, movieI
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieAccountStates)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5185,14 +4275,6 @@ func (c *Client) MovieAccountStatesWithResult[R any](ctx context.Context, movieI
 //
 //	GET /movie/{movie_id}/alternative_titles
 func (c *Client) GetAlternativeTitles(ctx context.Context, movieID MovieID, params *GetAlternativeTitlesParams) (*AlternativeTitlesOk, error) {
-	return c.GetAlternativeTitlesWithResult[AlternativeTitlesOk](ctx, movieID, params)
-}
-
-// Get the alternative titles for a movie.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}/alternative_titles
-func (c *Client) GetAlternativeTitlesWithResult[R any](ctx context.Context, movieID MovieID, params *GetAlternativeTitlesParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "alternative_titles")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -5228,15 +4310,8 @@ func (c *Client) GetAlternativeTitlesWithResult[R any](ctx context.Context, movi
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*AlternativeTitlesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out AlternativeTitlesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5245,7 +4320,7 @@ func (c *Client) GetAlternativeTitlesWithResult[R any](ctx context.Context, movi
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(AlternativeTitlesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5264,14 +4339,6 @@ func (c *Client) GetAlternativeTitlesWithResult[R any](ctx context.Context, movi
 //
 //	GET /movie/{movie_id}/changes
 func (c *Client) MovieChanges(ctx context.Context, movieID MovieID, params *MovieChangesParams) (*MovieChangesOk, error) {
-	return c.MovieChangesWithResult[MovieChangesOk](ctx, movieID, params)
-}
-
-// Get the recent changes for a movie.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}/changes
-func (c *Client) MovieChangesWithResult[R any](ctx context.Context, movieID MovieID, params *MovieChangesParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "changes")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -5315,15 +4382,8 @@ func (c *Client) MovieChangesWithResult[R any](ctx context.Context, movieID Movi
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieChangesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieChangesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5332,7 +4392,7 @@ func (c *Client) MovieChangesWithResult[R any](ctx context.Context, movieID Movi
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieChangesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5351,14 +4411,6 @@ func (c *Client) MovieChangesWithResult[R any](ctx context.Context, movieID Movi
 //
 //	GET /movie/{movie_id}/credits
 func (c *Client) MovieCredits(ctx context.Context, movieID MovieID, params *MovieCreditsParams) (*MovieCreditsOk, error) {
-	return c.MovieCreditsWithResult[MovieCreditsOk](ctx, movieID, params)
-}
-
-// Credits
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}/credits
-func (c *Client) MovieCreditsWithResult[R any](ctx context.Context, movieID MovieID, params *MovieCreditsParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "credits")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -5394,15 +4446,8 @@ func (c *Client) MovieCreditsWithResult[R any](ctx context.Context, movieID Movi
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieCreditsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieCreditsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5411,7 +4456,7 @@ func (c *Client) MovieCreditsWithResult[R any](ctx context.Context, movieID Movi
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieCreditsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5430,14 +4475,6 @@ func (c *Client) MovieCreditsWithResult[R any](ctx context.Context, movieID Movi
 //
 //	GET /movie/{movie_id}/external_ids
 func (c *Client) MovieExternalIds(ctx context.Context, movieID MovieID) (*MovieExternalIdsOk, error) {
-	return c.MovieExternalIdsWithResult[MovieExternalIdsOk](ctx, movieID)
-}
-
-// External IDs
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}/external_ids
-func (c *Client) MovieExternalIdsWithResult[R any](ctx context.Context, movieID MovieID) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "external_ids")
 	req := (&http.Request{
 		Header: http.Header{
@@ -5463,15 +4500,8 @@ func (c *Client) MovieExternalIdsWithResult[R any](ctx context.Context, movieID 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieExternalIdsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieExternalIdsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5480,7 +4510,7 @@ func (c *Client) MovieExternalIdsWithResult[R any](ctx context.Context, movieID 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieExternalIdsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5499,14 +4529,6 @@ func (c *Client) MovieExternalIdsWithResult[R any](ctx context.Context, movieID 
 //
 //	GET /movie/{movie_id}/images
 func (c *Client) GetMovieImages(ctx context.Context, movieID MovieID, params *GetMovieImagesParams) (*MovieImages, error) {
-	return c.GetMovieImagesWithResult[MovieImages](ctx, movieID, params)
-}
-
-// Get the images that belong to a movie.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}/images
-func (c *Client) GetMovieImagesWithResult[R any](ctx context.Context, movieID MovieID, params *GetMovieImagesParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "images")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -5546,15 +4568,8 @@ func (c *Client) GetMovieImagesWithResult[R any](ctx context.Context, movieID Mo
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieImages); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieImages
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5563,7 +4578,7 @@ func (c *Client) GetMovieImagesWithResult[R any](ctx context.Context, movieID Mo
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieImages)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5582,14 +4597,6 @@ func (c *Client) GetMovieImagesWithResult[R any](ctx context.Context, movieID Mo
 //
 //	GET /movie/{movie_id}/keywords
 func (c *Client) MovieKeywords(ctx context.Context, movieID MovieID) (*MovieKeywordsOk, error) {
-	return c.MovieKeywordsWithResult[MovieKeywordsOk](ctx, movieID)
-}
-
-// Keywords
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}/keywords
-func (c *Client) MovieKeywordsWithResult[R any](ctx context.Context, movieID MovieID) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "keywords")
 	req := (&http.Request{
 		Header: http.Header{
@@ -5615,15 +4622,8 @@ func (c *Client) MovieKeywordsWithResult[R any](ctx context.Context, movieID Mov
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieKeywordsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieKeywordsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5632,7 +4632,7 @@ func (c *Client) MovieKeywordsWithResult[R any](ctx context.Context, movieID Mov
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieKeywordsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5651,14 +4651,6 @@ func (c *Client) MovieKeywordsWithResult[R any](ctx context.Context, movieID Mov
 //
 //	GET /movie/latest
 func (c *Client) MovieLatestID(ctx context.Context) (*MovieLatestIDOk, error) {
-	return c.MovieLatestIDWithResult[MovieLatestIDOk](ctx)
-}
-
-// Get the newest movie ID.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/latest
-func (c *Client) MovieLatestIDWithResult[R any](ctx context.Context) (*R, error) {
 	u := c.baseURL.JoinPath("movie", "latest")
 	req := (&http.Request{
 		Header: http.Header{
@@ -5684,15 +4676,8 @@ func (c *Client) MovieLatestIDWithResult[R any](ctx context.Context) (*R, error)
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieLatestIDOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieLatestIDOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5701,7 +4686,7 @@ func (c *Client) MovieLatestIDWithResult[R any](ctx context.Context) (*R, error)
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieLatestIDOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5720,14 +4705,6 @@ func (c *Client) MovieLatestIDWithResult[R any](ctx context.Context) (*R, error)
 //
 //	GET /movie/{movie_id}/lists
 func (c *Client) MovieLists(ctx context.Context, movieID MovieID, params *MovieListsParams) (*MovieListsOk, error) {
-	return c.MovieListsWithResult[MovieListsOk](ctx, movieID, params)
-}
-
-// Get the lists that a movie has been added to.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}/lists
-func (c *Client) MovieListsWithResult[R any](ctx context.Context, movieID MovieID, params *MovieListsParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "lists")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -5767,15 +4744,8 @@ func (c *Client) MovieListsWithResult[R any](ctx context.Context, movieID MovieI
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieListsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieListsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5784,7 +4754,7 @@ func (c *Client) MovieListsWithResult[R any](ctx context.Context, movieID MovieI
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieListsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5871,14 +4841,6 @@ func (c *Client) MovieRecommendations(ctx context.Context, movieID MovieID, para
 //
 //	GET /movie/{movie_id}/release_dates
 func (c *Client) MovieReleaseDates(ctx context.Context, movieID MovieID) (*MovieReleaseDatesOk, error) {
-	return c.MovieReleaseDatesWithResult[MovieReleaseDatesOk](ctx, movieID)
-}
-
-// Get the release dates and certifications for a movie.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}/release_dates
-func (c *Client) MovieReleaseDatesWithResult[R any](ctx context.Context, movieID MovieID) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "release_dates")
 	req := (&http.Request{
 		Header: http.Header{
@@ -5904,15 +4866,8 @@ func (c *Client) MovieReleaseDatesWithResult[R any](ctx context.Context, movieID
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieReleaseDatesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieReleaseDatesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5921,7 +4876,7 @@ func (c *Client) MovieReleaseDatesWithResult[R any](ctx context.Context, movieID
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieReleaseDatesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -5940,14 +4895,6 @@ func (c *Client) MovieReleaseDatesWithResult[R any](ctx context.Context, movieID
 //
 //	GET /movie/{movie_id}/reviews
 func (c *Client) MovieReviews(ctx context.Context, movieID MovieID, params *MovieReviewsParams) (*MovieReviewsOk, error) {
-	return c.MovieReviewsWithResult[MovieReviewsOk](ctx, movieID, params)
-}
-
-// Get the user reviews for a movie.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}/reviews
-func (c *Client) MovieReviewsWithResult[R any](ctx context.Context, movieID MovieID, params *MovieReviewsParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "reviews")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -5987,15 +4934,8 @@ func (c *Client) MovieReviewsWithResult[R any](ctx context.Context, movieID Movi
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieReviewsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieReviewsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6004,7 +4944,7 @@ func (c *Client) MovieReviewsWithResult[R any](ctx context.Context, movieID Movi
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieReviewsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6023,14 +4963,6 @@ func (c *Client) MovieReviewsWithResult[R any](ctx context.Context, movieID Movi
 //
 //	GET /movie/{movie_id}/similar
 func (c *Client) MovieSimilar(ctx context.Context, movieID MovieID, params *MovieSimilarParams) (*MoviesResultPage, error) {
-	return c.MovieSimilarWithResult[MoviesResultPage](ctx, movieID, params)
-}
-
-// Get the similar movies based on genres and keywords.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}/similar
-func (c *Client) MovieSimilarWithResult[R any](ctx context.Context, movieID MovieID, params *MovieSimilarParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "similar")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -6070,15 +5002,8 @@ func (c *Client) MovieSimilarWithResult[R any](ctx context.Context, movieID Movi
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MoviesResultPage); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MoviesResultPage
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6087,7 +5012,7 @@ func (c *Client) MovieSimilarWithResult[R any](ctx context.Context, movieID Movi
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MoviesResultPage)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6106,14 +5031,6 @@ func (c *Client) MovieSimilarWithResult[R any](ctx context.Context, movieID Movi
 //
 //	GET /movie/{movie_id}/translations
 func (c *Client) MovieTranslations(ctx context.Context, movieID MovieID) (*MovieTranslationsOk, error) {
-	return c.MovieTranslationsWithResult[MovieTranslationsOk](ctx, movieID)
-}
-
-// Get the translations for a movie.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}/translations
-func (c *Client) MovieTranslationsWithResult[R any](ctx context.Context, movieID MovieID) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
@@ -6139,15 +5056,8 @@ func (c *Client) MovieTranslationsWithResult[R any](ctx context.Context, movieID
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieTranslationsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieTranslationsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6156,7 +5066,7 @@ func (c *Client) MovieTranslationsWithResult[R any](ctx context.Context, movieID
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieTranslationsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6175,14 +5085,6 @@ func (c *Client) MovieTranslationsWithResult[R any](ctx context.Context, movieID
 //
 //	GET /movie/{movie_id}/videos
 func (c *Client) MovieVideos(ctx context.Context, movieID MovieID, params *MovieVideosParams) (*MovieVideos, error) {
-	return c.MovieVideosWithResult[MovieVideos](ctx, movieID, params)
-}
-
-// Videos
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}/videos
-func (c *Client) MovieVideosWithResult[R any](ctx context.Context, movieID MovieID, params *MovieVideosParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "videos")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -6218,15 +5120,8 @@ func (c *Client) MovieVideosWithResult[R any](ctx context.Context, movieID Movie
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieVideos); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieVideos
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6235,7 +5130,7 @@ func (c *Client) MovieVideosWithResult[R any](ctx context.Context, movieID Movie
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieVideos)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6254,14 +5149,6 @@ func (c *Client) MovieVideosWithResult[R any](ctx context.Context, movieID Movie
 //
 //	GET /movie/{movie_id}/watch/providers
 func (c *Client) MovieWatchProviders(ctx context.Context, movieID MovieID) (*MovieWatchProvidersOk, error) {
-	return c.MovieWatchProvidersWithResult[MovieWatchProvidersOk](ctx, movieID)
-}
-
-// Get the list of streaming providers we have for a movie.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /movie/{movie_id}/watch/providers
-func (c *Client) MovieWatchProvidersWithResult[R any](ctx context.Context, movieID MovieID) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "watch", "providers")
 	req := (&http.Request{
 		Header: http.Header{
@@ -6287,15 +5174,8 @@ func (c *Client) MovieWatchProvidersWithResult[R any](ctx context.Context, movie
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieWatchProvidersOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieWatchProvidersOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6304,7 +5184,7 @@ func (c *Client) MovieWatchProvidersWithResult[R any](ctx context.Context, movie
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieWatchProvidersOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6323,14 +5203,6 @@ func (c *Client) MovieWatchProvidersWithResult[R any](ctx context.Context, movie
 //
 //	POST /movie/{movie_id}/rating
 func (c *Client) MovieAddRating(ctx context.Context, movieID MovieID, params *MovieAddRatingParams, body *ListCreate) (*ListClear, error) {
-	return c.MovieAddRatingWithResult[ListClear](ctx, movieID, params, body)
-}
-
-// Rate a movie and save it to your rated list.
-// You can define a custom result to unmarshal the response into.
-//
-//	POST /movie/{movie_id}/rating
-func (c *Client) MovieAddRatingWithResult[R any](ctx context.Context, movieID MovieID, params *MovieAddRatingParams, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "rating")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -6380,15 +5252,8 @@ func (c *Client) MovieAddRatingWithResult[R any](ctx context.Context, movieID Mo
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListClear); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListClear
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6397,7 +5262,7 @@ func (c *Client) MovieAddRatingWithResult[R any](ctx context.Context, movieID Mo
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListClear)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6416,14 +5281,6 @@ func (c *Client) MovieAddRatingWithResult[R any](ctx context.Context, movieID Mo
 //
 //	DELETE /movie/{movie_id}/rating
 func (c *Client) MovieDeleteRating(ctx context.Context, movieID MovieID, params *MovieDeleteRatingParams) (*ListClear, error) {
-	return c.MovieDeleteRatingWithResult[ListClear](ctx, movieID, params)
-}
-
-// Delete a user rating.
-// You can define a custom result to unmarshal the response into.
-//
-//	DELETE /movie/{movie_id}/rating
-func (c *Client) MovieDeleteRatingWithResult[R any](ctx context.Context, movieID MovieID, params *MovieDeleteRatingParams) (*R, error) {
 	u := c.baseURL.JoinPath("movie", strconv.FormatInt(int64(movieID), 10), "rating")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -6463,15 +5320,8 @@ func (c *Client) MovieDeleteRatingWithResult[R any](ctx context.Context, movieID
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListClear); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListClear
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6480,7 +5330,7 @@ func (c *Client) MovieDeleteRatingWithResult[R any](ctx context.Context, movieID
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListClear)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6499,14 +5349,6 @@ func (c *Client) MovieDeleteRatingWithResult[R any](ctx context.Context, movieID
 //
 //	GET /network/{network_id}
 func (c *Client) NetworkDetails(ctx context.Context, networkID int32) (*NetworkDetailsOk, error) {
-	return c.NetworkDetailsWithResult[NetworkDetailsOk](ctx, networkID)
-}
-
-// Details
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /network/{network_id}
-func (c *Client) NetworkDetailsWithResult[R any](ctx context.Context, networkID int32) (*R, error) {
 	u := c.baseURL.JoinPath("network", strconv.FormatInt(int64(networkID), 10))
 	req := (&http.Request{
 		Header: http.Header{
@@ -6532,15 +5374,8 @@ func (c *Client) NetworkDetailsWithResult[R any](ctx context.Context, networkID 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*NetworkDetailsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out NetworkDetailsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6549,7 +5384,7 @@ func (c *Client) NetworkDetailsWithResult[R any](ctx context.Context, networkID 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(NetworkDetailsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6568,14 +5403,6 @@ func (c *Client) NetworkDetailsWithResult[R any](ctx context.Context, networkID 
 //
 //	GET /network/{network_id}/alternative_names
 func (c *Client) DetailsCopy(ctx context.Context, networkID int32) (*DetailsCopy, error) {
-	return c.DetailsCopyWithResult[DetailsCopy](ctx, networkID)
-}
-
-// Get the alternative names of a network.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /network/{network_id}/alternative_names
-func (c *Client) DetailsCopyWithResult[R any](ctx context.Context, networkID int32) (*R, error) {
 	u := c.baseURL.JoinPath("network", strconv.FormatInt(int64(networkID), 10), "alternative_names")
 	req := (&http.Request{
 		Header: http.Header{
@@ -6601,15 +5428,8 @@ func (c *Client) DetailsCopyWithResult[R any](ctx context.Context, networkID int
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*DetailsCopy); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out DetailsCopy
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6618,7 +5438,7 @@ func (c *Client) DetailsCopyWithResult[R any](ctx context.Context, networkID int
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(DetailsCopy)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6637,14 +5457,6 @@ func (c *Client) DetailsCopyWithResult[R any](ctx context.Context, networkID int
 //
 //	GET /network/{network_id}/images
 func (c *Client) AlternativeNamesCopy(ctx context.Context, networkID int32) (*CompanyImages, error) {
-	return c.AlternativeNamesCopyWithResult[CompanyImages](ctx, networkID)
-}
-
-// Get the TV network logos by id.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /network/{network_id}/images
-func (c *Client) AlternativeNamesCopyWithResult[R any](ctx context.Context, networkID int32) (*R, error) {
 	u := c.baseURL.JoinPath("network", strconv.FormatInt(int64(networkID), 10), "images")
 	req := (&http.Request{
 		Header: http.Header{
@@ -6670,15 +5482,8 @@ func (c *Client) AlternativeNamesCopyWithResult[R any](ctx context.Context, netw
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*CompanyImages); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out CompanyImages
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6687,7 +5492,7 @@ func (c *Client) AlternativeNamesCopyWithResult[R any](ctx context.Context, netw
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(CompanyImages)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6706,14 +5511,6 @@ func (c *Client) AlternativeNamesCopyWithResult[R any](ctx context.Context, netw
 //
 //	GET /person/popular
 func (c *Client) PersonPopularList(ctx context.Context, params *PersonPopularListParams) (*PersonPopularListOk, error) {
-	return c.PersonPopularListWithResult[PersonPopularListOk](ctx, params)
-}
-
-// Get a list of people ordered by popularity.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /person/popular
-func (c *Client) PersonPopularListWithResult[R any](ctx context.Context, params *PersonPopularListParams) (*R, error) {
 	u := c.baseURL.JoinPath("person", "popular")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -6753,15 +5550,8 @@ func (c *Client) PersonPopularListWithResult[R any](ctx context.Context, params 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*PersonPopularListOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out PersonPopularListOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6770,7 +5560,7 @@ func (c *Client) PersonPopularListWithResult[R any](ctx context.Context, params 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(PersonPopularListOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6789,14 +5579,6 @@ func (c *Client) PersonPopularListWithResult[R any](ctx context.Context, params 
 //
 //	GET /person/{person_id}
 func (c *Client) PersonDetails(ctx context.Context, personID int32, params *PersonDetailsParams) (*PersonDetailsOk, error) {
-	return c.PersonDetailsWithResult[PersonDetailsOk](ctx, personID, params)
-}
-
-// Query the top level details of a person.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /person/{person_id}
-func (c *Client) PersonDetailsWithResult[R any](ctx context.Context, personID int32, params *PersonDetailsParams) (*R, error) {
 	u := c.baseURL.JoinPath("person", strconv.FormatInt(int64(personID), 10))
 	if params != nil {
 		q := make(url.Values, 2)
@@ -6836,15 +5618,8 @@ func (c *Client) PersonDetailsWithResult[R any](ctx context.Context, personID in
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*PersonDetailsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out PersonDetailsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6853,7 +5628,7 @@ func (c *Client) PersonDetailsWithResult[R any](ctx context.Context, personID in
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(PersonDetailsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6872,14 +5647,6 @@ func (c *Client) PersonDetailsWithResult[R any](ctx context.Context, personID in
 //
 //	GET /person/{person_id}/changes
 func (c *Client) PersonChanges(ctx context.Context, personID int32, params *PersonChangesParams) (*PersonChangesOk, error) {
-	return c.PersonChangesWithResult[PersonChangesOk](ctx, personID, params)
-}
-
-// Get the recent changes for a person.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /person/{person_id}/changes
-func (c *Client) PersonChangesWithResult[R any](ctx context.Context, personID int32, params *PersonChangesParams) (*R, error) {
 	u := c.baseURL.JoinPath("person", strconv.FormatInt(int64(personID), 10), "changes")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -6923,15 +5690,8 @@ func (c *Client) PersonChangesWithResult[R any](ctx context.Context, personID in
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*PersonChangesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out PersonChangesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6940,7 +5700,7 @@ func (c *Client) PersonChangesWithResult[R any](ctx context.Context, personID in
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(PersonChangesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -6959,14 +5719,6 @@ func (c *Client) PersonChangesWithResult[R any](ctx context.Context, personID in
 //
 //	GET /person/{person_id}/combined_credits
 func (c *Client) PersonCombinedCredits(ctx context.Context, personID string, params *PersonCombinedCreditsParams) (*PersonCombinedCreditsOk, error) {
-	return c.PersonCombinedCreditsWithResult[PersonCombinedCreditsOk](ctx, personID, params)
-}
-
-// Get the combined movie and TV credits that belong to a person.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /person/{person_id}/combined_credits
-func (c *Client) PersonCombinedCreditsWithResult[R any](ctx context.Context, personID string, params *PersonCombinedCreditsParams) (*R, error) {
 	u := c.baseURL.JoinPath("person", url.PathEscape(personID), "combined_credits")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -7002,15 +5754,8 @@ func (c *Client) PersonCombinedCreditsWithResult[R any](ctx context.Context, per
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*PersonCombinedCreditsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out PersonCombinedCreditsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7019,7 +5764,7 @@ func (c *Client) PersonCombinedCreditsWithResult[R any](ctx context.Context, per
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(PersonCombinedCreditsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7038,14 +5783,6 @@ func (c *Client) PersonCombinedCreditsWithResult[R any](ctx context.Context, per
 //
 //	GET /person/{person_id}/external_ids
 func (c *Client) PersonExternalIds(ctx context.Context, personID int32) (*PersonExternalIdsOk, error) {
-	return c.PersonExternalIdsWithResult[PersonExternalIdsOk](ctx, personID)
-}
-
-// Get the external ID's that belong to a person.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /person/{person_id}/external_ids
-func (c *Client) PersonExternalIdsWithResult[R any](ctx context.Context, personID int32) (*R, error) {
 	u := c.baseURL.JoinPath("person", strconv.FormatInt(int64(personID), 10), "external_ids")
 	req := (&http.Request{
 		Header: http.Header{
@@ -7071,15 +5808,8 @@ func (c *Client) PersonExternalIdsWithResult[R any](ctx context.Context, personI
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*PersonExternalIdsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out PersonExternalIdsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7088,7 +5818,7 @@ func (c *Client) PersonExternalIdsWithResult[R any](ctx context.Context, personI
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(PersonExternalIdsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7107,14 +5837,6 @@ func (c *Client) PersonExternalIdsWithResult[R any](ctx context.Context, personI
 //
 //	GET /person/{person_id}/images
 func (c *Client) PersonImages(ctx context.Context, personID int32) (*PersonImagesOk, error) {
-	return c.PersonImagesWithResult[PersonImagesOk](ctx, personID)
-}
-
-// Get the profile images that belong to a person.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /person/{person_id}/images
-func (c *Client) PersonImagesWithResult[R any](ctx context.Context, personID int32) (*R, error) {
 	u := c.baseURL.JoinPath("person", strconv.FormatInt(int64(personID), 10), "images")
 	req := (&http.Request{
 		Header: http.Header{
@@ -7140,15 +5862,8 @@ func (c *Client) PersonImagesWithResult[R any](ctx context.Context, personID int
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*PersonImagesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out PersonImagesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7157,7 +5872,7 @@ func (c *Client) PersonImagesWithResult[R any](ctx context.Context, personID int
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(PersonImagesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7176,14 +5891,6 @@ func (c *Client) PersonImagesWithResult[R any](ctx context.Context, personID int
 //
 //	GET /person/latest
 func (c *Client) PersonLatestID(ctx context.Context) (*PersonLatestIDOk, error) {
-	return c.PersonLatestIDWithResult[PersonLatestIDOk](ctx)
-}
-
-// Get the newest created person. This is a live response and will continuously change.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /person/latest
-func (c *Client) PersonLatestIDWithResult[R any](ctx context.Context) (*R, error) {
 	u := c.baseURL.JoinPath("person", "latest")
 	req := (&http.Request{
 		Header: http.Header{
@@ -7209,15 +5916,8 @@ func (c *Client) PersonLatestIDWithResult[R any](ctx context.Context) (*R, error
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*PersonLatestIDOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out PersonLatestIDOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7226,7 +5926,7 @@ func (c *Client) PersonLatestIDWithResult[R any](ctx context.Context) (*R, error
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(PersonLatestIDOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7245,14 +5945,6 @@ func (c *Client) PersonLatestIDWithResult[R any](ctx context.Context) (*R, error
 //
 //	GET /person/{person_id}/movie_credits
 func (c *Client) PersonMovieCredits(ctx context.Context, personID int32, params *PersonMovieCreditsParams) (*PersonMovieCreditsOk, error) {
-	return c.PersonMovieCreditsWithResult[PersonMovieCreditsOk](ctx, personID, params)
-}
-
-// Get the movie credits for a person.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /person/{person_id}/movie_credits
-func (c *Client) PersonMovieCreditsWithResult[R any](ctx context.Context, personID int32, params *PersonMovieCreditsParams) (*R, error) {
 	u := c.baseURL.JoinPath("person", strconv.FormatInt(int64(personID), 10), "movie_credits")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -7288,15 +5980,8 @@ func (c *Client) PersonMovieCreditsWithResult[R any](ctx context.Context, person
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*PersonMovieCreditsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out PersonMovieCreditsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7305,7 +5990,7 @@ func (c *Client) PersonMovieCreditsWithResult[R any](ctx context.Context, person
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(PersonMovieCreditsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7324,14 +6009,6 @@ func (c *Client) PersonMovieCreditsWithResult[R any](ctx context.Context, person
 //
 //	GET /person/{person_id}/tv_credits
 func (c *Client) PersonTvCredits(ctx context.Context, personID int32, params *PersonTvCreditsParams) (*PersonTvCreditsOk, error) {
-	return c.PersonTvCreditsWithResult[PersonTvCreditsOk](ctx, personID, params)
-}
-
-// Get the TV credits that belong to a person.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /person/{person_id}/tv_credits
-func (c *Client) PersonTvCreditsWithResult[R any](ctx context.Context, personID int32, params *PersonTvCreditsParams) (*R, error) {
 	u := c.baseURL.JoinPath("person", strconv.FormatInt(int64(personID), 10), "tv_credits")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -7367,15 +6044,8 @@ func (c *Client) PersonTvCreditsWithResult[R any](ctx context.Context, personID 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*PersonTvCreditsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out PersonTvCreditsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7384,7 +6054,7 @@ func (c *Client) PersonTvCreditsWithResult[R any](ctx context.Context, personID 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(PersonTvCreditsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7403,14 +6073,6 @@ func (c *Client) PersonTvCreditsWithResult[R any](ctx context.Context, personID 
 //
 //	GET /person/{person_id}/tagged_images
 func (c *Client) PersonTaggedImages(ctx context.Context, personID int32, params *PersonTaggedImagesParams) (*PersonTaggedImagesOk, error) {
-	return c.PersonTaggedImagesWithResult[PersonTaggedImagesOk](ctx, personID, params)
-}
-
-// Get the tagged images for a person.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /person/{person_id}/tagged_images
-func (c *Client) PersonTaggedImagesWithResult[R any](ctx context.Context, personID int32, params *PersonTaggedImagesParams) (*R, error) {
 	u := c.baseURL.JoinPath("person", strconv.FormatInt(int64(personID), 10), "tagged_images")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -7446,15 +6108,8 @@ func (c *Client) PersonTaggedImagesWithResult[R any](ctx context.Context, person
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*PersonTaggedImagesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out PersonTaggedImagesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7463,7 +6118,7 @@ func (c *Client) PersonTaggedImagesWithResult[R any](ctx context.Context, person
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(PersonTaggedImagesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7482,14 +6137,6 @@ func (c *Client) PersonTaggedImagesWithResult[R any](ctx context.Context, person
 //
 //	GET /person/{person_id}/translations
 func (c *Client) Translations(ctx context.Context, personID int32) (*TranslationsOk, error) {
-	return c.TranslationsWithResult[TranslationsOk](ctx, personID)
-}
-
-// Get the translations that belong to a person.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /person/{person_id}/translations
-func (c *Client) TranslationsWithResult[R any](ctx context.Context, personID int32) (*R, error) {
 	u := c.baseURL.JoinPath("person", strconv.FormatInt(int64(personID), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
@@ -7515,15 +6162,8 @@ func (c *Client) TranslationsWithResult[R any](ctx context.Context, personID int
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TranslationsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TranslationsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7532,7 +6172,7 @@ func (c *Client) TranslationsWithResult[R any](ctx context.Context, personID int
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TranslationsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7551,14 +6191,6 @@ func (c *Client) TranslationsWithResult[R any](ctx context.Context, personID int
 //
 //	GET /review/{review_id}
 func (c *Client) ReviewDetails(ctx context.Context, reviewID string) (*ReviewDetailsOk, error) {
-	return c.ReviewDetailsWithResult[ReviewDetailsOk](ctx, reviewID)
-}
-
-// Retrieve the details of a movie or TV show review.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /review/{review_id}
-func (c *Client) ReviewDetailsWithResult[R any](ctx context.Context, reviewID string) (*R, error) {
 	u := c.baseURL.JoinPath("review", url.PathEscape(reviewID))
 	req := (&http.Request{
 		Header: http.Header{
@@ -7584,15 +6216,8 @@ func (c *Client) ReviewDetailsWithResult[R any](ctx context.Context, reviewID st
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ReviewDetailsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ReviewDetailsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7601,7 +6226,7 @@ func (c *Client) ReviewDetailsWithResult[R any](ctx context.Context, reviewID st
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ReviewDetailsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7620,14 +6245,6 @@ func (c *Client) ReviewDetailsWithResult[R any](ctx context.Context, reviewID st
 //
 //	GET /search/collection
 func (c *Client) SearchCollection(ctx context.Context, params SearchCollectionParams) (*SearchCollectionOk, error) {
-	return c.SearchCollectionWithResult[SearchCollectionOk](ctx, params)
-}
-
-// Search for collections by their original, translated and alternative names.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /search/collection
-func (c *Client) SearchCollectionWithResult[R any](ctx context.Context, params SearchCollectionParams) (*R, error) {
 	u := c.baseURL.JoinPath("search", "collection")
 
 	q := make(url.Values, 5)
@@ -7676,15 +6293,8 @@ func (c *Client) SearchCollectionWithResult[R any](ctx context.Context, params S
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchCollectionOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out SearchCollectionOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7693,7 +6303,7 @@ func (c *Client) SearchCollectionWithResult[R any](ctx context.Context, params S
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(SearchCollectionOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7712,14 +6322,6 @@ func (c *Client) SearchCollectionWithResult[R any](ctx context.Context, params S
 //
 //	GET /search/company
 func (c *Client) SearchCompany(ctx context.Context, params SearchCompanyParams) (*SearchCompanyOk, error) {
-	return c.SearchCompanyWithResult[SearchCompanyOk](ctx, params)
-}
-
-// Search for companies by their original and alternative names.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /search/company
-func (c *Client) SearchCompanyWithResult[R any](ctx context.Context, params SearchCompanyParams) (*R, error) {
 	u := c.baseURL.JoinPath("search", "company")
 
 	q := make(url.Values, 2)
@@ -7756,15 +6358,8 @@ func (c *Client) SearchCompanyWithResult[R any](ctx context.Context, params Sear
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchCompanyOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out SearchCompanyOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7773,7 +6368,7 @@ func (c *Client) SearchCompanyWithResult[R any](ctx context.Context, params Sear
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(SearchCompanyOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7792,14 +6387,6 @@ func (c *Client) SearchCompanyWithResult[R any](ctx context.Context, params Sear
 //
 //	GET /search/keyword
 func (c *Client) SearchKeyword(ctx context.Context, params SearchKeywordParams) (*SearchKeywordOk, error) {
-	return c.SearchKeywordWithResult[SearchKeywordOk](ctx, params)
-}
-
-// Search for keywords by their name.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /search/keyword
-func (c *Client) SearchKeywordWithResult[R any](ctx context.Context, params SearchKeywordParams) (*R, error) {
 	u := c.baseURL.JoinPath("search", "keyword")
 
 	q := make(url.Values, 2)
@@ -7836,15 +6423,8 @@ func (c *Client) SearchKeywordWithResult[R any](ctx context.Context, params Sear
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchKeywordOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out SearchKeywordOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7853,7 +6433,7 @@ func (c *Client) SearchKeywordWithResult[R any](ctx context.Context, params Sear
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(SearchKeywordOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7872,14 +6452,6 @@ func (c *Client) SearchKeywordWithResult[R any](ctx context.Context, params Sear
 //
 //	GET /search/movie
 func (c *Client) SearchMovies(ctx context.Context, params SearchMoviesParams) (*MoviesResultPage, error) {
-	return c.SearchMoviesWithResult[MoviesResultPage](ctx, params)
-}
-
-// Search for movies by their original, translated and alternative titles.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /search/movie
-func (c *Client) SearchMoviesWithResult[R any](ctx context.Context, params SearchMoviesParams) (*R, error) {
 	u := c.baseURL.JoinPath("search", "movie")
 
 	q := make(url.Values, 7)
@@ -7936,15 +6508,8 @@ func (c *Client) SearchMoviesWithResult[R any](ctx context.Context, params Searc
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MoviesResultPage); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MoviesResultPage
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7953,7 +6518,7 @@ func (c *Client) SearchMoviesWithResult[R any](ctx context.Context, params Searc
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MoviesResultPage)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -7972,14 +6537,6 @@ func (c *Client) SearchMoviesWithResult[R any](ctx context.Context, params Searc
 //
 //	GET /search/multi
 func (c *Client) SearchMulti(ctx context.Context, params SearchMultiParams) (*SearchMultiOk, error) {
-	return c.SearchMultiWithResult[SearchMultiOk](ctx, params)
-}
-
-// Use multi search when you want to search for movies, TV shows and people in a single request.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /search/multi
-func (c *Client) SearchMultiWithResult[R any](ctx context.Context, params SearchMultiParams) (*R, error) {
 	u := c.baseURL.JoinPath("search", "multi")
 
 	q := make(url.Values, 4)
@@ -8024,15 +6581,8 @@ func (c *Client) SearchMultiWithResult[R any](ctx context.Context, params Search
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchMultiOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out SearchMultiOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8041,7 +6591,7 @@ func (c *Client) SearchMultiWithResult[R any](ctx context.Context, params Search
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(SearchMultiOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8060,14 +6610,6 @@ func (c *Client) SearchMultiWithResult[R any](ctx context.Context, params Search
 //
 //	GET /search/person
 func (c *Client) SearchPerson(ctx context.Context, params SearchPersonParams) (*SearchPersonOk, error) {
-	return c.SearchPersonWithResult[SearchPersonOk](ctx, params)
-}
-
-// Search for people by their name and also known as names.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /search/person
-func (c *Client) SearchPersonWithResult[R any](ctx context.Context, params SearchPersonParams) (*R, error) {
 	u := c.baseURL.JoinPath("search", "person")
 
 	q := make(url.Values, 4)
@@ -8112,15 +6654,8 @@ func (c *Client) SearchPersonWithResult[R any](ctx context.Context, params Searc
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SearchPersonOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out SearchPersonOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8129,7 +6664,7 @@ func (c *Client) SearchPersonWithResult[R any](ctx context.Context, params Searc
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(SearchPersonOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8148,14 +6683,6 @@ func (c *Client) SearchPersonWithResult[R any](ctx context.Context, params Searc
 //
 //	GET /search/tv
 func (c *Client) SearchShows(ctx context.Context, params SearchShowsParams) (*ShowsResultPage, error) {
-	return c.SearchShowsWithResult[ShowsResultPage](ctx, params)
-}
-
-// Search for TV shows by their original, translated and also known as names.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /search/tv
-func (c *Client) SearchShowsWithResult[R any](ctx context.Context, params SearchShowsParams) (*R, error) {
 	u := c.baseURL.JoinPath("search", "tv")
 
 	q := make(url.Values, 6)
@@ -8208,15 +6735,8 @@ func (c *Client) SearchShowsWithResult[R any](ctx context.Context, params Search
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ShowsResultPage); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ShowsResultPage
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8225,7 +6745,7 @@ func (c *Client) SearchShowsWithResult[R any](ctx context.Context, params Search
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ShowsResultPage)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8244,14 +6764,6 @@ func (c *Client) SearchShowsWithResult[R any](ctx context.Context, params Search
 //
 //	GET /trending/all/{time_window}
 func (c *Client) TrendingAll(ctx context.Context, timeWindow TimeWindow, params *TrendingAllParams) (*TrendingAll, error) {
-	return c.TrendingAllWithResult[TrendingAll](ctx, timeWindow, params)
-}
-
-// Get the trending movies, TV shows and people.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /trending/all/{time_window}
-func (c *Client) TrendingAllWithResult[R any](ctx context.Context, timeWindow TimeWindow, params *TrendingAllParams) (*R, error) {
 	u := c.baseURL.JoinPath("trending", "all", url.PathEscape(string(timeWindow)))
 	if params != nil {
 		q := make(url.Values, 1)
@@ -8287,15 +6799,8 @@ func (c *Client) TrendingAllWithResult[R any](ctx context.Context, timeWindow Ti
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TrendingAll); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TrendingAll
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8304,7 +6809,7 @@ func (c *Client) TrendingAllWithResult[R any](ctx context.Context, timeWindow Ti
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TrendingAll)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8323,14 +6828,6 @@ func (c *Client) TrendingAllWithResult[R any](ctx context.Context, timeWindow Ti
 //
 //	GET /trending/movie/{time_window}
 func (c *Client) TrendingMovies(ctx context.Context, timeWindow TimeWindow, params *TrendingMoviesParams) (*TrendingAll, error) {
-	return c.TrendingMoviesWithResult[TrendingAll](ctx, timeWindow, params)
-}
-
-// Get the trending movies on TMDB.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /trending/movie/{time_window}
-func (c *Client) TrendingMoviesWithResult[R any](ctx context.Context, timeWindow TimeWindow, params *TrendingMoviesParams) (*R, error) {
 	u := c.baseURL.JoinPath("trending", "movie", url.PathEscape(string(timeWindow)))
 	if params != nil {
 		q := make(url.Values, 1)
@@ -8366,15 +6863,8 @@ func (c *Client) TrendingMoviesWithResult[R any](ctx context.Context, timeWindow
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TrendingAll); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TrendingAll
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8383,7 +6873,7 @@ func (c *Client) TrendingMoviesWithResult[R any](ctx context.Context, timeWindow
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TrendingAll)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8402,14 +6892,6 @@ func (c *Client) TrendingMoviesWithResult[R any](ctx context.Context, timeWindow
 //
 //	GET /trending/person/{time_window}
 func (c *Client) TrendingPeople(ctx context.Context, timeWindow TimeWindow, params *TrendingPeopleParams) (*TrendingPeopleOk, error) {
-	return c.TrendingPeopleWithResult[TrendingPeopleOk](ctx, timeWindow, params)
-}
-
-// Get the trending people on TMDB.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /trending/person/{time_window}
-func (c *Client) TrendingPeopleWithResult[R any](ctx context.Context, timeWindow TimeWindow, params *TrendingPeopleParams) (*R, error) {
 	u := c.baseURL.JoinPath("trending", "person", url.PathEscape(string(timeWindow)))
 	if params != nil {
 		q := make(url.Values, 1)
@@ -8445,15 +6927,8 @@ func (c *Client) TrendingPeopleWithResult[R any](ctx context.Context, timeWindow
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TrendingPeopleOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TrendingPeopleOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8462,7 +6937,7 @@ func (c *Client) TrendingPeopleWithResult[R any](ctx context.Context, timeWindow
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TrendingPeopleOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8481,14 +6956,6 @@ func (c *Client) TrendingPeopleWithResult[R any](ctx context.Context, timeWindow
 //
 //	GET /trending/tv/{time_window}
 func (c *Client) TrendingTv(ctx context.Context, timeWindow TimeWindow, params *TrendingTvParams) (*TrendingTv, error) {
-	return c.TrendingTvWithResult[TrendingTv](ctx, timeWindow, params)
-}
-
-// Get the trending TV shows on TMDB.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /trending/tv/{time_window}
-func (c *Client) TrendingTvWithResult[R any](ctx context.Context, timeWindow TimeWindow, params *TrendingTvParams) (*R, error) {
 	u := c.baseURL.JoinPath("trending", "tv", url.PathEscape(string(timeWindow)))
 	if params != nil {
 		q := make(url.Values, 1)
@@ -8524,15 +6991,8 @@ func (c *Client) TrendingTvWithResult[R any](ctx context.Context, timeWindow Tim
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TrendingTv); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TrendingTv
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8541,7 +7001,7 @@ func (c *Client) TrendingTvWithResult[R any](ctx context.Context, timeWindow Tim
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TrendingTv)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8560,14 +7020,6 @@ func (c *Client) TrendingTvWithResult[R any](ctx context.Context, timeWindow Tim
 //
 //	GET /tv/airing_today
 func (c *Client) TvSeriesAiringTodayList(ctx context.Context, params *TvSeriesAiringTodayListParams) (*DiscoverTv, error) {
-	return c.TvSeriesAiringTodayListWithResult[DiscoverTv](ctx, params)
-}
-
-// Get a list of TV shows airing today.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/airing_today
-func (c *Client) TvSeriesAiringTodayListWithResult[R any](ctx context.Context, params *TvSeriesAiringTodayListParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", "airing_today")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -8611,15 +7063,8 @@ func (c *Client) TvSeriesAiringTodayListWithResult[R any](ctx context.Context, p
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*DiscoverTv); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out DiscoverTv
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8628,7 +7073,7 @@ func (c *Client) TvSeriesAiringTodayListWithResult[R any](ctx context.Context, p
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(DiscoverTv)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8647,14 +7092,6 @@ func (c *Client) TvSeriesAiringTodayListWithResult[R any](ctx context.Context, p
 //
 //	GET /tv/on_the_air
 func (c *Client) TvSeriesOnTheAirList(ctx context.Context, params *TvSeriesOnTheAirListParams) (*DiscoverTv, error) {
-	return c.TvSeriesOnTheAirListWithResult[DiscoverTv](ctx, params)
-}
-
-// Get a list of TV shows that air in the next 7 days.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/on_the_air
-func (c *Client) TvSeriesOnTheAirListWithResult[R any](ctx context.Context, params *TvSeriesOnTheAirListParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", "on_the_air")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -8698,15 +7135,8 @@ func (c *Client) TvSeriesOnTheAirListWithResult[R any](ctx context.Context, para
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*DiscoverTv); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out DiscoverTv
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8715,7 +7145,7 @@ func (c *Client) TvSeriesOnTheAirListWithResult[R any](ctx context.Context, para
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(DiscoverTv)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8734,14 +7164,6 @@ func (c *Client) TvSeriesOnTheAirListWithResult[R any](ctx context.Context, para
 //
 //	GET /tv/popular
 func (c *Client) TvSeriesPopularList(ctx context.Context, params *TvSeriesPopularListParams) (*DiscoverTv, error) {
-	return c.TvSeriesPopularListWithResult[DiscoverTv](ctx, params)
-}
-
-// Get a list of TV shows ordered by popularity.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/popular
-func (c *Client) TvSeriesPopularListWithResult[R any](ctx context.Context, params *TvSeriesPopularListParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", "popular")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -8781,15 +7203,8 @@ func (c *Client) TvSeriesPopularListWithResult[R any](ctx context.Context, param
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*DiscoverTv); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out DiscoverTv
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8798,7 +7213,7 @@ func (c *Client) TvSeriesPopularListWithResult[R any](ctx context.Context, param
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(DiscoverTv)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8817,14 +7232,6 @@ func (c *Client) TvSeriesPopularListWithResult[R any](ctx context.Context, param
 //
 //	GET /tv/top_rated
 func (c *Client) TvSeriesTopRatedList(ctx context.Context, params *TvSeriesTopRatedListParams) (*TvSeriesTopRatedListOk, error) {
-	return c.TvSeriesTopRatedListWithResult[TvSeriesTopRatedListOk](ctx, params)
-}
-
-// Get a list of TV shows ordered by rating.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/top_rated
-func (c *Client) TvSeriesTopRatedListWithResult[R any](ctx context.Context, params *TvSeriesTopRatedListParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", "top_rated")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -8864,15 +7271,8 @@ func (c *Client) TvSeriesTopRatedListWithResult[R any](ctx context.Context, para
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeriesTopRatedListOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeriesTopRatedListOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8881,7 +7281,7 @@ func (c *Client) TvSeriesTopRatedListWithResult[R any](ctx context.Context, para
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeriesTopRatedListOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8900,14 +7300,6 @@ func (c *Client) TvSeriesTopRatedListWithResult[R any](ctx context.Context, para
 //
 //	GET /tv/{series_id}
 func (c *Client) GetShow(ctx context.Context, seriesID ShowID, params *GetShowParams) (*ShowDetails, error) {
-	return c.GetShowWithResult[ShowDetails](ctx, seriesID, params)
-}
-
-// Get the details of a show.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}
-func (c *Client) GetShowWithResult[R any](ctx context.Context, seriesID ShowID, params *GetShowParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10))
 	if params != nil {
 		q := make(url.Values, 2)
@@ -8947,15 +7339,8 @@ func (c *Client) GetShowWithResult[R any](ctx context.Context, seriesID ShowID, 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ShowDetails); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ShowDetails
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8964,7 +7349,7 @@ func (c *Client) GetShowWithResult[R any](ctx context.Context, seriesID ShowID, 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ShowDetails)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -8983,14 +7368,6 @@ func (c *Client) GetShowWithResult[R any](ctx context.Context, seriesID ShowID, 
 //
 //	GET /tv/{series_id}/account_states
 func (c *Client) TvSeriesAccountStates(ctx context.Context, seriesID ShowID, params *TvSeriesAccountStatesParams) (*MovieAccountStates, error) {
-	return c.TvSeriesAccountStatesWithResult[MovieAccountStates](ctx, seriesID, params)
-}
-
-// Get the rating, watchlist and favourite status.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/account_states
-func (c *Client) TvSeriesAccountStatesWithResult[R any](ctx context.Context, seriesID ShowID, params *TvSeriesAccountStatesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "account_states")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -9030,15 +7407,8 @@ func (c *Client) TvSeriesAccountStatesWithResult[R any](ctx context.Context, ser
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieAccountStates); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieAccountStates
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9047,7 +7417,7 @@ func (c *Client) TvSeriesAccountStatesWithResult[R any](ctx context.Context, ser
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieAccountStates)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9066,14 +7436,6 @@ func (c *Client) TvSeriesAccountStatesWithResult[R any](ctx context.Context, ser
 //
 //	GET /tv/{series_id}/aggregate_credits
 func (c *Client) TvSeriesAggregateCredits(ctx context.Context, seriesID ShowID, params *TvSeriesAggregateCreditsParams) (*TvSeriesAggregateCreditsOk, error) {
-	return c.TvSeriesAggregateCreditsWithResult[TvSeriesAggregateCreditsOk](ctx, seriesID, params)
-}
-
-// Get the aggregate credits (cast and crew) that have been added to a TV show.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/aggregate_credits
-func (c *Client) TvSeriesAggregateCreditsWithResult[R any](ctx context.Context, seriesID ShowID, params *TvSeriesAggregateCreditsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "aggregate_credits")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -9109,15 +7471,8 @@ func (c *Client) TvSeriesAggregateCreditsWithResult[R any](ctx context.Context, 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeriesAggregateCreditsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeriesAggregateCreditsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9126,7 +7481,7 @@ func (c *Client) TvSeriesAggregateCreditsWithResult[R any](ctx context.Context, 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeriesAggregateCreditsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9145,14 +7500,6 @@ func (c *Client) TvSeriesAggregateCreditsWithResult[R any](ctx context.Context, 
 //
 //	GET /tv/{series_id}/alternative_titles
 func (c *Client) TvSeriesAlternativeTitles(ctx context.Context, seriesID ShowID) (*AlternativeTitlesWrapper, error) {
-	return c.TvSeriesAlternativeTitlesWithResult[AlternativeTitlesWrapper](ctx, seriesID)
-}
-
-// Get the alternative titles that have been added to a TV show.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/alternative_titles
-func (c *Client) TvSeriesAlternativeTitlesWithResult[R any](ctx context.Context, seriesID ShowID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "alternative_titles")
 	req := (&http.Request{
 		Header: http.Header{
@@ -9178,15 +7525,8 @@ func (c *Client) TvSeriesAlternativeTitlesWithResult[R any](ctx context.Context,
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*AlternativeTitlesWrapper); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out AlternativeTitlesWrapper
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9195,7 +7535,7 @@ func (c *Client) TvSeriesAlternativeTitlesWithResult[R any](ctx context.Context,
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(AlternativeTitlesWrapper)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9214,14 +7554,6 @@ func (c *Client) TvSeriesAlternativeTitlesWithResult[R any](ctx context.Context,
 //
 //	GET /tv/{series_id}/changes
 func (c *Client) GetShowChanges(ctx context.Context, seriesID ShowID, params *GetShowChangesParams) (*ShowChangesWrapper, error) {
-	return c.GetShowChangesWithResult[ShowChangesWrapper](ctx, seriesID, params)
-}
-
-// Get the recent changes for a TV show.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/changes
-func (c *Client) GetShowChangesWithResult[R any](ctx context.Context, seriesID ShowID, params *GetShowChangesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "changes")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -9265,15 +7597,8 @@ func (c *Client) GetShowChangesWithResult[R any](ctx context.Context, seriesID S
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ShowChangesWrapper); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ShowChangesWrapper
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9282,7 +7607,7 @@ func (c *Client) GetShowChangesWithResult[R any](ctx context.Context, seriesID S
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ShowChangesWrapper)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9301,14 +7626,6 @@ func (c *Client) GetShowChangesWithResult[R any](ctx context.Context, seriesID S
 //
 //	GET /tv/{series_id}/content_ratings
 func (c *Client) TvSeriesContentRatings(ctx context.Context, seriesID ShowID) (*TvSeriesContentRatingsOk, error) {
-	return c.TvSeriesContentRatingsWithResult[TvSeriesContentRatingsOk](ctx, seriesID)
-}
-
-// Get the content ratings that have been added to a TV show.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/content_ratings
-func (c *Client) TvSeriesContentRatingsWithResult[R any](ctx context.Context, seriesID ShowID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "content_ratings")
 	req := (&http.Request{
 		Header: http.Header{
@@ -9334,15 +7651,8 @@ func (c *Client) TvSeriesContentRatingsWithResult[R any](ctx context.Context, se
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeriesContentRatingsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeriesContentRatingsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9351,7 +7661,7 @@ func (c *Client) TvSeriesContentRatingsWithResult[R any](ctx context.Context, se
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeriesContentRatingsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9370,14 +7680,6 @@ func (c *Client) TvSeriesContentRatingsWithResult[R any](ctx context.Context, se
 //
 //	GET /tv/{series_id}/credits
 func (c *Client) TvSeriesCredits(ctx context.Context, seriesID ShowID, params *TvSeriesCreditsParams) (*TvSeriesCreditsOk, error) {
-	return c.TvSeriesCreditsWithResult[TvSeriesCreditsOk](ctx, seriesID, params)
-}
-
-// Get the latest season credits of a TV show.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/credits
-func (c *Client) TvSeriesCreditsWithResult[R any](ctx context.Context, seriesID ShowID, params *TvSeriesCreditsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "credits")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -9413,15 +7715,8 @@ func (c *Client) TvSeriesCreditsWithResult[R any](ctx context.Context, seriesID 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeriesCreditsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeriesCreditsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9430,7 +7725,7 @@ func (c *Client) TvSeriesCreditsWithResult[R any](ctx context.Context, seriesID 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeriesCreditsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9449,14 +7744,6 @@ func (c *Client) TvSeriesCreditsWithResult[R any](ctx context.Context, seriesID 
 //
 //	GET /tv/{series_id}/episode_groups
 func (c *Client) TvSeriesEpisodeGroups(ctx context.Context, seriesID ShowID) (*TvSeriesEpisodeGroupsOk, error) {
-	return c.TvSeriesEpisodeGroupsWithResult[TvSeriesEpisodeGroupsOk](ctx, seriesID)
-}
-
-// Get the episode groups that have been added to a TV show.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/episode_groups
-func (c *Client) TvSeriesEpisodeGroupsWithResult[R any](ctx context.Context, seriesID ShowID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "episode_groups")
 	req := (&http.Request{
 		Header: http.Header{
@@ -9482,15 +7769,8 @@ func (c *Client) TvSeriesEpisodeGroupsWithResult[R any](ctx context.Context, ser
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeriesEpisodeGroupsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeriesEpisodeGroupsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9499,7 +7779,7 @@ func (c *Client) TvSeriesEpisodeGroupsWithResult[R any](ctx context.Context, ser
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeriesEpisodeGroupsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9518,14 +7798,6 @@ func (c *Client) TvSeriesEpisodeGroupsWithResult[R any](ctx context.Context, ser
 //
 //	GET /tv/{series_id}/external_ids
 func (c *Client) TvSeriesExternalIds(ctx context.Context, seriesID ShowID) (*TvSeriesExternalIdsOk, error) {
-	return c.TvSeriesExternalIdsWithResult[TvSeriesExternalIdsOk](ctx, seriesID)
-}
-
-// Get a list of external IDs that have been added to a TV show.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/external_ids
-func (c *Client) TvSeriesExternalIdsWithResult[R any](ctx context.Context, seriesID ShowID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "external_ids")
 	req := (&http.Request{
 		Header: http.Header{
@@ -9551,15 +7823,8 @@ func (c *Client) TvSeriesExternalIdsWithResult[R any](ctx context.Context, serie
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeriesExternalIdsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeriesExternalIdsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9568,7 +7833,7 @@ func (c *Client) TvSeriesExternalIdsWithResult[R any](ctx context.Context, serie
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeriesExternalIdsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9587,14 +7852,6 @@ func (c *Client) TvSeriesExternalIdsWithResult[R any](ctx context.Context, serie
 //
 //	GET /tv/{series_id}/images
 func (c *Client) TvSeriesImages(ctx context.Context, seriesID ShowID, params *TvSeriesImagesParams) (*MovieImages, error) {
-	return c.TvSeriesImagesWithResult[MovieImages](ctx, seriesID, params)
-}
-
-// Get the images that belong to a TV series.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/images
-func (c *Client) TvSeriesImagesWithResult[R any](ctx context.Context, seriesID ShowID, params *TvSeriesImagesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "images")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -9634,15 +7891,8 @@ func (c *Client) TvSeriesImagesWithResult[R any](ctx context.Context, seriesID S
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieImages); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieImages
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9651,7 +7901,7 @@ func (c *Client) TvSeriesImagesWithResult[R any](ctx context.Context, seriesID S
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieImages)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9670,14 +7920,6 @@ func (c *Client) TvSeriesImagesWithResult[R any](ctx context.Context, seriesID S
 //
 //	GET /tv/{series_id}/keywords
 func (c *Client) TvSeriesKeywords(ctx context.Context, seriesID ShowID) (*TvSeriesKeywordsOk, error) {
-	return c.TvSeriesKeywordsWithResult[TvSeriesKeywordsOk](ctx, seriesID)
-}
-
-// Get a list of keywords that have been added to a TV show.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/keywords
-func (c *Client) TvSeriesKeywordsWithResult[R any](ctx context.Context, seriesID ShowID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "keywords")
 	req := (&http.Request{
 		Header: http.Header{
@@ -9703,15 +7945,8 @@ func (c *Client) TvSeriesKeywordsWithResult[R any](ctx context.Context, seriesID
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeriesKeywordsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeriesKeywordsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9720,7 +7955,7 @@ func (c *Client) TvSeriesKeywordsWithResult[R any](ctx context.Context, seriesID
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeriesKeywordsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9739,14 +7974,6 @@ func (c *Client) TvSeriesKeywordsWithResult[R any](ctx context.Context, seriesID
 //
 //	GET /tv/latest
 func (c *Client) TvSeriesLatestID(ctx context.Context) (*TvSeriesLatestIDOk, error) {
-	return c.TvSeriesLatestIDWithResult[TvSeriesLatestIDOk](ctx)
-}
-
-// Get the newest TV show ID.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/latest
-func (c *Client) TvSeriesLatestIDWithResult[R any](ctx context.Context) (*R, error) {
 	u := c.baseURL.JoinPath("tv", "latest")
 	req := (&http.Request{
 		Header: http.Header{
@@ -9772,15 +7999,8 @@ func (c *Client) TvSeriesLatestIDWithResult[R any](ctx context.Context) (*R, err
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeriesLatestIDOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeriesLatestIDOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9789,7 +8009,7 @@ func (c *Client) TvSeriesLatestIDWithResult[R any](ctx context.Context) (*R, err
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeriesLatestIDOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9808,14 +8028,6 @@ func (c *Client) TvSeriesLatestIDWithResult[R any](ctx context.Context) (*R, err
 //
 //	GET /tv/{series_id}/lists
 func (c *Client) ListsCopy(ctx context.Context, seriesID ShowID, params *ListsCopyParams) (*ListsCopyOk, error) {
-	return c.ListsCopyWithResult[ListsCopyOk](ctx, seriesID, params)
-}
-
-// Get the lists that a TV series has been added to.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/lists
-func (c *Client) ListsCopyWithResult[R any](ctx context.Context, seriesID ShowID, params *ListsCopyParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "lists")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -9855,15 +8067,8 @@ func (c *Client) ListsCopyWithResult[R any](ctx context.Context, seriesID ShowID
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListsCopyOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListsCopyOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9872,7 +8077,7 @@ func (c *Client) ListsCopyWithResult[R any](ctx context.Context, seriesID ShowID
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListsCopyOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9891,14 +8096,6 @@ func (c *Client) ListsCopyWithResult[R any](ctx context.Context, seriesID ShowID
 //
 //	GET /tv/{series_id}/recommendations
 func (c *Client) TvSeriesRecommendations(ctx context.Context, seriesID ShowID, params *TvSeriesRecommendationsParams) (*TrendingTv, error) {
-	return c.TvSeriesRecommendationsWithResult[TrendingTv](ctx, seriesID, params)
-}
-
-// Recommendations
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/recommendations
-func (c *Client) TvSeriesRecommendationsWithResult[R any](ctx context.Context, seriesID ShowID, params *TvSeriesRecommendationsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "recommendations")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -9938,15 +8135,8 @@ func (c *Client) TvSeriesRecommendationsWithResult[R any](ctx context.Context, s
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TrendingTv); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TrendingTv
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9955,7 +8145,7 @@ func (c *Client) TvSeriesRecommendationsWithResult[R any](ctx context.Context, s
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TrendingTv)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -9974,14 +8164,6 @@ func (c *Client) TvSeriesRecommendationsWithResult[R any](ctx context.Context, s
 //
 //	GET /tv/{series_id}/reviews
 func (c *Client) TvSeriesReviews(ctx context.Context, seriesID ShowID, params *TvSeriesReviewsParams) (*TvSeriesReviewsOk, error) {
-	return c.TvSeriesReviewsWithResult[TvSeriesReviewsOk](ctx, seriesID, params)
-}
-
-// Get the reviews that have been added to a TV show.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/reviews
-func (c *Client) TvSeriesReviewsWithResult[R any](ctx context.Context, seriesID ShowID, params *TvSeriesReviewsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "reviews")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -10021,15 +8203,8 @@ func (c *Client) TvSeriesReviewsWithResult[R any](ctx context.Context, seriesID 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeriesReviewsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeriesReviewsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10038,7 +8213,7 @@ func (c *Client) TvSeriesReviewsWithResult[R any](ctx context.Context, seriesID 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeriesReviewsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10057,14 +8232,6 @@ func (c *Client) TvSeriesReviewsWithResult[R any](ctx context.Context, seriesID 
 //
 //	GET /tv/{series_id}/screened_theatrically
 func (c *Client) TvSeriesScreenedTheatrically(ctx context.Context, seriesID ShowID) (*TvSeriesScreenedTheatricallyOk, error) {
-	return c.TvSeriesScreenedTheatricallyWithResult[TvSeriesScreenedTheatricallyOk](ctx, seriesID)
-}
-
-// Get the seasons and episodes that have screened theatrically.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/screened_theatrically
-func (c *Client) TvSeriesScreenedTheatricallyWithResult[R any](ctx context.Context, seriesID ShowID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "screened_theatrically")
 	req := (&http.Request{
 		Header: http.Header{
@@ -10090,15 +8257,8 @@ func (c *Client) TvSeriesScreenedTheatricallyWithResult[R any](ctx context.Conte
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeriesScreenedTheatricallyOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeriesScreenedTheatricallyOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10107,7 +8267,7 @@ func (c *Client) TvSeriesScreenedTheatricallyWithResult[R any](ctx context.Conte
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeriesScreenedTheatricallyOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10126,14 +8286,6 @@ func (c *Client) TvSeriesScreenedTheatricallyWithResult[R any](ctx context.Conte
 //
 //	GET /tv/{series_id}/similar
 func (c *Client) TvSeriesSimilar(ctx context.Context, seriesID ShowID, params *TvSeriesSimilarParams) (*TvSeriesSimilarOk, error) {
-	return c.TvSeriesSimilarWithResult[TvSeriesSimilarOk](ctx, seriesID, params)
-}
-
-// Get the similar TV shows.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/similar
-func (c *Client) TvSeriesSimilarWithResult[R any](ctx context.Context, seriesID ShowID, params *TvSeriesSimilarParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "similar")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -10173,15 +8325,8 @@ func (c *Client) TvSeriesSimilarWithResult[R any](ctx context.Context, seriesID 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeriesSimilarOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeriesSimilarOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10190,7 +8335,7 @@ func (c *Client) TvSeriesSimilarWithResult[R any](ctx context.Context, seriesID 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeriesSimilarOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10209,14 +8354,6 @@ func (c *Client) TvSeriesSimilarWithResult[R any](ctx context.Context, seriesID 
 //
 //	GET /tv/{series_id}/translations
 func (c *Client) TvSeriesTranslations(ctx context.Context, seriesID ShowID) (*TvSeriesTranslationsOk, error) {
-	return c.TvSeriesTranslationsWithResult[TvSeriesTranslationsOk](ctx, seriesID)
-}
-
-// Get the translations that have been added to a TV show.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/translations
-func (c *Client) TvSeriesTranslationsWithResult[R any](ctx context.Context, seriesID ShowID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
@@ -10242,15 +8379,8 @@ func (c *Client) TvSeriesTranslationsWithResult[R any](ctx context.Context, seri
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeriesTranslationsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeriesTranslationsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10259,7 +8389,7 @@ func (c *Client) TvSeriesTranslationsWithResult[R any](ctx context.Context, seri
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeriesTranslationsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10278,14 +8408,6 @@ func (c *Client) TvSeriesTranslationsWithResult[R any](ctx context.Context, seri
 //
 //	GET /tv/{series_id}/videos
 func (c *Client) TvSeriesVideos(ctx context.Context, seriesID ShowID, params *TvSeriesVideosParams) (*MovieVideos, error) {
-	return c.TvSeriesVideosWithResult[MovieVideos](ctx, seriesID, params)
-}
-
-// Get the videos that belong to a TV show.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/videos
-func (c *Client) TvSeriesVideosWithResult[R any](ctx context.Context, seriesID ShowID, params *TvSeriesVideosParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "videos")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -10325,15 +8447,8 @@ func (c *Client) TvSeriesVideosWithResult[R any](ctx context.Context, seriesID S
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieVideos); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieVideos
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10342,7 +8457,7 @@ func (c *Client) TvSeriesVideosWithResult[R any](ctx context.Context, seriesID S
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieVideos)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10361,14 +8476,6 @@ func (c *Client) TvSeriesVideosWithResult[R any](ctx context.Context, seriesID S
 //
 //	GET /tv/{series_id}/watch/providers
 func (c *Client) TvSeriesWatchProviders(ctx context.Context, seriesID ShowID) (*TvSeriesWatchProvidersOk, error) {
-	return c.TvSeriesWatchProvidersWithResult[TvSeriesWatchProvidersOk](ctx, seriesID)
-}
-
-// Get the list of streaming providers we have for a TV show.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/watch/providers
-func (c *Client) TvSeriesWatchProvidersWithResult[R any](ctx context.Context, seriesID ShowID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "watch", "providers")
 	req := (&http.Request{
 		Header: http.Header{
@@ -10394,15 +8501,8 @@ func (c *Client) TvSeriesWatchProvidersWithResult[R any](ctx context.Context, se
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeriesWatchProvidersOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeriesWatchProvidersOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10411,7 +8511,7 @@ func (c *Client) TvSeriesWatchProvidersWithResult[R any](ctx context.Context, se
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeriesWatchProvidersOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10430,14 +8530,6 @@ func (c *Client) TvSeriesWatchProvidersWithResult[R any](ctx context.Context, se
 //
 //	POST /tv/{series_id}/rating
 func (c *Client) TvSeriesAddRating(ctx context.Context, seriesID ShowID, params *TvSeriesAddRatingParams, body *ListCreate) (*ListClear, error) {
-	return c.TvSeriesAddRatingWithResult[ListClear](ctx, seriesID, params, body)
-}
-
-// Rate a TV show and save it to your rated list.
-// You can define a custom result to unmarshal the response into.
-//
-//	POST /tv/{series_id}/rating
-func (c *Client) TvSeriesAddRatingWithResult[R any](ctx context.Context, seriesID ShowID, params *TvSeriesAddRatingParams, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "rating")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -10487,15 +8579,8 @@ func (c *Client) TvSeriesAddRatingWithResult[R any](ctx context.Context, seriesI
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListClear); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListClear
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10504,7 +8589,7 @@ func (c *Client) TvSeriesAddRatingWithResult[R any](ctx context.Context, seriesI
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListClear)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10523,14 +8608,6 @@ func (c *Client) TvSeriesAddRatingWithResult[R any](ctx context.Context, seriesI
 //
 //	DELETE /tv/{series_id}/rating
 func (c *Client) TvSeriesDeleteRating(ctx context.Context, seriesID ShowID, params *TvSeriesDeleteRatingParams) (*ListClear, error) {
-	return c.TvSeriesDeleteRatingWithResult[ListClear](ctx, seriesID, params)
-}
-
-// Delete Rating
-// You can define a custom result to unmarshal the response into.
-//
-//	DELETE /tv/{series_id}/rating
-func (c *Client) TvSeriesDeleteRatingWithResult[R any](ctx context.Context, seriesID ShowID, params *TvSeriesDeleteRatingParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "rating")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -10570,15 +8647,8 @@ func (c *Client) TvSeriesDeleteRatingWithResult[R any](ctx context.Context, seri
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListClear); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListClear
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10587,7 +8657,7 @@ func (c *Client) TvSeriesDeleteRatingWithResult[R any](ctx context.Context, seri
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListClear)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10606,14 +8676,6 @@ func (c *Client) TvSeriesDeleteRatingWithResult[R any](ctx context.Context, seri
 //
 //	GET /tv/{series_id}/season/{season_number}
 func (c *Client) GetShowSeason(ctx context.Context, seriesID ShowID, seasonNumber int32, params *GetShowSeasonParams) (*SeasonDetails, error) {
-	return c.GetShowSeasonWithResult[SeasonDetails](ctx, seriesID, seasonNumber, params)
-}
-
-// Query the details of a TV season.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}
-func (c *Client) GetShowSeasonWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, params *GetShowSeasonParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10))
 	if params != nil {
 		q := make(url.Values, 2)
@@ -10653,15 +8715,8 @@ func (c *Client) GetShowSeasonWithResult[R any](ctx context.Context, seriesID Sh
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SeasonDetails); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out SeasonDetails
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10670,7 +8725,7 @@ func (c *Client) GetShowSeasonWithResult[R any](ctx context.Context, seriesID Sh
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(SeasonDetails)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10713,14 +8768,6 @@ func (c *Client) GetShowSeasonWithResult[R any](ctx context.Context, seriesID Sh
 //
 //	GET /tv/{series_id}/season/{season_number}/account_states
 func (c *Client) TvSeasonAccountStates(ctx context.Context, seriesID ShowID, seasonNumber int32, params *TvSeasonAccountStatesParams) (*TvSeasonAccountStatesOk, error) {
-	return c.TvSeasonAccountStatesWithResult[TvSeasonAccountStatesOk](ctx, seriesID, seasonNumber, params)
-}
-
-// Get the rating, watchlist and favourite status.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/account_states
-func (c *Client) TvSeasonAccountStatesWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, params *TvSeasonAccountStatesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "account_states")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -10760,15 +8807,8 @@ func (c *Client) TvSeasonAccountStatesWithResult[R any](ctx context.Context, ser
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeasonAccountStatesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeasonAccountStatesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10777,7 +8817,7 @@ func (c *Client) TvSeasonAccountStatesWithResult[R any](ctx context.Context, ser
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeasonAccountStatesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10796,14 +8836,6 @@ func (c *Client) TvSeasonAccountStatesWithResult[R any](ctx context.Context, ser
 //
 //	GET /tv/{series_id}/season/{season_number}/aggregate_credits
 func (c *Client) TvSeasonAggregateCredits(ctx context.Context, seriesID ShowID, seasonNumber int32, params *TvSeasonAggregateCreditsParams) (*TvSeasonAggregateCreditsOk, error) {
-	return c.TvSeasonAggregateCreditsWithResult[TvSeasonAggregateCreditsOk](ctx, seriesID, seasonNumber, params)
-}
-
-// Get the aggregate credits (cast and crew) that have been added to a TV season.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/aggregate_credits
-func (c *Client) TvSeasonAggregateCreditsWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, params *TvSeasonAggregateCreditsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "aggregate_credits")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -10839,15 +8871,8 @@ func (c *Client) TvSeasonAggregateCreditsWithResult[R any](ctx context.Context, 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeasonAggregateCreditsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeasonAggregateCreditsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10856,7 +8881,7 @@ func (c *Client) TvSeasonAggregateCreditsWithResult[R any](ctx context.Context, 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeasonAggregateCreditsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10875,14 +8900,6 @@ func (c *Client) TvSeasonAggregateCreditsWithResult[R any](ctx context.Context, 
 //
 //	GET /tv/season/{season_id}/changes
 func (c *Client) GetSeasonChanges(ctx context.Context, seasonID SeasonID, params *GetSeasonChangesParams) (*SeasonChangesWrapper, error) {
-	return c.GetSeasonChangesWithResult[SeasonChangesWrapper](ctx, seasonID, params)
-}
-
-// Get the recent changes for a TV season.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/season/{season_id}/changes
-func (c *Client) GetSeasonChangesWithResult[R any](ctx context.Context, seasonID SeasonID, params *GetSeasonChangesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", "season", strconv.FormatInt(int64(seasonID), 10), "changes")
 	if params != nil {
 		q := make(url.Values, 3)
@@ -10926,15 +8943,8 @@ func (c *Client) GetSeasonChangesWithResult[R any](ctx context.Context, seasonID
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*SeasonChangesWrapper); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out SeasonChangesWrapper
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10943,7 +8953,7 @@ func (c *Client) GetSeasonChangesWithResult[R any](ctx context.Context, seasonID
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(SeasonChangesWrapper)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -10962,14 +8972,6 @@ func (c *Client) GetSeasonChangesWithResult[R any](ctx context.Context, seasonID
 //
 //	GET /tv/{series_id}/season/{season_number}/credits
 func (c *Client) TvSeasonCredits(ctx context.Context, seriesID ShowID, seasonNumber int32, params *TvSeasonCreditsParams) (*TvSeasonCreditsOk, error) {
-	return c.TvSeasonCreditsWithResult[TvSeasonCreditsOk](ctx, seriesID, seasonNumber, params)
-}
-
-// Credits
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/credits
-func (c *Client) TvSeasonCreditsWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, params *TvSeasonCreditsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "credits")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -11005,15 +9007,8 @@ func (c *Client) TvSeasonCreditsWithResult[R any](ctx context.Context, seriesID 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeasonCreditsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeasonCreditsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11022,7 +9017,7 @@ func (c *Client) TvSeasonCreditsWithResult[R any](ctx context.Context, seriesID 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeasonCreditsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11041,14 +9036,6 @@ func (c *Client) TvSeasonCreditsWithResult[R any](ctx context.Context, seriesID 
 //
 //	GET /tv/{series_id}/season/{season_number}/external_ids
 func (c *Client) TvSeasonExternalIds(ctx context.Context, seriesID ShowID, seasonNumber int32) (*TvSeasonExternalIdsOk, error) {
-	return c.TvSeasonExternalIdsWithResult[TvSeasonExternalIdsOk](ctx, seriesID, seasonNumber)
-}
-
-// Get a list of external IDs that have been added to a TV season.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/external_ids
-func (c *Client) TvSeasonExternalIdsWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "external_ids")
 	req := (&http.Request{
 		Header: http.Header{
@@ -11074,15 +9061,8 @@ func (c *Client) TvSeasonExternalIdsWithResult[R any](ctx context.Context, serie
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeasonExternalIdsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeasonExternalIdsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11091,7 +9071,7 @@ func (c *Client) TvSeasonExternalIdsWithResult[R any](ctx context.Context, serie
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeasonExternalIdsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11110,14 +9090,6 @@ func (c *Client) TvSeasonExternalIdsWithResult[R any](ctx context.Context, serie
 //
 //	GET /tv/{series_id}/season/{season_number}/images
 func (c *Client) TvSeasonImages(ctx context.Context, seriesID ShowID, seasonNumber int32, params *TvSeasonImagesParams) (*TvSeasonImagesOk, error) {
-	return c.TvSeasonImagesWithResult[TvSeasonImagesOk](ctx, seriesID, seasonNumber, params)
-}
-
-// Get the images that belong to a TV season.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/images
-func (c *Client) TvSeasonImagesWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, params *TvSeasonImagesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "images")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -11157,15 +9129,8 @@ func (c *Client) TvSeasonImagesWithResult[R any](ctx context.Context, seriesID S
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeasonImagesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeasonImagesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11174,7 +9139,7 @@ func (c *Client) TvSeasonImagesWithResult[R any](ctx context.Context, seriesID S
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeasonImagesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11193,14 +9158,6 @@ func (c *Client) TvSeasonImagesWithResult[R any](ctx context.Context, seriesID S
 //
 //	GET /tv/{series_id}/season/{season_number}/translations
 func (c *Client) TvSeasonTranslations(ctx context.Context, seriesID ShowID, seasonNumber int32) (*TvSeasonTranslations, error) {
-	return c.TvSeasonTranslationsWithResult[TvSeasonTranslations](ctx, seriesID, seasonNumber)
-}
-
-// Get the translations for a TV season.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/translations
-func (c *Client) TvSeasonTranslationsWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
@@ -11226,15 +9183,8 @@ func (c *Client) TvSeasonTranslationsWithResult[R any](ctx context.Context, seri
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeasonTranslations); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeasonTranslations
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11243,7 +9193,7 @@ func (c *Client) TvSeasonTranslationsWithResult[R any](ctx context.Context, seri
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeasonTranslations)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11262,14 +9212,6 @@ func (c *Client) TvSeasonTranslationsWithResult[R any](ctx context.Context, seri
 //
 //	GET /tv/{series_id}/season/{season_number}/videos
 func (c *Client) TvSeasonVideos(ctx context.Context, seriesID ShowID, seasonNumber int32, params *TvSeasonVideosParams) (*MovieVideos, error) {
-	return c.TvSeasonVideosWithResult[MovieVideos](ctx, seriesID, seasonNumber, params)
-}
-
-// Get the videos that belong to a TV season.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/videos
-func (c *Client) TvSeasonVideosWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, params *TvSeasonVideosParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "videos")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -11309,15 +9251,8 @@ func (c *Client) TvSeasonVideosWithResult[R any](ctx context.Context, seriesID S
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieVideos); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieVideos
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11326,7 +9261,7 @@ func (c *Client) TvSeasonVideosWithResult[R any](ctx context.Context, seriesID S
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieVideos)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11345,14 +9280,6 @@ func (c *Client) TvSeasonVideosWithResult[R any](ctx context.Context, seriesID S
 //
 //	GET /tv/{series_id}/season/{season_number}/watch/providers
 func (c *Client) TvSeasonWatchProviders(ctx context.Context, seriesID ShowID, seasonNumber int32, params *TvSeasonWatchProvidersParams) (*TvSeasonWatchProvidersOk, error) {
-	return c.TvSeasonWatchProvidersWithResult[TvSeasonWatchProvidersOk](ctx, seriesID, seasonNumber, params)
-}
-
-// Get the list of streaming providers we have for a TV season.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/watch/providers
-func (c *Client) TvSeasonWatchProvidersWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, params *TvSeasonWatchProvidersParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "watch", "providers")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -11388,15 +9315,8 @@ func (c *Client) TvSeasonWatchProvidersWithResult[R any](ctx context.Context, se
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeasonWatchProvidersOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeasonWatchProvidersOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11405,7 +9325,7 @@ func (c *Client) TvSeasonWatchProvidersWithResult[R any](ctx context.Context, se
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeasonWatchProvidersOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11424,14 +9344,6 @@ func (c *Client) TvSeasonWatchProvidersWithResult[R any](ctx context.Context, se
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}
 func (c *Client) GetEpisodeDetails(ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *GetEpisodeDetailsParams) (*EpisodeDetails, error) {
-	return c.GetEpisodeDetailsWithResult[EpisodeDetails](ctx, seriesID, seasonNumber, episodeNumber, params)
-}
-
-// Query the details of a TV episode.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}
-func (c *Client) GetEpisodeDetailsWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *GetEpisodeDetailsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10))
 	if params != nil {
 		q := make(url.Values, 2)
@@ -11471,15 +9383,8 @@ func (c *Client) GetEpisodeDetailsWithResult[R any](ctx context.Context, seriesI
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*EpisodeDetails); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out EpisodeDetails
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11488,7 +9393,7 @@ func (c *Client) GetEpisodeDetailsWithResult[R any](ctx context.Context, seriesI
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(EpisodeDetails)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11507,14 +9412,6 @@ func (c *Client) GetEpisodeDetailsWithResult[R any](ctx context.Context, seriesI
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/account_states
 func (c *Client) TvEpisodeAccountStates(ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *TvEpisodeAccountStatesParams) (*MovieAccountStates, error) {
-	return c.TvEpisodeAccountStatesWithResult[MovieAccountStates](ctx, seriesID, seasonNumber, episodeNumber, params)
-}
-
-// Get the rating, watchlist and favourite status.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/account_states
-func (c *Client) TvEpisodeAccountStatesWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *TvEpisodeAccountStatesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "account_states")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -11554,15 +9451,8 @@ func (c *Client) TvEpisodeAccountStatesWithResult[R any](ctx context.Context, se
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieAccountStates); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieAccountStates
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11571,7 +9461,7 @@ func (c *Client) TvEpisodeAccountStatesWithResult[R any](ctx context.Context, se
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieAccountStates)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11590,14 +9480,6 @@ func (c *Client) TvEpisodeAccountStatesWithResult[R any](ctx context.Context, se
 //
 //	GET /tv/episode/{episode_id}/changes
 func (c *Client) GetEpisodeChanges(ctx context.Context, episodeID EpisodeID) (*EpisodeChangesWrapper, error) {
-	return c.GetEpisodeChangesWithResult[EpisodeChangesWrapper](ctx, episodeID)
-}
-
-// Get the recent changes for a TV episode.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/episode/{episode_id}/changes
-func (c *Client) GetEpisodeChangesWithResult[R any](ctx context.Context, episodeID EpisodeID) (*R, error) {
 	u := c.baseURL.JoinPath("tv", "episode", strconv.FormatInt(int64(episodeID), 10), "changes")
 	req := (&http.Request{
 		Header: http.Header{
@@ -11623,15 +9505,8 @@ func (c *Client) GetEpisodeChangesWithResult[R any](ctx context.Context, episode
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*EpisodeChangesWrapper); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out EpisodeChangesWrapper
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11640,7 +9515,7 @@ func (c *Client) GetEpisodeChangesWithResult[R any](ctx context.Context, episode
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(EpisodeChangesWrapper)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11659,14 +9534,6 @@ func (c *Client) GetEpisodeChangesWithResult[R any](ctx context.Context, episode
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/credits
 func (c *Client) TvEpisodeCredits(ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *TvEpisodeCreditsParams) (*TvEpisodeCreditsOk, error) {
-	return c.TvEpisodeCreditsWithResult[TvEpisodeCreditsOk](ctx, seriesID, seasonNumber, episodeNumber, params)
-}
-
-// Credits
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/credits
-func (c *Client) TvEpisodeCreditsWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *TvEpisodeCreditsParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "credits")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -11702,15 +9569,8 @@ func (c *Client) TvEpisodeCreditsWithResult[R any](ctx context.Context, seriesID
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvEpisodeCreditsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvEpisodeCreditsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11719,7 +9579,7 @@ func (c *Client) TvEpisodeCreditsWithResult[R any](ctx context.Context, seriesID
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvEpisodeCreditsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11738,14 +9598,6 @@ func (c *Client) TvEpisodeCreditsWithResult[R any](ctx context.Context, seriesID
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/external_ids
 func (c *Client) TvEpisodeExternalIds(ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber string) (*TvEpisodeExternalIdsOk, error) {
-	return c.TvEpisodeExternalIdsWithResult[TvEpisodeExternalIdsOk](ctx, seriesID, seasonNumber, episodeNumber)
-}
-
-// Get a list of external IDs that have been added to a TV episode.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/external_ids
-func (c *Client) TvEpisodeExternalIdsWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber string) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", url.PathEscape(episodeNumber), "external_ids")
 	req := (&http.Request{
 		Header: http.Header{
@@ -11771,15 +9623,8 @@ func (c *Client) TvEpisodeExternalIdsWithResult[R any](ctx context.Context, seri
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvEpisodeExternalIdsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvEpisodeExternalIdsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11788,7 +9633,7 @@ func (c *Client) TvEpisodeExternalIdsWithResult[R any](ctx context.Context, seri
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvEpisodeExternalIdsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11807,14 +9652,6 @@ func (c *Client) TvEpisodeExternalIdsWithResult[R any](ctx context.Context, seri
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/images
 func (c *Client) TvEpisodeImages(ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *TvEpisodeImagesParams) (*TvEpisodeImagesOk, error) {
-	return c.TvEpisodeImagesWithResult[TvEpisodeImagesOk](ctx, seriesID, seasonNumber, episodeNumber, params)
-}
-
-// Get the images that belong to a TV episode.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/images
-func (c *Client) TvEpisodeImagesWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *TvEpisodeImagesParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "images")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -11854,15 +9691,8 @@ func (c *Client) TvEpisodeImagesWithResult[R any](ctx context.Context, seriesID 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvEpisodeImagesOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvEpisodeImagesOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11871,7 +9701,7 @@ func (c *Client) TvEpisodeImagesWithResult[R any](ctx context.Context, seriesID 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvEpisodeImagesOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11890,14 +9720,6 @@ func (c *Client) TvEpisodeImagesWithResult[R any](ctx context.Context, seriesID 
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/translations
 func (c *Client) TvEpisodeTranslations(ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32) (*TvSeasonTranslations, error) {
-	return c.TvEpisodeTranslationsWithResult[TvSeasonTranslations](ctx, seriesID, seasonNumber, episodeNumber)
-}
-
-// Get the translations that have been added to a TV episode.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/translations
-func (c *Client) TvEpisodeTranslationsWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "translations")
 	req := (&http.Request{
 		Header: http.Header{
@@ -11923,15 +9745,8 @@ func (c *Client) TvEpisodeTranslationsWithResult[R any](ctx context.Context, ser
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvSeasonTranslations); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvSeasonTranslations
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11940,7 +9755,7 @@ func (c *Client) TvEpisodeTranslationsWithResult[R any](ctx context.Context, ser
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvSeasonTranslations)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -11959,14 +9774,6 @@ func (c *Client) TvEpisodeTranslationsWithResult[R any](ctx context.Context, ser
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/videos
 func (c *Client) TvEpisodeVideos(ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *TvEpisodeVideosParams) (*MovieVideos, error) {
-	return c.TvEpisodeVideosWithResult[MovieVideos](ctx, seriesID, seasonNumber, episodeNumber, params)
-}
-
-// Get the videos that belong to a TV episode.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/videos
-func (c *Client) TvEpisodeVideosWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *TvEpisodeVideosParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "videos")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -12006,15 +9813,8 @@ func (c *Client) TvEpisodeVideosWithResult[R any](ctx context.Context, seriesID 
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*MovieVideos); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out MovieVideos
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -12023,7 +9823,7 @@ func (c *Client) TvEpisodeVideosWithResult[R any](ctx context.Context, seriesID 
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(MovieVideos)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -12042,14 +9842,6 @@ func (c *Client) TvEpisodeVideosWithResult[R any](ctx context.Context, seriesID 
 //
 //	POST /tv/{series_id}/season/{season_number}/episode/{episode_number}/rating
 func (c *Client) TvEpisodeAddRating(ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *TvEpisodeAddRatingParams, body *ListCreate) (*ListClear, error) {
-	return c.TvEpisodeAddRatingWithResult[ListClear](ctx, seriesID, seasonNumber, episodeNumber, params, body)
-}
-
-// Rate a TV episode and save it to your rated list.
-// You can define a custom result to unmarshal the response into.
-//
-//	POST /tv/{series_id}/season/{season_number}/episode/{episode_number}/rating
-func (c *Client) TvEpisodeAddRatingWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *TvEpisodeAddRatingParams, body *ListCreate) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "rating")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -12099,15 +9891,8 @@ func (c *Client) TvEpisodeAddRatingWithResult[R any](ctx context.Context, series
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListClear); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListClear
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -12116,7 +9901,7 @@ func (c *Client) TvEpisodeAddRatingWithResult[R any](ctx context.Context, series
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListClear)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -12135,14 +9920,6 @@ func (c *Client) TvEpisodeAddRatingWithResult[R any](ctx context.Context, series
 //
 //	DELETE /tv/{series_id}/season/{season_number}/episode/{episode_number}/rating
 func (c *Client) TvEpisodeDeleteRating(ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *TvEpisodeDeleteRatingParams) (*ListClear, error) {
-	return c.TvEpisodeDeleteRatingWithResult[ListClear](ctx, seriesID, seasonNumber, episodeNumber, params)
-}
-
-// Delete your rating on a TV episode.
-// You can define a custom result to unmarshal the response into.
-//
-//	DELETE /tv/{series_id}/season/{season_number}/episode/{episode_number}/rating
-func (c *Client) TvEpisodeDeleteRatingWithResult[R any](ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber int32, params *TvEpisodeDeleteRatingParams) (*R, error) {
 	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", strconv.FormatInt(int64(episodeNumber), 10), "rating")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -12182,15 +9959,8 @@ func (c *Client) TvEpisodeDeleteRatingWithResult[R any](ctx context.Context, ser
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*ListClear); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out ListClear
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -12199,7 +9969,7 @@ func (c *Client) TvEpisodeDeleteRatingWithResult[R any](ctx context.Context, ser
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(ListClear)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -12218,14 +9988,6 @@ func (c *Client) TvEpisodeDeleteRatingWithResult[R any](ctx context.Context, ser
 //
 //	GET /tv/episode_group/{tv_episode_group_id}
 func (c *Client) TvEpisodeGroupDetails(ctx context.Context, tvEpisodeGroupID string) (*TvEpisodeGroupDetailsOk, error) {
-	return c.TvEpisodeGroupDetailsWithResult[TvEpisodeGroupDetailsOk](ctx, tvEpisodeGroupID)
-}
-
-// Get the details of a TV episode group.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /tv/episode_group/{tv_episode_group_id}
-func (c *Client) TvEpisodeGroupDetailsWithResult[R any](ctx context.Context, tvEpisodeGroupID string) (*R, error) {
 	u := c.baseURL.JoinPath("tv", "episode_group", url.PathEscape(tvEpisodeGroupID))
 	req := (&http.Request{
 		Header: http.Header{
@@ -12251,15 +10013,8 @@ func (c *Client) TvEpisodeGroupDetailsWithResult[R any](ctx context.Context, tvE
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*TvEpisodeGroupDetailsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out TvEpisodeGroupDetailsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -12268,7 +10023,7 @@ func (c *Client) TvEpisodeGroupDetailsWithResult[R any](ctx context.Context, tvE
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(TvEpisodeGroupDetailsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -12287,14 +10042,6 @@ func (c *Client) TvEpisodeGroupDetailsWithResult[R any](ctx context.Context, tvE
 //
 //	GET /watch/providers/regions
 func (c *Client) WatchProvidersAvailableRegions(ctx context.Context, params *WatchProvidersAvailableRegionsParams) (*WatchProvidersAvailableRegionsOk, error) {
-	return c.WatchProvidersAvailableRegionsWithResult[WatchProvidersAvailableRegionsOk](ctx, params)
-}
-
-// Get the list of the countries we have watch provider (OTT/streaming) data for.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /watch/providers/regions
-func (c *Client) WatchProvidersAvailableRegionsWithResult[R any](ctx context.Context, params *WatchProvidersAvailableRegionsParams) (*R, error) {
 	u := c.baseURL.JoinPath("watch", "providers", "regions")
 	if params != nil {
 		q := make(url.Values, 1)
@@ -12330,15 +10077,8 @@ func (c *Client) WatchProvidersAvailableRegionsWithResult[R any](ctx context.Con
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*WatchProvidersAvailableRegionsOk); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out WatchProvidersAvailableRegionsOk
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -12347,7 +10087,7 @@ func (c *Client) WatchProvidersAvailableRegionsWithResult[R any](ctx context.Con
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(WatchProvidersAvailableRegionsOk)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -12366,14 +10106,6 @@ func (c *Client) WatchProvidersAvailableRegionsWithResult[R any](ctx context.Con
 //
 //	GET /watch/providers/movie
 func (c *Client) WatchProvidersMovieList(ctx context.Context, params *WatchProvidersMovieListParams) (*WatchProviderTvList, error) {
-	return c.WatchProvidersMovieListWithResult[WatchProviderTvList](ctx, params)
-}
-
-// Get the list of streaming providers we have for movies.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /watch/providers/movie
-func (c *Client) WatchProvidersMovieListWithResult[R any](ctx context.Context, params *WatchProvidersMovieListParams) (*R, error) {
 	u := c.baseURL.JoinPath("watch", "providers", "movie")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -12413,15 +10145,8 @@ func (c *Client) WatchProvidersMovieListWithResult[R any](ctx context.Context, p
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*WatchProviderTvList); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out WatchProviderTvList
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -12430,7 +10155,7 @@ func (c *Client) WatchProvidersMovieListWithResult[R any](ctx context.Context, p
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(WatchProviderTvList)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -12449,14 +10174,6 @@ func (c *Client) WatchProvidersMovieListWithResult[R any](ctx context.Context, p
 //
 //	GET /watch/providers/tv
 func (c *Client) WatchProviderTvList(ctx context.Context, params *WatchProviderTvListParams) (*WatchProviderTvList, error) {
-	return c.WatchProviderTvListWithResult[WatchProviderTvList](ctx, params)
-}
-
-// Get the list of streaming providers we have for TV shows.
-// You can define a custom result to unmarshal the response into.
-//
-//	GET /watch/providers/tv
-func (c *Client) WatchProviderTvListWithResult[R any](ctx context.Context, params *WatchProviderTvListParams) (*R, error) {
 	u := c.baseURL.JoinPath("watch", "providers", "tv")
 	if params != nil {
 		q := make(url.Values, 2)
@@ -12496,15 +10213,8 @@ func (c *Client) WatchProviderTvListWithResult[R any](ctx context.Context, param
 		// 200
 		switch mt, _, _ := strings.Cut(rsp.Header.Get("Content-Type"), ";"); mt {
 		case "application/json":
-			var out R
-
-			// a type of the caller's own declares only what it needs of the response, so it is decoded leniently
-			opts := jsonOptsLenient
-			if _, ok := any(&out).(*WatchProviderTvList); ok {
-				opts = jsonOpts
-			}
-
-			if err := json.UnmarshalRead(rsp.Body, &out, opts); err != nil {
+			var out WatchProviderTvList
+			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if ia == nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
@@ -12513,7 +10223,7 @@ func (c *Client) WatchProviderTvListWithResult[R any](ctx context.Context, param
 					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
 				}
 
-				out = *new(R)
+				out = *new(WatchProviderTvList)
 				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
 					return nil, api.WrapDecodingError(rsp, err)
 				}
