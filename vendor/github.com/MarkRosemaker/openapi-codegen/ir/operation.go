@@ -6,6 +6,7 @@ import (
 	"encoding/json/v2"
 	"fmt"
 	"net/http"
+	"net/url"
 	"slices"
 	"strconv"
 	"strings"
@@ -444,7 +445,9 @@ func segmentExpr(seg string, params map[string]Param) string {
 
 		name := seg[open+1 : close]
 		if p, ok := params[name]; ok {
-			parts = append(parts, p.FormatExpr())
+			// JoinPath takes its elements as escaped path text, so a parameter is escaped, or a slash in it would
+			// separate segments and a percent sign start an escape
+			parts = append(parts, p.PathExpr())
 		} else {
 			parts = append(parts, strconv.Quote(name))
 		}
@@ -577,6 +580,34 @@ func (p Param) FormatExpr() string {
 	default:
 		return "fmt.Sprint(" + v + ")"
 	}
+}
+
+// PathExpr is the Go expression of the parameter as a path segment, escaped where its text can hold what a path
+// reads as its own, as a slash or a percent sign: url.URL.JoinPath takes its elements as escaped path text. A fixed
+// value is escaped as the code is generated; a number, a UUID or a date never needs it.
+func (p Param) PathExpr() string {
+	expr := p.FormatExpr()
+
+	if p.Value != "" {
+		if v, err := strconv.Unquote(expr); err == nil {
+			return strconv.Quote(url.PathEscape(v))
+		}
+	}
+
+	tp := cmp.Or(p.BaseType, p.Type)
+	if p.Value == "" && p.GlobalType == "" {
+		switch tp {
+		case "bool", "int", "int32", "int64", "uint", "uint32", "uint64", "float32", "float64",
+			"uuid.UUID", "time.Duration", "civil.Date":
+			return expr
+		case "time.Time":
+			if p.IsUnix {
+				return expr
+			}
+		}
+	}
+
+	return "url.PathEscape(" + expr + ")"
 }
 
 func fromRequestBody(rb *openapi.RequestBody) (*ReqBody, error) {
