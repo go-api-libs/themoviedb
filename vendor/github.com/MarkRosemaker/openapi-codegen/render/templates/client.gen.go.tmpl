@@ -522,6 +522,24 @@ func joinQuery(parts []string, sep string, escape func(string) string) string {
 	return strings.Join(parts, sep)
 }
 {{- end }}
+{{- if .EscapesPathSegments }}
+
+// escapePathSegments escapes s, a path parameter that is a path of its own, part by part: its slashes stay slashes,
+// and a part of . or .. is escaped too, so the client does not drop it, nor the part before it, from the path.
+func escapePathSegments(s string) string {
+	parts := strings.Split(s, "/")
+	for i, part := range parts {
+		switch part {
+		case ".", "..":
+			parts[i] = strings.ReplaceAll(part, ".", "%2E")
+		default:
+			parts[i] = url.PathEscape(part)
+		}
+	}
+
+	return strings.Join(parts, "/")
+}
+{{- end }}
 {{- if .AllowsReserved }}
 
 // escapeReserved escapes s as [url.QueryEscape] does, but for the characters RFC 3986 reserves, which allowReserved

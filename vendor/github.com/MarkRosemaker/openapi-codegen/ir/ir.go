@@ -165,6 +165,19 @@ func (op Operation) NilParamsExpr() string {
 	return "nil"
 }
 
+// ServePattern is the path template as an [http.ServeMux] pattern: a path parameter that keeps its slashes, see
+// [Param.AllowSlashes], matches the rest of the path where it comes last, as {path...}. Elsewhere a pattern cannot hold
+// more than one segment of it.
+func (op Operation) ServePattern() string {
+	for _, p := range op.PathParams {
+		if placeholder := "{" + p.JSONName + "}"; p.AllowSlashes && strings.HasSuffix(op.PathTemplate, placeholder) {
+			return strings.TrimSuffix(op.PathTemplate, placeholder) + "{" + p.JSONName + "...}"
+		}
+	}
+
+	return op.PathTemplate
+}
+
 // JSPathTemplate returns the path template with {jsonName} placeholders replaced
 // by ${goName} JavaScript template-literal interpolations, and those of fixed
 // parameters by their value.
@@ -459,8 +472,12 @@ type Param struct {
 	IsUnix bool `json:"isUnix,omitzero"`
 	// IsDateBasic is true when Type is "civil.Date" but the schema is a string of format date-basic, such as
 	// "20260320", which FormatExpr writes and ParseExpr reads.
-	IsDateBasic bool   `json:"isDateBasic,omitzero"`
-	Description string `json:"description,omitzero"`
+	IsDateBasic bool `json:"isDateBasic,omitzero"`
+	// AllowSlashes is set for a path parameter marked x-allow-slashes, a path of its own, as pkg.go.dev's
+	// /package/{path} takes golang.org/x/time/rate: its slashes stay slashes, where any other path parameter's are
+	// escaped, as OpenAPI requires.
+	AllowSlashes bool   `json:"allowSlashes,omitzero"`
+	Description  string `json:"description,omitzero"`
 	// Item is one element of an array parameter, with v as its variable.
 	Item *Param `json:"item,omitzero"`
 	// Props are the members of an object parameter, each with the struct's field as its variable.

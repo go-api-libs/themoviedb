@@ -162,6 +162,13 @@ How the specification maps onto Go:
   `const` or the only value of its `enum`, is sent by the client itself: in the
   path, the query or the headers, such as Notion's `Notion-Version`. The caller
   never passes it. An `example` alone does not fix a value.
+- **Path parameters** — a value is escaped whole, a slash included, as OpenAPI
+  says a path parameter holds none, so `x/y` or `../admin` stays one segment of
+  the path. A parameter that is a path of its own, as pkg.go.dev's
+  `/package/{path}` takes `golang.org/x/time/rate`, is marked
+  `x-allow-slashes: true`: its slashes stay, what lies between them is escaped,
+  and a part of `.` or `..` is escaped too. The server takes the rest of the
+  path for it where it comes last.
 - **Query parameters** — every style OpenAPI defines, written by the client,
   read by the server and api.js alike. An array or an object of single values
   (a struct of its properties, or a map) is sent as one value joined by commas

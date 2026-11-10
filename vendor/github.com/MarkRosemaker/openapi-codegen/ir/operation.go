@@ -270,6 +270,7 @@ func fromParam(p *openapi.Parameter, apiTitle string) (Param, error) {
 	}
 
 	param.GoName = strcase.ToGoCamel(p.Name)
+	param.AllowSlashes = p.In == openapi.ParameterLocationPath && allowsSlashes(p)
 
 	param.FieldName = goPascal(p.Name)
 
@@ -582,14 +583,20 @@ func (p Param) FormatExpr() string {
 	}
 }
 
-// PathExpr is the Go expression of the parameter as a path segment, escaped where its text can hold what a path
-// reads as its own, as a slash or a percent sign: url.URL.JoinPath takes its elements as escaped path text. A fixed
-// value is escaped as the code is generated; a number, a UUID or a date never needs it.
+// PathExpr is the Go expression of the parameter in a path, escaped where its text can hold what a path reads as its
+// own: url.URL.JoinPath takes its elements as escaped path text, so a percent sign would make it drop the path, and a
+// slash would separate segments, as OpenAPI says a path parameter's never does. A parameter marked x-allow-slashes,
+// see [Param.AllowSlashes], keeps its slashes, and is escaped part by part. A fixed value is escaped as the code is
+// generated; a number, a UUID or a date never needs it.
 func (p Param) PathExpr() string {
 	expr := p.FormatExpr()
 
 	if p.Value != "" {
 		if v, err := strconv.Unquote(expr); err == nil {
+			if p.AllowSlashes {
+				return strconv.Quote(escapePathSegments(v))
+			}
+
 			return strconv.Quote(url.PathEscape(v))
 		}
 	}
@@ -607,7 +614,47 @@ func (p Param) PathExpr() string {
 		}
 	}
 
+	if p.AllowSlashes {
+		return "escapePathSegments(" + expr + ")"
+	}
+
 	return "url.PathEscape(" + expr + ")"
+}
+
+// escapePathSegments is what the generated function of that name makes of s, for a fixed value.
+func escapePathSegments(s string) string {
+	parts := strings.Split(s, "/")
+	for i, part := range parts {
+		switch part {
+		case ".", "..":
+			parts[i] = strings.ReplaceAll(part, ".", "%2E")
+		default:
+			parts[i] = url.PathEscape(part)
+		}
+	}
+
+	return strings.Join(parts, "/")
+}
+
+// allowsSlashes reports whether p is marked x-allow-slashes: true.
+func allowsSlashes(p *openapi.Parameter) bool {
+	if len(p.Extensions) == 0 {
+		return false
+	}
+
+	var ext struct {
+		AllowSlashes bool `json:"x-allow-slashes"`
+	}
+
+	return json.Unmarshal(p.Extensions, &ext) == nil && ext.AllowSlashes
+}
+
+// EscapesPathSegments reports whether a path parameter keeps its slashes, which the generated escapePathSegments
+// escapes around.
+func (doc Document) EscapesPathSegments() bool {
+	return slices.ContainsFunc(doc.Operations, func(op Operation) bool {
+		return slices.ContainsFunc(op.PathParams, func(p Param) bool { return p.AllowSlashes })
+	})
 }
 
 func fromRequestBody(rb *openapi.RequestBody) (*ReqBody, error) {

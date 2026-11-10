@@ -32,7 +32,7 @@ type Service interface {
 func RegisterService(svc Service, mux *http.ServeMux, pathPrefix string) {
 {{range .Operations}}{{$op := .}}{{$successCode := "http.StatusOK"}}{{$successContentType := "application/json"}}{{range .Responses}}{{if .IsSuccess}}{{$successCode = .GoConstant}}{{$successContentType = .ContentType}}{{end}}{{end}}
 	{
-	path := fmt.Sprintf("%s%s", pathPrefix, {{ .PathTemplate | printf "%q" }})
+	path := fmt.Sprintf("%s%s", pathPrefix, {{ .ServePattern | printf "%q" }})
 	l := slog.Default().With(slog.String("method", "{{ .Method }}"), slog.String("path", path), slog.String("function", {{.Name | printf "%q" }}))
 
 	mux.HandleFunc(fmt.Sprintf("{{ .Method }} %s", path), func(w http.ResponseWriter, r *http.Request) {
