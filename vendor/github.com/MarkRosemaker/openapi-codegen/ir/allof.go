@@ -357,9 +357,18 @@ func countNull(l openapi.SchemaList) int {
 // fromAllOfSchema builds the struct of an allOf. A part that only this schema uses is folded into its fields, any
 // other is embedded, and a union among the parts is held as a field of its own, decoded by the struct's own methods.
 func fromAllOfSchema(name string, s *openapi.Schema, uses map[string]int, folded map[string]bool) (*Schema, error) {
+	// a member is required where any part requires it, whichever part declares it
 	requiredSet := make(map[string]bool)
 	for _, r := range s.Required {
 		requiredSet[r] = true
+	}
+
+	for _, entry := range s.AllOf {
+		if part := deref(entry); part != nil {
+			for _, r := range part.Required {
+				requiredSet[r] = true
+			}
+		}
 	}
 
 	out := &Schema{
@@ -377,6 +386,12 @@ func fromAllOfSchema(name string, s *openapi.Schema, uses map[string]int, folded
 			field, err := getField(jsonName, propRef, requiredSet)
 			if err != nil {
 				return fmt.Errorf("allOf property %q: %w", jsonName, err)
+			}
+
+			// a later part declaring a member again redefines it, as one that corrects another's type
+			if i := slices.IndexFunc(out.Fields, func(f Field) bool { return !f.Embedded && f.JSONName == jsonName }); i >= 0 {
+				out.Fields[i] = field
+				continue
 			}
 
 			out.Fields = append(out.Fields, field)
