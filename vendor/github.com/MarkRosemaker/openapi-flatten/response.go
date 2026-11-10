@@ -1,11 +1,8 @@
 package flatten
 
 import (
-	"strings"
-
 	"github.com/MarkRosemaker/errpath"
 	"github.com/MarkRosemaker/openapi"
-	"github.com/ettle/strcase"
 )
 
 // nameResponse returns a human-readable name for the response.
@@ -15,7 +12,7 @@ func nameResponse(opID string, code openapi.StatusCode) string {
 		statusText = string(code)
 	}
 
-	return strcase.ToGoPascal(strings.Join([]string{opID, statusText}, " "))
+	return goName(opID, statusText)
 }
 
 func response(d *openapi.Document, r *openapi.Response, rspName string, alwaysMove bool) error {

@@ -5,7 +5,6 @@ import (
 
 	"github.com/MarkRosemaker/errpath"
 	"github.com/MarkRosemaker/openapi"
-	"github.com/ettle/strcase"
 )
 
 // inlineSchema moves s into the components if it deserves a name of its own, leaving a reference in its place, and flattens what it contains.
@@ -147,7 +146,7 @@ func inlineBranches(d *openapi.Document, ss openapi.SchemaList, prefix string) e
 	for i, s := range ss {
 		name := fmt.Sprintf("%s%d", prefix, i)
 		if s.Title != "" {
-			name = strcase.ToGoPascal(s.Title)
+			name = goName(s.Title)
 		}
 
 		if err := inlineSchema(d, s, name, false); err != nil {

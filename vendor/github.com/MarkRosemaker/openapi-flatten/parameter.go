@@ -3,7 +3,6 @@ package flatten
 import (
 	"github.com/MarkRosemaker/errpath"
 	"github.com/MarkRosemaker/openapi"
-	"github.com/ettle/strcase"
 )
 
 func parameterRef(d *openapi.Document, p *openapi.ParameterRef) error {
@@ -20,7 +19,7 @@ func parameterRef(d *openapi.Document, p *openapi.ParameterRef) error {
 }
 
 func parameter(d *openapi.Document, p *openapi.Parameter) error {
-	paramName := strcase.ToGoPascal(p.Name)
+	paramName := goName(p.Name)
 
 	if p.Schema != nil {
 		if err := inlineSchema(d, p.Schema, paramName, false); err != nil {

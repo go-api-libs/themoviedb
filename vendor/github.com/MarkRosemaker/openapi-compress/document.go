@@ -122,6 +122,10 @@ func deduplicateSchemasAtThreshold(d *openapi.Document, threshold float64, deriv
 
 			schemaB := list[j]
 
+			if !sameMeaning(schemaA, schemaB, derived[names[i]] || derived[names[j]]) {
+				continue
+			}
+
 			sim, ok := similarity(schemaA, schemaB, keys[i] == keys[j], threshold)
 			if !ok {
 				continue
@@ -187,6 +191,18 @@ func similarity(a, b *openapi.Schema, sameKey bool, threshold float64) (float64,
 	sim := schemasSimilarity(a, b)
 
 	return sim, sim >= threshold
+}
+
+// sameMeaning reports whether a and b may be one type as far as what they mean goes. An enum's values say little of
+// it, as 1, 2 and 3 for both a node type and a thumbnail type: two enums the specification named mean the same only
+// where their titles and descriptions agree. One flatten named, derived, is a copy of an enum written inline, and
+// merges with any of the same values.
+func sameMeaning(a, b *openapi.Schema, derived bool) bool {
+	if derived || len(a.Enum) == 0 && len(b.Enum) == 0 {
+		return true
+	}
+
+	return a.Title == b.Title && a.Description == b.Description
 }
 
 // deduplicateParameters removes exact duplicate parameter definitions from
