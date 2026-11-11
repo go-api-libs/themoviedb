@@ -63,8 +63,9 @@ rest of the family before generating anything:
   error, joined with the error of a debug file it cannot write; an error type is decoded leniently too. A failure
   that declares no body is reported by its status, and every member of an enum is `Valid`, a value none is not.
   Each variant of a union is set in turn, encoded and decoded strictly, and must come back as the same variant,
-  encoding the same: a variant that needs a union of its own, or a date, is left out, as is one whose minimal value
-  another variant would take too.
+  encoding the same, and so is each tag of a tagged struct, with the members the tag requires. A value sets every
+  union it holds to an alternative that union tells apart, every fixed member to its value and every date or time to
+  one; a variant whose minimal value another variant would take too is left out.
 - **JavaScript client** — optional `api.js` alongside the Go output. A relative
   server URL, such as `/api`, makes it call the server that serves the page.
 

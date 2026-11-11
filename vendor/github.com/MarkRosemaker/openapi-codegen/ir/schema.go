@@ -593,7 +593,31 @@ func getField(jsonName string, propRef *openapi.Schema, requiredSet map[string]b
 		IsStringOrNumber: isStringOrNumberOneOf(v),
 		IsUnix:           isUnix(goType.Name, v),
 		IsDateBasic:      isDateBasic(goType.Name, v),
+		Fixed:            fixedJSON(v),
 	}, nil
+}
+
+// fixedJSON is the one value s allows, by its const or a one-value enum, written as compact JSON, or "".
+func fixedJSON(s *openapi.Schema) string {
+	if s == nil {
+		return ""
+	}
+
+	value := s.Const
+	if len(value) == 0 && len(s.Enum) == 1 {
+		value = s.Enum[0]
+	}
+
+	if len(value) == 0 {
+		return ""
+	}
+
+	c, ok := compactJSON(value)
+	if !ok {
+		return ""
+	}
+
+	return c
 }
 
 // isUnix reports whether a value of the Go type named, from schema s, is an integer of unix time: a date-time or a date

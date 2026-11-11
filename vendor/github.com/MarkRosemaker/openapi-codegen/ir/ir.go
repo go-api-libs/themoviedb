@@ -395,6 +395,8 @@ type Field struct {
 	// a response the latter, and neither requires it.
 	ReadOnly  bool `json:"readOnly,omitzero"`
 	WriteOnly bool `json:"writeOnly,omitzero"`
+	// Fixed is the one value the property allows, by its const or a one-value enum, written as compact JSON.
+	Fixed string `json:"fixed,omitzero"`
 
 	// IsDateTimeOrInt is true when the property's schema is a oneOf of a
 	// date-time string and an integer. The Go type is time.Time, but a custom
