@@ -16,6 +16,7 @@ var jsonOpts = json.JoinOptions(
 	json.RejectUnknownMembers(true),
 	json.WithMarshalers(json.JoinMarshalers(
 		json.MarshalToFunc(jsonutil.URLMarshal),
+		json.MarshalToFunc(jsonutil.DateMarshalZeroAsNull),
 	)),
 	json.WithUnmarshalers(json.JoinUnmarshalers(
 		json.UnmarshalFromFunc(jsonutil.URLUnmarshal),
