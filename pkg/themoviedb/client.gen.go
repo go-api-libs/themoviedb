@@ -2375,7 +2375,7 @@ func (c *Client) ConfigurationTimezones(ctx context.Context) (ConfigurationTimez
 //
 //	GET /credit/{credit_id}
 func (c *Client) CreditDetails(ctx context.Context, creditID string, params *CreditDetailsParams) (*CreditDetailsOk, error) {
-	u := c.baseURL.JoinPath("credit", url.PathEscape(creditID))
+	u := c.baseURL.JoinPath("credit", escapePathSegment(creditID))
 	if params != nil {
 		q := make(url.Values, 1)
 
@@ -2843,7 +2843,7 @@ func (c *Client) DiscoverTv(ctx context.Context, params *DiscoverTvParams) (*Dis
 //
 //	GET /find/{external_id}
 func (c *Client) FindByID(ctx context.Context, externalID string, params FindByIDParams) (*FindByIDOk, error) {
-	u := c.baseURL.JoinPath("find", url.PathEscape(externalID))
+	u := c.baseURL.JoinPath("find", escapePathSegment(externalID))
 
 	q := make(url.Values, 2)
 
@@ -3036,7 +3036,7 @@ func (c *Client) GenreTvList(ctx context.Context, params *GenreTvListParams) (*G
 //
 //	GET /guest_session/{guest_session_id}/rated/movies
 func (c *Client) GuestSessionRatedMovies(ctx context.Context, guestSessionID string, params *GuestSessionRatedMoviesParams) (*GuestSessionRatedMoviesOk, error) {
-	u := c.baseURL.JoinPath("guest_session", url.PathEscape(guestSessionID), "rated", "movies")
+	u := c.baseURL.JoinPath("guest_session", escapePathSegment(guestSessionID), "rated", "movies")
 	if params != nil {
 		q := make(url.Values, 3)
 
@@ -3108,7 +3108,7 @@ func (c *Client) GuestSessionRatedMovies(ctx context.Context, guestSessionID str
 //
 //	GET /guest_session/{guest_session_id}/rated/tv
 func (c *Client) GuestSessionRatedTv(ctx context.Context, guestSessionID string, params *GuestSessionRatedTvParams) (*GuestSessionRatedTvOk, error) {
-	u := c.baseURL.JoinPath("guest_session", url.PathEscape(guestSessionID), "rated", "tv")
+	u := c.baseURL.JoinPath("guest_session", escapePathSegment(guestSessionID), "rated", "tv")
 	if params != nil {
 		q := make(url.Values, 3)
 
@@ -3180,7 +3180,7 @@ func (c *Client) GuestSessionRatedTv(ctx context.Context, guestSessionID string,
 //
 //	GET /guest_session/{guest_session_id}/rated/tv/episodes
 func (c *Client) GuestSessionRatedTvEpisodes(ctx context.Context, guestSessionID string, params *GuestSessionRatedTvEpisodesParams) (*GuestSessionRatedTvEpisodesOk, error) {
-	u := c.baseURL.JoinPath("guest_session", url.PathEscape(guestSessionID), "rated", "tv", "episodes")
+	u := c.baseURL.JoinPath("guest_session", escapePathSegment(guestSessionID), "rated", "tv", "episodes")
 	if params != nil {
 		q := make(url.Values, 3)
 
@@ -3306,7 +3306,7 @@ func (c *Client) KeywordDetails(ctx context.Context, keywordID int32) (*Keyword,
 //
 //	GET /keyword/{keyword_id}/movies
 func (c *Client) KeywordMovies(ctx context.Context, keywordID string, params *KeywordMoviesParams) (*KeywordMoviesOk, error) {
-	u := c.baseURL.JoinPath("keyword", url.PathEscape(keywordID), "movies")
+	u := c.baseURL.JoinPath("keyword", escapePathSegment(keywordID), "movies")
 	if params != nil {
 		q := make(url.Values, 3)
 
@@ -5719,7 +5719,7 @@ func (c *Client) PersonChanges(ctx context.Context, personID int32, params *Pers
 //
 //	GET /person/{person_id}/combined_credits
 func (c *Client) PersonCombinedCredits(ctx context.Context, personID string, params *PersonCombinedCreditsParams) (*PersonCombinedCreditsOk, error) {
-	u := c.baseURL.JoinPath("person", url.PathEscape(personID), "combined_credits")
+	u := c.baseURL.JoinPath("person", escapePathSegment(personID), "combined_credits")
 	if params != nil {
 		q := make(url.Values, 1)
 
@@ -6191,7 +6191,7 @@ func (c *Client) Translations(ctx context.Context, personID int32) (*Translation
 //
 //	GET /review/{review_id}
 func (c *Client) ReviewDetails(ctx context.Context, reviewID string) (*ReviewDetailsOk, error) {
-	u := c.baseURL.JoinPath("review", url.PathEscape(reviewID))
+	u := c.baseURL.JoinPath("review", escapePathSegment(reviewID))
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
@@ -6764,7 +6764,7 @@ func (c *Client) SearchShows(ctx context.Context, params SearchShowsParams) (*Sh
 //
 //	GET /trending/all/{time_window}
 func (c *Client) TrendingAll(ctx context.Context, timeWindow TimeWindow, params *TrendingAllParams) (*TrendingAll, error) {
-	u := c.baseURL.JoinPath("trending", "all", url.PathEscape(string(timeWindow)))
+	u := c.baseURL.JoinPath("trending", "all", escapePathSegment(string(timeWindow)))
 	if params != nil {
 		q := make(url.Values, 1)
 
@@ -6828,7 +6828,7 @@ func (c *Client) TrendingAll(ctx context.Context, timeWindow TimeWindow, params 
 //
 //	GET /trending/movie/{time_window}
 func (c *Client) TrendingMovies(ctx context.Context, timeWindow TimeWindow, params *TrendingMoviesParams) (*TrendingAll, error) {
-	u := c.baseURL.JoinPath("trending", "movie", url.PathEscape(string(timeWindow)))
+	u := c.baseURL.JoinPath("trending", "movie", escapePathSegment(string(timeWindow)))
 	if params != nil {
 		q := make(url.Values, 1)
 
@@ -6892,7 +6892,7 @@ func (c *Client) TrendingMovies(ctx context.Context, timeWindow TimeWindow, para
 //
 //	GET /trending/person/{time_window}
 func (c *Client) TrendingPeople(ctx context.Context, timeWindow TimeWindow, params *TrendingPeopleParams) (*TrendingPeopleOk, error) {
-	u := c.baseURL.JoinPath("trending", "person", url.PathEscape(string(timeWindow)))
+	u := c.baseURL.JoinPath("trending", "person", escapePathSegment(string(timeWindow)))
 	if params != nil {
 		q := make(url.Values, 1)
 
@@ -6956,7 +6956,7 @@ func (c *Client) TrendingPeople(ctx context.Context, timeWindow TimeWindow, para
 //
 //	GET /trending/tv/{time_window}
 func (c *Client) TrendingTv(ctx context.Context, timeWindow TimeWindow, params *TrendingTvParams) (*TrendingTv, error) {
-	u := c.baseURL.JoinPath("trending", "tv", url.PathEscape(string(timeWindow)))
+	u := c.baseURL.JoinPath("trending", "tv", escapePathSegment(string(timeWindow)))
 	if params != nil {
 		q := make(url.Values, 1)
 
@@ -9598,7 +9598,7 @@ func (c *Client) TvEpisodeCredits(ctx context.Context, seriesID ShowID, seasonNu
 //
 //	GET /tv/{series_id}/season/{season_number}/episode/{episode_number}/external_ids
 func (c *Client) TvEpisodeExternalIds(ctx context.Context, seriesID ShowID, seasonNumber int32, episodeNumber string) (*TvEpisodeExternalIdsOk, error) {
-	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", url.PathEscape(episodeNumber), "external_ids")
+	u := c.baseURL.JoinPath("tv", strconv.FormatInt(int64(seriesID), 10), "season", strconv.FormatInt(int64(seasonNumber), 10), "episode", escapePathSegment(episodeNumber), "external_ids")
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
@@ -9988,7 +9988,7 @@ func (c *Client) TvEpisodeDeleteRating(ctx context.Context, seriesID ShowID, sea
 //
 //	GET /tv/episode_group/{tv_episode_group_id}
 func (c *Client) TvEpisodeGroupDetails(ctx context.Context, tvEpisodeGroupID string) (*TvEpisodeGroupDetailsOk, error) {
-	u := c.baseURL.JoinPath("tv", "episode_group", url.PathEscape(tvEpisodeGroupID))
+	u := c.baseURL.JoinPath("tv", "episode_group", escapePathSegment(tvEpisodeGroupID))
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
@@ -10235,6 +10235,18 @@ func (c *Client) WatchProviderTvList(ctx context.Context, params *WatchProviderT
 		}
 	default:
 		return nil, c.failed(ia, api.NewErrUnknownStatusCode(rsp))
+	}
+}
+
+// escapePathSegment escapes s, a path parameter, as one segment of a path: all but the characters RFC 3986 leaves
+// unreserved, as encodeURIComponent does, and a segment of . or .., so the client does not drop it, nor the segment
+// before it, from the path.
+func escapePathSegment(s string) string {
+	switch s {
+	case ".", "..":
+		return strings.ReplaceAll(s, ".", "%2E")
+	default:
+		return strings.ReplaceAll(url.QueryEscape(s), "+", "%20")
 	}
 }
 
