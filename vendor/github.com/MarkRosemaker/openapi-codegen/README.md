@@ -60,6 +60,9 @@ rest of the family before generating anything:
   mode, a body the client cannot decode even leniently is still added to the debug file and returned as a decoding
   error, joined with the error of a debug file it cannot write; an error type is decoded leniently too. A failure
   that declares no body is reported by its status, and every member of an enum is `Valid`, a value none is not.
+  Each variant of a union is set in turn, encoded and decoded strictly, and must come back as the same variant,
+  encoding the same: a variant that needs a union of its own, or a date, is left out, as is one whose minimal value
+  another variant would take too.
 - **JavaScript client** — optional `api.js` alongside the Go output. A relative
   server URL, such as `/api`, makes it call the server that serves the page.
 

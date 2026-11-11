@@ -45,7 +45,14 @@ func (doc Document) minimalLiteral(goType string, seen map[string]bool) (string,
 		}
 
 		v := s.UnionVariants[0]
-		parts = append(parts, v.FieldName+": "+doc.setLiteral(v.Type, v.Zero, seen))
+
+		lit := doc.setLiteral(v.Type, v.Zero, seen)
+		if v.Zero == "nil" && v.Type != "any" {
+			// the field holds the variant itself, as a named slice or map, never a pointer to it
+			lit = v.Type + "{}"
+		}
+
+		parts = append(parts, v.FieldName+": "+lit)
 	case SchemaKindStruct, SchemaKindAllOf:
 		for _, f := range s.Fields {
 			if strings.HasPrefix(f.Type, "*") || !f.Required && !f.Embedded {
