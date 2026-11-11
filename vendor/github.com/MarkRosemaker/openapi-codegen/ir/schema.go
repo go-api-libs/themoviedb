@@ -214,26 +214,34 @@ func nullableVariant(s *openapi.Schema) *openapi.Schema {
 	}
 }
 
-// nullableGoType is the Go type of X or null: a pointer to X if its zero value is a value of its own, or X itself.
+// nullableGoType is the Go type of X or null: X itself, null reading as its zero value, unless null and the zero value
+// mean different things. They do for a number or a boolean whose zero value is a value of its own, such as a count
+// that may be 0, but not for a string, a time, a date or an object: an empty one says what null does. A required
+// field of X sends its zero value where it would have sent null, which a client sending such a field can live with.
 func nullableGoType(v *openapi.Schema) (*GoType, error) {
 	tp, err := SchemaGoType(v)
 	if err != nil {
 		return nil, err
 	}
 
-	// null otherwise reads as the zero value, which is all it needs to be when that is no value of X; a type that
-	// decodes itself, such as a union, would refuse null
-	if zeroIsAValue(v, tp) || hasJSONMethods(v) || zeroIsNoNull(tp) || zeroUnencodable(v) {
+	// a type that decodes itself, such as a union, would refuse null, and one whose zero value cannot be encoded could
+	// not write it back
+	if zeroIsAScalarValue(v, tp) || hasJSONMethods(v) || zeroUnencodable(v) {
 		tp.IsPointer = true
 	}
 
 	return tp, nil
 }
 
-// zeroIsNoNull reports whether the zero value of tp is written as something other than null, a date that does not
-// exist, so that only a pointer can write null back.
-func zeroIsNoNull(tp *GoType) bool {
-	return !tp.IsSlice && !tp.IsNilable && (tp.Name == "time.Time" || tp.Name == "civil.Date")
+// zeroIsAScalarValue reports whether s is a number or a boolean whose zero value, that of tp, is a value s can hold
+// (see [zeroIsAValue]).
+func zeroIsAScalarValue(s *openapi.Schema, tp *GoType) bool {
+	switch deref(s).Type {
+	case openapi.TypeBoolean, openapi.TypeInteger, openapi.TypeNumber:
+		return zeroIsAValue(s, tp)
+	default:
+		return false
+	}
 }
 
 // isOneOfOnly reports whether s is an untagged union expressed purely via

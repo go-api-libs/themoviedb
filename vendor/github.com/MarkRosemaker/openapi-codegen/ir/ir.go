@@ -39,7 +39,8 @@ type Document struct {
 	HasBasicDateFields bool     `json:"hasBasicDateFields,omitzero"`
 	BasicDateMembers   []string `json:"basicDateMembers,omitempty"`
 	// HasStringDateFields and HasStringTimeFields are set when a JSON body holds a civil.Date, or a time.Time, as the
-	// type writes it, so that an empty string, which an API may send for one it leaves out, reads as the zero value.
+	// type writes it, so that an empty string, which an API may send for one it leaves out, reads as the zero value. A zero
+	// date is written as null, since civil.Date would write it as "0000-00-00", which is no date.
 	HasStringDateFields bool `json:"hasStringDateFields,omitzero"`
 	HasStringTimeFields bool `json:"hasStringTimeFields,omitzero"`
 

@@ -17,7 +17,7 @@ import (
 
 var jsonOpts = json.JoinOptions(
 		json.RejectUnknownMembers(true),
-		{{- if or .HasURLFields .HasDurationFields .HasUnixTimeFields .HasUnixDateFields .UnixTimeMembers .UnixDateMembers .HasBasicDateFields .BasicDateMembers }}
+		{{- if or .HasURLFields .HasDurationFields .HasUnixTimeFields .HasUnixDateFields .UnixTimeMembers .UnixDateMembers .HasBasicDateFields .BasicDateMembers .HasStringDateFields }}
 		json.WithMarshalers(json.JoinMarshalers(
 			{{- template "marshalers" . }}
 		)),
@@ -1483,6 +1483,10 @@ func (v *{{.Name}}) unmarshalJSONMember(dec *jsontext.Decoder, name string) (boo
 	{{- end }}
 	{{- with .BasicDateMembers }}
 	json.MarshalToFunc(jsonutil.DateMarshalBasicFor({{ range $i, $m := . }}{{ if $i }}, {{ end }}{{ printf "%q" $m }}{{ end }})),
+	{{- end }}
+	{{- if .HasStringDateFields }}
+	{{- /* last, so that it only writes a zero date the others leave: as null, not as "0000-00-00", which is no date */}}
+	json.MarshalToFunc(jsonutil.DateMarshalZeroAsNull),
 	{{- end }}
 {{- end }}
 
