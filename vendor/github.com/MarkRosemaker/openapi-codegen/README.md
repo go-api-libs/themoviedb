@@ -49,7 +49,9 @@ rest of the family before generating anything:
   The replay test plays every recorded call back with `cassette.Replay` from
   [cassette](https://github.com/MarkRosemaker/cassette), in order, with its method, URL (its query in any order),
   body and headers but the `User-Agent` exact, and fails on any recording never
-  called. To mock a generated client in your own tests, pass
+  called. What a call decodes must encode to the body it was decoded from, but
+  for what holds nothing, member order, and a value written another way, as a
+  time as the same instant. To mock a generated client in your own tests, pass
   `WithHTTPClient(&http.Client{Transport: cassette.Replay(interactions)})`: each
   request is answered from the recording it matches, without the network.
   Beside the replay test, each operation is tested without a recording: every query and header parameter is
