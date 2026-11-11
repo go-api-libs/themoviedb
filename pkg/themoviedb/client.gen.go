@@ -142,17 +142,8 @@ func (c *Client) ValidateKey(ctx context.Context) (*ValidKey, error) {
 		case "application/json":
 			var out ValidKey
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ValidKey)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -166,17 +157,8 @@ func (c *Client) ValidateKey(ctx context.Context) (*ValidKey, error) {
 		case "application/json":
 			var out Error
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(Error)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -230,17 +212,8 @@ func (c *Client) AccountDetails(ctx context.Context, accountID int32, params *Ac
 		case "application/json":
 			var out AccountDetailsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(AccountDetailsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -304,17 +277,8 @@ func (c *Client) AccountAddFavorite(ctx context.Context, accountID int32, params
 		case "application/json":
 			var out ListClear
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListClear)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -378,17 +342,8 @@ func (c *Client) AccountAddToWatchlist(ctx context.Context, accountID int32, par
 		case "application/json":
 			var out ListClear
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListClear)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -454,17 +409,8 @@ func (c *Client) AccountGetFavorites(ctx context.Context, accountID int32, param
 		case "application/json":
 			var out MoviesResultPage
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MoviesResultPage)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -530,17 +476,8 @@ func (c *Client) AccountFavoriteTv(ctx context.Context, accountID int32, params 
 		case "application/json":
 			var out ShowsResultPage
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ShowsResultPage)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -598,17 +535,8 @@ func (c *Client) AccountLists(ctx context.Context, accountID int32, params *Acco
 		case "application/json":
 			var out AccountListsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(AccountListsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -674,17 +602,8 @@ func (c *Client) AccountRatedMovies(ctx context.Context, accountID int32, params
 		case "application/json":
 			var out AccountRatedMoviesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(AccountRatedMoviesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -750,17 +669,8 @@ func (c *Client) AccountRatedTv(ctx context.Context, accountID int32, params *Ac
 		case "application/json":
 			var out AccountRatedTvOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(AccountRatedTvOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -826,17 +736,8 @@ func (c *Client) GetRatedTvEpisodes(ctx context.Context, accountID int32, params
 		case "application/json":
 			var out RatedEpisodesPage
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(RatedEpisodesPage)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -902,17 +803,8 @@ func (c *Client) AccountWatchlistMovies(ctx context.Context, accountID int32, pa
 		case "application/json":
 			var out MoviesResultPage
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MoviesResultPage)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -978,17 +870,8 @@ func (c *Client) AccountWatchlistTv(ctx context.Context, accountID int32, params
 		case "application/json":
 			var out ShowsResultPage
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ShowsResultPage)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1032,17 +915,8 @@ func (c *Client) AuthenticationCreateGuestSession(ctx context.Context) (*Authent
 		case "application/json":
 			var out AuthenticationCreateGuestSessionOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(AuthenticationCreateGuestSessionOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1086,17 +960,8 @@ func (c *Client) AuthenticationCreateRequestToken(ctx context.Context) (*Authent
 		case "application/json":
 			var out AuthenticationCreateToken
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(AuthenticationCreateToken)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1150,17 +1015,8 @@ func (c *Client) AuthenticationCreateSession(ctx context.Context, body *ListCrea
 		case "application/json":
 			var out AuthenticationCreateSession
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(AuthenticationCreateSession)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1214,17 +1070,8 @@ func (c *Client) AuthenticationCreateSessionFromV4Token(ctx context.Context, bod
 		case "application/json":
 			var out AuthenticationCreateSession
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(AuthenticationCreateSession)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1278,17 +1125,8 @@ func (c *Client) AuthenticationCreateSessionFromLogin(ctx context.Context, body 
 		case "application/json":
 			var out AuthenticationCreateToken
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(AuthenticationCreateToken)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1342,17 +1180,8 @@ func (c *Client) AuthenticationDeleteSession(ctx context.Context, body *ListCrea
 		case "application/json":
 			var out AuthenticationDeleteSessionOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(AuthenticationDeleteSessionOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1396,17 +1225,8 @@ func (c *Client) CertificationMovieList(ctx context.Context) (*CertificationMovi
 		case "application/json":
 			var out CertificationMovieListOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(CertificationMovieListOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1450,17 +1270,8 @@ func (c *Client) CertificationsTvList(ctx context.Context) (*CertificationsByReg
 		case "application/json":
 			var out CertificationsByRegionWrapper
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(CertificationsByRegionWrapper)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1522,17 +1333,8 @@ func (c *Client) ChangesMovieList(ctx context.Context, params *ChangesMovieListP
 		case "application/json":
 			var out ChangesTvList
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ChangesTvList)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1594,17 +1396,8 @@ func (c *Client) ChangesPeopleList(ctx context.Context, params *ChangesPeopleLis
 		case "application/json":
 			var out ChangesTvList
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ChangesTvList)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1666,17 +1459,8 @@ func (c *Client) ChangesTvList(ctx context.Context, params *ChangesTvListParams)
 		case "application/json":
 			var out ChangesTvList
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ChangesTvList)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1730,17 +1514,8 @@ func (c *Client) CollectionDetails(ctx context.Context, collectionID int32, para
 		case "application/json":
 			var out CollectionDetailsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(CollectionDetailsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1798,17 +1573,8 @@ func (c *Client) CollectionImages(ctx context.Context, collectionID int32, param
 		case "application/json":
 			var out CollectionImagesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(CollectionImagesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1852,17 +1618,8 @@ func (c *Client) CollectionTranslations(ctx context.Context, collectionID int32)
 		case "application/json":
 			var out CollectionTranslationsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(CollectionTranslationsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1906,17 +1663,8 @@ func (c *Client) CompanyDetails(ctx context.Context, companyID int32) (*CompanyD
 		case "application/json":
 			var out CompanyDetailsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(CompanyDetailsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -1960,17 +1708,8 @@ func (c *Client) CompanyAlternativeNames(ctx context.Context, companyID int32) (
 		case "application/json":
 			var out DetailsCopy
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(DetailsCopy)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -2014,17 +1753,8 @@ func (c *Client) CompanyImages(ctx context.Context, companyID int32) (*CompanyIm
 		case "application/json":
 			var out CompanyImages
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(CompanyImages)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -2068,17 +1798,8 @@ func (c *Client) ConfigurationDetails(ctx context.Context) (*ConfigurationDetail
 		case "application/json":
 			var out ConfigurationDetailsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ConfigurationDetailsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -2132,17 +1853,8 @@ func (c *Client) ConfigurationCountries(ctx context.Context, params *Configurati
 		case "application/json":
 			var out ConfigurationCountries
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ConfigurationCountries)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -2186,17 +1898,8 @@ func (c *Client) ConfigurationJobs(ctx context.Context) (ConfigurationJobsOk, er
 		case "application/json":
 			var out ConfigurationJobsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ConfigurationJobsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -2240,17 +1943,8 @@ func (c *Client) ConfigurationLanguages(ctx context.Context) (Languages, error) 
 		case "application/json":
 			var out Languages
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(Languages)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -2294,17 +1988,8 @@ func (c *Client) ConfigurationPrimaryTranslations(ctx context.Context) ([]string
 		case "application/json":
 			var out []string
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new([]string)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -2348,17 +2033,8 @@ func (c *Client) ConfigurationTimezones(ctx context.Context) (ConfigurationTimez
 		case "application/json":
 			var out ConfigurationTimezonesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ConfigurationTimezonesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -2412,17 +2088,8 @@ func (c *Client) CreditDetails(ctx context.Context, creditID string, params *Cre
 		case "application/json":
 			var out CreditDetailsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(CreditDetailsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -2624,17 +2291,8 @@ func (c *Client) DiscoverMovie(ctx context.Context, params *DiscoverMovieParams)
 		case "application/json":
 			var out MoviesResultPage
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MoviesResultPage)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -2816,17 +2474,8 @@ func (c *Client) DiscoverTv(ctx context.Context, params *DiscoverTvParams) (*Dis
 		case "application/json":
 			var out DiscoverTv
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(DiscoverTv)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -2881,17 +2530,8 @@ func (c *Client) FindByID(ctx context.Context, externalID string, params FindByI
 		case "application/json":
 			var out FindByIDOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(FindByIDOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -2945,17 +2585,8 @@ func (c *Client) GenreMovieList(ctx context.Context, params *GenreMovieListParam
 		case "application/json":
 			var out GenreTvList
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(GenreTvList)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3009,17 +2640,8 @@ func (c *Client) GenreTvList(ctx context.Context, params *GenreTvListParams) (*G
 		case "application/json":
 			var out GenreTvList
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(GenreTvList)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3081,17 +2703,8 @@ func (c *Client) GuestSessionRatedMovies(ctx context.Context, guestSessionID str
 		case "application/json":
 			var out GuestSessionRatedMoviesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(GuestSessionRatedMoviesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3153,17 +2766,8 @@ func (c *Client) GuestSessionRatedTv(ctx context.Context, guestSessionID string,
 		case "application/json":
 			var out GuestSessionRatedTvOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(GuestSessionRatedTvOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3225,17 +2829,8 @@ func (c *Client) GuestSessionRatedTvEpisodes(ctx context.Context, guestSessionID
 		case "application/json":
 			var out GuestSessionRatedTvEpisodesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(GuestSessionRatedTvEpisodesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3279,17 +2874,8 @@ func (c *Client) KeywordDetails(ctx context.Context, keywordID int32) (*Keyword,
 		case "application/json":
 			var out Keyword
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(Keyword)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3351,17 +2937,8 @@ func (c *Client) KeywordMovies(ctx context.Context, keywordID string, params *Ke
 		case "application/json":
 			var out KeywordMoviesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(KeywordMoviesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3422,17 +2999,8 @@ func (c *Client) ListAddMovie(ctx context.Context, listID int32, params ListAddM
 		case "application/json":
 			var out ListClear
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListClear)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3490,17 +3058,8 @@ func (c *Client) ListCheckItemStatus(ctx context.Context, listID int32, params *
 		case "application/json":
 			var out ListCheckItemStatusOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListCheckItemStatusOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3553,17 +3112,8 @@ func (c *Client) ListClear(ctx context.Context, listID int32, params ListClearPa
 		case "application/json":
 			var out ListClear
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListClear)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3624,17 +3174,8 @@ func (c *Client) ListCreate(ctx context.Context, params ListCreateParams, body *
 		case "application/json":
 			var out ListCreateOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListCreateOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3692,17 +3233,8 @@ func (c *Client) ListDetails(ctx context.Context, listID int32, params *ListDeta
 		case "application/json":
 			var out ListDetailsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListDetailsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3753,17 +3285,8 @@ func (c *Client) ListDelete(ctx context.Context, listID int32, params ListDelete
 		case "application/json":
 			var out ListClear
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListClear)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3824,17 +3347,8 @@ func (c *Client) ListRemoveMovie(ctx context.Context, listID int32, params ListR
 		case "application/json":
 			var out ListClear
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListClear)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3896,17 +3410,8 @@ func (c *Client) GetNowPlaying(ctx context.Context, params *GetNowPlayingParams)
 		case "application/json":
 			var out MovieNowPlayingListOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieNowPlayingListOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -3968,17 +3473,8 @@ func (c *Client) GetPopular(ctx context.Context, params *GetPopularParams) (*Mov
 		case "application/json":
 			var out MoviesResultPage
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MoviesResultPage)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -4040,17 +3536,8 @@ func (c *Client) GetTopRated(ctx context.Context, params *GetTopRatedParams) (*M
 		case "application/json":
 			var out MoviesResultPage
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MoviesResultPage)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -4112,17 +3599,8 @@ func (c *Client) GetUpcoming(ctx context.Context, params *GetUpcomingParams) (*M
 		case "application/json":
 			var out MovieUpcomingListOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieUpcomingListOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -4180,17 +3658,8 @@ func (c *Client) GetMovie(ctx context.Context, movieID MovieID, params *GetMovie
 		case "application/json":
 			var out MovieDetails
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieDetails)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -4248,17 +3717,8 @@ func (c *Client) MovieAccountStates(ctx context.Context, movieID MovieID, params
 		case "application/json":
 			var out MovieAccountStates
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieAccountStates)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -4312,17 +3772,8 @@ func (c *Client) GetAlternativeTitles(ctx context.Context, movieID MovieID, para
 		case "application/json":
 			var out AlternativeTitlesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(AlternativeTitlesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -4384,17 +3835,8 @@ func (c *Client) MovieChanges(ctx context.Context, movieID MovieID, params *Movi
 		case "application/json":
 			var out MovieChangesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieChangesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -4448,17 +3890,8 @@ func (c *Client) MovieCredits(ctx context.Context, movieID MovieID, params *Movi
 		case "application/json":
 			var out MovieCreditsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieCreditsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -4502,17 +3935,8 @@ func (c *Client) MovieExternalIds(ctx context.Context, movieID MovieID) (*MovieE
 		case "application/json":
 			var out MovieExternalIdsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieExternalIdsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -4570,17 +3994,8 @@ func (c *Client) GetMovieImages(ctx context.Context, movieID MovieID, params *Ge
 		case "application/json":
 			var out MovieImages
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieImages)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -4624,17 +4039,8 @@ func (c *Client) MovieKeywords(ctx context.Context, movieID MovieID) (*MovieKeyw
 		case "application/json":
 			var out MovieKeywordsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieKeywordsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -4678,17 +4084,8 @@ func (c *Client) MovieLatestID(ctx context.Context) (*MovieLatestIDOk, error) {
 		case "application/json":
 			var out MovieLatestIDOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieLatestIDOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -4746,17 +4143,8 @@ func (c *Client) MovieLists(ctx context.Context, movieID MovieID, params *MovieL
 		case "application/json":
 			var out MovieListsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieListsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -4814,17 +4202,8 @@ func (c *Client) MovieRecommendations(ctx context.Context, movieID MovieID, para
 		case "application/json":
 			var out struct{}
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(struct{})
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return err
 				}
 			}
 
@@ -4868,17 +4247,8 @@ func (c *Client) MovieReleaseDates(ctx context.Context, movieID MovieID) (*Movie
 		case "application/json":
 			var out MovieReleaseDatesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieReleaseDatesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -4936,17 +4306,8 @@ func (c *Client) MovieReviews(ctx context.Context, movieID MovieID, params *Movi
 		case "application/json":
 			var out MovieReviewsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieReviewsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5004,17 +4365,8 @@ func (c *Client) MovieSimilar(ctx context.Context, movieID MovieID, params *Movi
 		case "application/json":
 			var out MoviesResultPage
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MoviesResultPage)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5058,17 +4410,8 @@ func (c *Client) MovieTranslations(ctx context.Context, movieID MovieID) (*Movie
 		case "application/json":
 			var out MovieTranslationsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieTranslationsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5122,17 +4465,8 @@ func (c *Client) MovieVideos(ctx context.Context, movieID MovieID, params *Movie
 		case "application/json":
 			var out MovieVideos
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieVideos)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5176,17 +4510,8 @@ func (c *Client) MovieWatchProviders(ctx context.Context, movieID MovieID) (*Mov
 		case "application/json":
 			var out MovieWatchProvidersOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieWatchProvidersOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5254,17 +4579,8 @@ func (c *Client) MovieAddRating(ctx context.Context, movieID MovieID, params *Mo
 		case "application/json":
 			var out ListClear
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListClear)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5322,17 +4638,8 @@ func (c *Client) MovieDeleteRating(ctx context.Context, movieID MovieID, params 
 		case "application/json":
 			var out ListClear
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListClear)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5376,17 +4683,8 @@ func (c *Client) NetworkDetails(ctx context.Context, networkID int32) (*NetworkD
 		case "application/json":
 			var out NetworkDetailsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(NetworkDetailsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5430,17 +4728,8 @@ func (c *Client) DetailsCopy(ctx context.Context, networkID int32) (*DetailsCopy
 		case "application/json":
 			var out DetailsCopy
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(DetailsCopy)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5484,17 +4773,8 @@ func (c *Client) AlternativeNamesCopy(ctx context.Context, networkID int32) (*Co
 		case "application/json":
 			var out CompanyImages
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(CompanyImages)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5552,17 +4832,8 @@ func (c *Client) PersonPopularList(ctx context.Context, params *PersonPopularLis
 		case "application/json":
 			var out PersonPopularListOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(PersonPopularListOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5620,17 +4891,8 @@ func (c *Client) PersonDetails(ctx context.Context, personID int32, params *Pers
 		case "application/json":
 			var out PersonDetailsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(PersonDetailsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5692,17 +4954,8 @@ func (c *Client) PersonChanges(ctx context.Context, personID int32, params *Pers
 		case "application/json":
 			var out PersonChangesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(PersonChangesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5756,17 +5009,8 @@ func (c *Client) PersonCombinedCredits(ctx context.Context, personID string, par
 		case "application/json":
 			var out PersonCombinedCreditsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(PersonCombinedCreditsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5810,17 +5054,8 @@ func (c *Client) PersonExternalIds(ctx context.Context, personID int32) (*Person
 		case "application/json":
 			var out PersonExternalIdsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(PersonExternalIdsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5864,17 +5099,8 @@ func (c *Client) PersonImages(ctx context.Context, personID int32) (*PersonImage
 		case "application/json":
 			var out PersonImagesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(PersonImagesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5918,17 +5144,8 @@ func (c *Client) PersonLatestID(ctx context.Context) (*PersonLatestIDOk, error) 
 		case "application/json":
 			var out PersonLatestIDOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(PersonLatestIDOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -5982,17 +5199,8 @@ func (c *Client) PersonMovieCredits(ctx context.Context, personID int32, params 
 		case "application/json":
 			var out PersonMovieCreditsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(PersonMovieCreditsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6046,17 +5254,8 @@ func (c *Client) PersonTvCredits(ctx context.Context, personID int32, params *Pe
 		case "application/json":
 			var out PersonTvCreditsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(PersonTvCreditsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6110,17 +5309,8 @@ func (c *Client) PersonTaggedImages(ctx context.Context, personID int32, params 
 		case "application/json":
 			var out PersonTaggedImagesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(PersonTaggedImagesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6164,17 +5354,8 @@ func (c *Client) Translations(ctx context.Context, personID int32) (*Translation
 		case "application/json":
 			var out TranslationsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TranslationsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6218,17 +5399,8 @@ func (c *Client) ReviewDetails(ctx context.Context, reviewID string) (*ReviewDet
 		case "application/json":
 			var out ReviewDetailsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ReviewDetailsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6295,17 +5467,8 @@ func (c *Client) SearchCollection(ctx context.Context, params SearchCollectionPa
 		case "application/json":
 			var out SearchCollectionOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(SearchCollectionOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6360,17 +5523,8 @@ func (c *Client) SearchCompany(ctx context.Context, params SearchCompanyParams) 
 		case "application/json":
 			var out SearchCompanyOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(SearchCompanyOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6425,17 +5579,8 @@ func (c *Client) SearchKeyword(ctx context.Context, params SearchKeywordParams) 
 		case "application/json":
 			var out SearchKeywordOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(SearchKeywordOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6510,17 +5655,8 @@ func (c *Client) SearchMovies(ctx context.Context, params SearchMoviesParams) (*
 		case "application/json":
 			var out MoviesResultPage
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MoviesResultPage)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6583,17 +5719,8 @@ func (c *Client) SearchMulti(ctx context.Context, params SearchMultiParams) (*Se
 		case "application/json":
 			var out SearchMultiOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(SearchMultiOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6656,17 +5783,8 @@ func (c *Client) SearchPerson(ctx context.Context, params SearchPersonParams) (*
 		case "application/json":
 			var out SearchPersonOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(SearchPersonOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6737,17 +5855,8 @@ func (c *Client) SearchShows(ctx context.Context, params SearchShowsParams) (*Sh
 		case "application/json":
 			var out ShowsResultPage
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ShowsResultPage)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6801,17 +5910,8 @@ func (c *Client) TrendingAll(ctx context.Context, timeWindow TimeWindow, params 
 		case "application/json":
 			var out TrendingAll
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TrendingAll)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6865,17 +5965,8 @@ func (c *Client) TrendingMovies(ctx context.Context, timeWindow TimeWindow, para
 		case "application/json":
 			var out TrendingAll
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TrendingAll)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6929,17 +6020,8 @@ func (c *Client) TrendingPeople(ctx context.Context, timeWindow TimeWindow, para
 		case "application/json":
 			var out TrendingPeopleOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TrendingPeopleOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -6993,17 +6075,8 @@ func (c *Client) TrendingTv(ctx context.Context, timeWindow TimeWindow, params *
 		case "application/json":
 			var out TrendingTv
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TrendingTv)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7065,17 +6138,8 @@ func (c *Client) TvSeriesAiringTodayList(ctx context.Context, params *TvSeriesAi
 		case "application/json":
 			var out DiscoverTv
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(DiscoverTv)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7137,17 +6201,8 @@ func (c *Client) TvSeriesOnTheAirList(ctx context.Context, params *TvSeriesOnThe
 		case "application/json":
 			var out DiscoverTv
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(DiscoverTv)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7205,17 +6260,8 @@ func (c *Client) TvSeriesPopularList(ctx context.Context, params *TvSeriesPopula
 		case "application/json":
 			var out DiscoverTv
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(DiscoverTv)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7273,17 +6319,8 @@ func (c *Client) TvSeriesTopRatedList(ctx context.Context, params *TvSeriesTopRa
 		case "application/json":
 			var out TvSeriesTopRatedListOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeriesTopRatedListOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7341,17 +6378,8 @@ func (c *Client) GetShow(ctx context.Context, seriesID ShowID, params *GetShowPa
 		case "application/json":
 			var out ShowDetails
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ShowDetails)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7409,17 +6437,8 @@ func (c *Client) TvSeriesAccountStates(ctx context.Context, seriesID ShowID, par
 		case "application/json":
 			var out MovieAccountStates
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieAccountStates)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7473,17 +6492,8 @@ func (c *Client) TvSeriesAggregateCredits(ctx context.Context, seriesID ShowID, 
 		case "application/json":
 			var out TvSeriesAggregateCreditsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeriesAggregateCreditsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7527,17 +6537,8 @@ func (c *Client) TvSeriesAlternativeTitles(ctx context.Context, seriesID ShowID)
 		case "application/json":
 			var out AlternativeTitlesWrapper
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(AlternativeTitlesWrapper)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7599,17 +6600,8 @@ func (c *Client) GetShowChanges(ctx context.Context, seriesID ShowID, params *Ge
 		case "application/json":
 			var out ShowChangesWrapper
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ShowChangesWrapper)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7653,17 +6645,8 @@ func (c *Client) TvSeriesContentRatings(ctx context.Context, seriesID ShowID) (*
 		case "application/json":
 			var out TvSeriesContentRatingsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeriesContentRatingsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7717,17 +6700,8 @@ func (c *Client) TvSeriesCredits(ctx context.Context, seriesID ShowID, params *T
 		case "application/json":
 			var out TvSeriesCreditsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeriesCreditsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7771,17 +6745,8 @@ func (c *Client) TvSeriesEpisodeGroups(ctx context.Context, seriesID ShowID) (*T
 		case "application/json":
 			var out TvSeriesEpisodeGroupsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeriesEpisodeGroupsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7825,17 +6790,8 @@ func (c *Client) TvSeriesExternalIds(ctx context.Context, seriesID ShowID) (*TvS
 		case "application/json":
 			var out TvSeriesExternalIdsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeriesExternalIdsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7893,17 +6849,8 @@ func (c *Client) TvSeriesImages(ctx context.Context, seriesID ShowID, params *Tv
 		case "application/json":
 			var out MovieImages
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieImages)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -7947,17 +6894,8 @@ func (c *Client) TvSeriesKeywords(ctx context.Context, seriesID ShowID) (*TvSeri
 		case "application/json":
 			var out TvSeriesKeywordsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeriesKeywordsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8001,17 +6939,8 @@ func (c *Client) TvSeriesLatestID(ctx context.Context) (*TvSeriesLatestIDOk, err
 		case "application/json":
 			var out TvSeriesLatestIDOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeriesLatestIDOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8069,17 +6998,8 @@ func (c *Client) ListsCopy(ctx context.Context, seriesID ShowID, params *ListsCo
 		case "application/json":
 			var out ListsCopyOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListsCopyOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8137,17 +7057,8 @@ func (c *Client) TvSeriesRecommendations(ctx context.Context, seriesID ShowID, p
 		case "application/json":
 			var out TrendingTv
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TrendingTv)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8205,17 +7116,8 @@ func (c *Client) TvSeriesReviews(ctx context.Context, seriesID ShowID, params *T
 		case "application/json":
 			var out TvSeriesReviewsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeriesReviewsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8259,17 +7161,8 @@ func (c *Client) TvSeriesScreenedTheatrically(ctx context.Context, seriesID Show
 		case "application/json":
 			var out TvSeriesScreenedTheatricallyOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeriesScreenedTheatricallyOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8327,17 +7220,8 @@ func (c *Client) TvSeriesSimilar(ctx context.Context, seriesID ShowID, params *T
 		case "application/json":
 			var out TvSeriesSimilarOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeriesSimilarOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8381,17 +7265,8 @@ func (c *Client) TvSeriesTranslations(ctx context.Context, seriesID ShowID) (*Tv
 		case "application/json":
 			var out TvSeriesTranslationsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeriesTranslationsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8449,17 +7324,8 @@ func (c *Client) TvSeriesVideos(ctx context.Context, seriesID ShowID, params *Tv
 		case "application/json":
 			var out MovieVideos
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieVideos)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8503,17 +7369,8 @@ func (c *Client) TvSeriesWatchProviders(ctx context.Context, seriesID ShowID) (*
 		case "application/json":
 			var out TvSeriesWatchProvidersOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeriesWatchProvidersOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8581,17 +7438,8 @@ func (c *Client) TvSeriesAddRating(ctx context.Context, seriesID ShowID, params 
 		case "application/json":
 			var out ListClear
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListClear)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8649,17 +7497,8 @@ func (c *Client) TvSeriesDeleteRating(ctx context.Context, seriesID ShowID, para
 		case "application/json":
 			var out ListClear
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListClear)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8717,17 +7556,8 @@ func (c *Client) GetShowSeason(ctx context.Context, seriesID ShowID, seasonNumbe
 		case "application/json":
 			var out SeasonDetails
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(SeasonDetails)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8741,17 +7571,8 @@ func (c *Client) GetShowSeason(ctx context.Context, seriesID ShowID, seasonNumbe
 		case "application/json":
 			var out Error
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(Error)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8809,17 +7630,8 @@ func (c *Client) TvSeasonAccountStates(ctx context.Context, seriesID ShowID, sea
 		case "application/json":
 			var out TvSeasonAccountStatesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeasonAccountStatesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8873,17 +7685,8 @@ func (c *Client) TvSeasonAggregateCredits(ctx context.Context, seriesID ShowID, 
 		case "application/json":
 			var out TvSeasonAggregateCreditsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeasonAggregateCreditsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -8945,17 +7748,8 @@ func (c *Client) GetSeasonChanges(ctx context.Context, seasonID SeasonID, params
 		case "application/json":
 			var out SeasonChangesWrapper
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(SeasonChangesWrapper)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9009,17 +7803,8 @@ func (c *Client) TvSeasonCredits(ctx context.Context, seriesID ShowID, seasonNum
 		case "application/json":
 			var out TvSeasonCreditsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeasonCreditsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9063,17 +7848,8 @@ func (c *Client) TvSeasonExternalIds(ctx context.Context, seriesID ShowID, seaso
 		case "application/json":
 			var out TvSeasonExternalIdsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeasonExternalIdsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9131,17 +7907,8 @@ func (c *Client) TvSeasonImages(ctx context.Context, seriesID ShowID, seasonNumb
 		case "application/json":
 			var out TvSeasonImagesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeasonImagesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9185,17 +7952,8 @@ func (c *Client) TvSeasonTranslations(ctx context.Context, seriesID ShowID, seas
 		case "application/json":
 			var out TvSeasonTranslations
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeasonTranslations)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9253,17 +8011,8 @@ func (c *Client) TvSeasonVideos(ctx context.Context, seriesID ShowID, seasonNumb
 		case "application/json":
 			var out MovieVideos
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieVideos)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9317,17 +8066,8 @@ func (c *Client) TvSeasonWatchProviders(ctx context.Context, seriesID ShowID, se
 		case "application/json":
 			var out TvSeasonWatchProvidersOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeasonWatchProvidersOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9385,17 +8125,8 @@ func (c *Client) GetEpisodeDetails(ctx context.Context, seriesID ShowID, seasonN
 		case "application/json":
 			var out EpisodeDetails
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(EpisodeDetails)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9453,17 +8184,8 @@ func (c *Client) TvEpisodeAccountStates(ctx context.Context, seriesID ShowID, se
 		case "application/json":
 			var out MovieAccountStates
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieAccountStates)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9507,17 +8229,8 @@ func (c *Client) GetEpisodeChanges(ctx context.Context, episodeID EpisodeID) (*E
 		case "application/json":
 			var out EpisodeChangesWrapper
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(EpisodeChangesWrapper)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9571,17 +8284,8 @@ func (c *Client) TvEpisodeCredits(ctx context.Context, seriesID ShowID, seasonNu
 		case "application/json":
 			var out TvEpisodeCreditsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvEpisodeCreditsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9625,17 +8329,8 @@ func (c *Client) TvEpisodeExternalIds(ctx context.Context, seriesID ShowID, seas
 		case "application/json":
 			var out TvEpisodeExternalIdsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvEpisodeExternalIdsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9693,17 +8388,8 @@ func (c *Client) TvEpisodeImages(ctx context.Context, seriesID ShowID, seasonNum
 		case "application/json":
 			var out TvEpisodeImagesOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvEpisodeImagesOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9747,17 +8433,8 @@ func (c *Client) TvEpisodeTranslations(ctx context.Context, seriesID ShowID, sea
 		case "application/json":
 			var out TvSeasonTranslations
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvSeasonTranslations)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9815,17 +8492,8 @@ func (c *Client) TvEpisodeVideos(ctx context.Context, seriesID ShowID, seasonNum
 		case "application/json":
 			var out MovieVideos
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(MovieVideos)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9893,17 +8561,8 @@ func (c *Client) TvEpisodeAddRating(ctx context.Context, seriesID ShowID, season
 		case "application/json":
 			var out ListClear
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListClear)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -9961,17 +8620,8 @@ func (c *Client) TvEpisodeDeleteRating(ctx context.Context, seriesID ShowID, sea
 		case "application/json":
 			var out ListClear
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(ListClear)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -10015,17 +8665,8 @@ func (c *Client) TvEpisodeGroupDetails(ctx context.Context, tvEpisodeGroupID str
 		case "application/json":
 			var out TvEpisodeGroupDetailsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(TvEpisodeGroupDetailsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -10079,17 +8720,8 @@ func (c *Client) WatchProvidersAvailableRegions(ctx context.Context, params *Wat
 		case "application/json":
 			var out WatchProvidersAvailableRegionsOk
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(WatchProvidersAvailableRegionsOk)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -10147,17 +8779,8 @@ func (c *Client) WatchProvidersMovieList(ctx context.Context, params *WatchProvi
 		case "application/json":
 			var out WatchProviderTvList
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(WatchProviderTvList)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
@@ -10215,17 +8838,8 @@ func (c *Client) WatchProviderTvList(ctx context.Context, params *WatchProviderT
 		case "application/json":
 			var out WatchProviderTvList
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
-				if ia == nil {
-					return nil, api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return nil, errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				out = *new(WatchProviderTvList)
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return nil, api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return nil, err
 				}
 			}
 
