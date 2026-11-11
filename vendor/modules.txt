@@ -16,7 +16,7 @@ github.com/MarkRosemaker/jsonutil
 # github.com/MarkRosemaker/openapi v0.0.0-20261111050345-49f46392a86f
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi
-# github.com/MarkRosemaker/openapi-codegen v0.0.0-20261111110828-c7120a4ea98d
+# github.com/MarkRosemaker/openapi-codegen v0.0.0-20261111140109-2a1c88b60d0f
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-codegen
 github.com/MarkRosemaker/openapi-codegen/cmd/openapi-codegen

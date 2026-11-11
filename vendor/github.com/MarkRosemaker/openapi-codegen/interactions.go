@@ -815,9 +815,10 @@ func scalarLiteral(goType string, v any) (string, bool) {
 }
 
 // fallbackJSON returns v's compact JSON encoding as a quoted Go string
-// literal, for embedding in a mustDecodeBody call.
+// literal, for embedding in a mustDecodeBody call. Object members are sorted
+// by name: v holds maps, so that generating twice writes the same code.
 func fallbackJSON(v any) string {
-	data, err := json.Marshal(v)
+	data, err := json.Marshal(v, json.Deterministic(true))
 	if err != nil {
 		// v was itself decoded from JSON moments ago, so re-encoding it
 		// cannot fail; this is unreachable in practice.
