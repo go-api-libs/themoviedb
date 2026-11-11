@@ -657,8 +657,8 @@ func jsonSame(a, b any, at string) (string, bool) {
 	}
 }
 
-// jsonSameInstant reports whether a is a Unix time and b a date-time of the same second, as a type that takes either
-// writes one as the other.
+// jsonSameInstant reports whether a is a Unix time, in seconds or milliseconds, and b a date-time of the same instant,
+// as a type that takes either writes one as the other.
 func jsonSameInstant(a, b any) bool {
 	n, ok := a.(float64)
 	if !ok {
@@ -672,7 +672,7 @@ func jsonSameInstant(a, b any) bool {
 
 	ts, err := time.Parse(time.RFC3339Nano, s)
 
-	return err == nil && float64(ts.Unix()) == n
+	return err == nil && (float64(ts.Unix()) == n || float64(ts.UnixMilli()) == n)
 }
 
 // jsonSameNumber reports whether a is a number and b a string of the same number, as a string type writes one.

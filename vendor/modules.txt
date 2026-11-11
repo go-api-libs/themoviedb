@@ -13,35 +13,35 @@ github.com/MarkRosemaker/json2yaml
 # github.com/MarkRosemaker/jsonutil v0.0.0-20261111023756-6c211037c3df
 ## explicit; go 1.27
 github.com/MarkRosemaker/jsonutil
-# github.com/MarkRosemaker/openapi v0.0.0-20261109211946-32ea4a5e2711
+# github.com/MarkRosemaker/openapi v0.0.0-20261111024415-25c3009dcfea
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi
-# github.com/MarkRosemaker/openapi-codegen v0.0.0-20261111014149-c846a9c84604
+# github.com/MarkRosemaker/openapi-codegen v0.0.0-20261111025450-d9cf62dcbe9d
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-codegen
 github.com/MarkRosemaker/openapi-codegen/cmd/openapi-codegen
 github.com/MarkRosemaker/openapi-codegen/config
 github.com/MarkRosemaker/openapi-codegen/ir
 github.com/MarkRosemaker/openapi-codegen/render
-# github.com/MarkRosemaker/openapi-compare v0.0.0-20261109212022-f5a4f4a5080e
+# github.com/MarkRosemaker/openapi-compare v0.0.0-20261111024634-5238ae314349
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-compare/schema
-# github.com/MarkRosemaker/openapi-compress v0.0.0-20261110192436-68e2af3c06b8
+# github.com/MarkRosemaker/openapi-compress v0.0.0-20261111025019-702f3a93d14a
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-compress
 github.com/MarkRosemaker/openapi-compress/cmd/openapi-compress
-# github.com/MarkRosemaker/openapi-edit v0.0.0-20261109212023-da578ef7b002
+# github.com/MarkRosemaker/openapi-edit v0.0.0-20261111024639-8239f18d980b
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-edit
-# github.com/MarkRosemaker/openapi-enrich v0.0.0-20261109212110-ebf4b8fa7406
+# github.com/MarkRosemaker/openapi-enrich v0.0.0-20261111024914-aa5710fbf622
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-enrich
 github.com/MarkRosemaker/openapi-enrich/cmd/openapi-enrich
-# github.com/MarkRosemaker/openapi-flatten v0.0.0-20261110192338-74e5c49bed2d
+# github.com/MarkRosemaker/openapi-flatten v0.0.0-20261111024638-93c63f64e71d
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-flatten
 github.com/MarkRosemaker/openapi-flatten/cmd/openapi-flatten
-# github.com/MarkRosemaker/openapi-merge v0.0.0-20261109212022-e015a17edc56
+# github.com/MarkRosemaker/openapi-merge v0.0.0-20261111024638-3db29805991e
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-merge
 # github.com/MarkRosemaker/ordmap v0.0.0-20261109211921-475c54164ef0
