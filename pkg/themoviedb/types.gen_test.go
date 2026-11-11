@@ -4,7 +4,9 @@
 
 package themoviedb
 
-import "testing"
+import (
+	"testing"
+)
 
 // TestEnums_Valid checks that every member of an enum is valid, and that a value of its type none is, is not.
 func TestEnums_Valid(t *testing.T) {
