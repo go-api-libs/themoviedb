@@ -13,7 +13,7 @@ require (
 	cloud.google.com/go v0.123.0
 	github.com/MarkRosemaker/cassette v0.0.0-20261111155207-3bee9a17aeeb
 	github.com/MarkRosemaker/jsonutil v0.0.0-20261111155129-3eb35e1f56f9
-	github.com/go-api-libs/api v0.0.0-20261109120454-35fbf0e61179
+	github.com/go-api-libs/api v0.0.0-20261111174301-fbfde5d0be21
 )
 
 require (
