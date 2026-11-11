@@ -356,15 +356,15 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 
 
 	switch {{ if not .Responses.HasRange }}rsp.StatusCode {{ end }}{
-{{- range .Responses.InMatchOrder }}
+{{- range .Responses.Cases }}
 	{{ if eq .GoConstant "default" -}}
 		default:
 	{{- else if $op.Responses.HasRange -}}
-		case {{ .Condition }}:
+		case {{ .Conditions }}:
 	{{- else -}}
-		case {{ .GoConstant }}:
+		case {{ .GoConstants }}:
 	{{- end }}
-		{{ with .Description }}{{ toGoComment . }}{{ end }}
+		{{ with .Descriptions }}{{ toGoComment . }}{{ end }}
 {{- if and .IsSuccess $op.EmptySuccess (not $.Debug) }}
 		{{- /* an empty object holds nothing to return, so the body is not read */}}
 		return nil
@@ -373,22 +373,13 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 		case "{{ .ContentType }}":
 			{{- if .IsJSON }}
 			{{- /* every success is decoded into what the method returns */}}
-			var out {{ if and .IsSuccess $op.SuccessReturn }}{{ $op.SuccessReturn }}{{ else }}{{ .GoType }}{{ end }}
+			{{- $out := .GoType }}{{ if and .IsSuccess $op.SuccessReturn }}{{ $out = $op.SuccessReturn }}{{ end }}
+			{{- /* decoded here, so that a client not in debug mode does nothing more */}}
+			var out {{ $out }}
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				{{ if $.Debug -}}
-				if ia == nil {
-					return {{if $op.SuccessReturn}}nil, {{end}}api.WrapDecodingError(rsp, err)
-				}
-
-				if kerr := c.keep(ia); kerr != nil {
-					return {{if $op.SuccessReturn}}nil, {{end}}errors.Join(api.WrapDecodingError(rsp, err), kerr)
-				}
-
-				{{/* recorded for enrich to learn from, the response is still of use if all it holds beyond the
-				     specification is members it does not know yet */ -}}
-				out = *new({{ if and .IsSuccess $op.SuccessReturn }}{{ $op.SuccessReturn }}{{ else }}{{ .GoType }}{{ end }})
-				if err := json.Unmarshal(ia.Response.Body, &out, jsonOptsLenient); err != nil {
-					return {{if $op.SuccessReturn}}nil, {{end}}api.WrapDecodingError(rsp, err)
+				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
+					return {{if $op.SuccessReturn}}nil, {{end}}err
 				}
 				{{- else -}}
 				return {{if $op.SuccessReturn}}nil, {{end}}api.WrapDecodingError(rsp, err)
