@@ -524,12 +524,37 @@ func replay(t *testing.T) http.RoundTripper {
 
 	{{/* Every call must be the next recording, with its headers exact but the User-Agent, which names whatever tool
 	     made the recording, and every recording must be called. */ -}}
-	rec := cassette.Replay(interactions, cassette.InOrder(), cassette.WithMatcher(cassette.MatchRequest(
+	match := cassette.MatchRequest(
 		cassette.CompareHeaders("User-Agent"),
 		{{- if .HasOptionalAuthCalls }}
 		cassette.OptionalAuthorization(func(req *http.Request) bool { return req.Context().Value(optionalAuthKey{}) != nil }),
 		{{- end }}
-	)))
+	)
+
+	rec := cassette.Replay(interactions, cassette.InOrder(), cassette.WithMatcher(func(req *http.Request, ia cassette.Request) error {
+		err := match(req, ia)
+		if err == nil || req.Body == nil {
+			return err
+		}
+
+		{{/* matching drained the body and put it back to be read again */ -}}
+		sent, rerr := io.ReadAll(req.Body)
+		if rerr != nil {
+			return err
+		}
+
+		req.Body = io.NopCloser(bytes.NewReader(sent))
+
+		{{/* the body is the one recorded but for the tags the client fills in: match the rest as it is sent */ -}}
+		var a, b any
+		if json.Unmarshal(ia.Body, &a) != nil || json.Unmarshal(sent, &b) != nil || !jsonSameButTags(a, b) {
+			return err
+		}
+
+		ia.Body = sent
+
+		return match(req, ia)
+	}))
 
 	t.Cleanup(func() {
 		if unused := rec.Unused(); len(unused) > 0 {
@@ -565,8 +590,9 @@ func (l *lastBody) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 // decodedAsSent fails unless out, what a call decoded from body, encodes to what body holds. A member one side lacks is
-// fine where the other holds nothing there (null, false, 0, "", [] or {}, or the zero text of a date or a time), as an
-// optional value left out is, and members may come in another order. A value may be written another way, as long as it
+// fine where the other holds nothing there (null, false, 0, "", [], an object of nothing but such members, or the zero
+// text of a date, a time or a UUID), as an optional value left out is, and so is a tag one side leaves out (see
+// jsonInferredTag); members may come in another order. A value may be written another way, as long as it
 // is the same: a time as the same instant, a UUID with or without dashes, a number as a string of it.
 func decodedAsSent(t *testing.T, op string, out any, body []byte) {
 	t.Helper()
@@ -613,6 +639,10 @@ func jsonSame(a, b any, at string) (string, bool) {
 		}
 
 		for _, name := range names {
+			if jsonInferredTag(a, b, name) || jsonInferredTag(b, a, name) {
+				continue
+			}
+
 			if where, same := jsonSame(a[name], b[name], at+"/"+name); !same {
 				return where, false
 			}
@@ -702,8 +732,9 @@ func jsonUUID(s string) (string, bool) {
 	return hex, true
 }
 
-// jsonEmpty reports whether v, a JSON value decoded into any, holds nothing: null, false, 0, "", [] or {}, or the text
-// a zero date or time is written as, which is what an empty one decodes into.
+// jsonEmpty reports whether v, a JSON value decoded into any, holds nothing: null, false, 0, "", [], an object whose
+// members hold nothing, or the text a zero date, time or UUID is written as, which is what an empty one decodes into:
+// null read into a struct is written back as its members, empty.
 func jsonEmpty(v any) bool {
 	switch v := v.(type) {
 	case nil:
@@ -713,13 +744,80 @@ func jsonEmpty(v any) bool {
 	case float64:
 		return v == 0
 	case string:
-		return v == "" || v == "0000-00-00" || v == "0001-01-01T00:00:00Z"
+		return v == "" || v == "0000-00-00" || v == "0001-01-01T00:00:00Z" || v == "00000000-0000-0000-0000-000000000000"
 	case []any:
 		return len(v) == 0
 	case map[string]any:
-		return len(v) == 0
+		for _, m := range v {
+			if !jsonEmpty(m) {
+				return false
+			}
+		}
+
+		return true
 	default:
 		return false
+	}
+}
+
+// jsonInferredTag reports whether the object a lacks the member name, which b holds as a tag: the name of a member both
+// hold. A tagged object may leave its tag out, and decoding it infers the tag from the member that is set, which
+// encoding then writes.
+func jsonInferredTag(a, b map[string]any, name string) bool {
+	if _, ok := a[name]; ok {
+		return false
+	}
+
+	tag, ok := b[name].(string)
+	if !ok {
+		return false
+	}
+
+	_, inA := a[tag]
+	_, inB := b[tag]
+
+	return inA && inB
+}
+
+// jsonSameButTags reports whether the JSON values a and b, decoded into any, are the same, but for tags either leaves
+// out (see jsonInferredTag): the request a call sends for one that was recorded without them.
+func jsonSameButTags(a, b any) bool {
+	switch a := a.(type) {
+	case map[string]any:
+		b, ok := b.(map[string]any)
+		if !ok {
+			return false
+		}
+
+		for name := range a {
+			if _, ok := b[name]; !ok && !jsonInferredTag(b, a, name) {
+				return false
+			}
+		}
+
+		for name, vb := range b {
+			va, ok := a[name]
+			if !ok && !jsonInferredTag(a, b, name) || ok && !jsonSameButTags(va, vb) {
+				return false
+			}
+		}
+
+		return true
+	case []any:
+		b, ok := b.([]any)
+		if !ok || len(a) != len(b) {
+			return false
+		}
+
+		for i := range a {
+			if !jsonSameButTags(a[i], b[i]) {
+				return false
+			}
+		}
+
+		return true
+	default:
+		return a == b
 	}
 }
 

@@ -189,7 +189,7 @@ func (op Operation) JSPathTemplate() string {
 
 	for _, p := range op.FixedParams {
 		if v, err := strconv.Unquote(p.Value); err == nil && p.In == "path" {
-			result = strings.ReplaceAll(result, "{"+p.JSONName+"}", url.PathEscape(v))
+			result = strings.ReplaceAll(result, "{"+p.JSONName+"}", escapePathSegment(v))
 		}
 	}
 

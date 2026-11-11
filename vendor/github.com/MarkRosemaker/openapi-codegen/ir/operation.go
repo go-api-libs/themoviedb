@@ -585,9 +585,11 @@ func (p Param) FormatExpr() string {
 
 // PathExpr is the Go expression of the parameter in a path, escaped where its text can hold what a path reads as its
 // own: url.URL.JoinPath takes its elements as escaped path text, so a percent sign would make it drop the path, and a
-// slash would separate segments, as OpenAPI says a path parameter's never does. A parameter marked x-allow-slashes,
-// see [Param.AllowSlashes], keeps its slashes, and is escaped part by part. A fixed value is escaped as the code is
-// generated; a number, a UUID or a date never needs it.
+// slash would separate segments, as OpenAPI says a path parameter's never does. All but the characters RFC 3986 leaves
+// unreserved are escaped, as clients written in JavaScript do with encodeURIComponent, so that a colon, say, reaches
+// the server as a recording of such a client has it. A parameter marked x-allow-slashes, see [Param.AllowSlashes],
+// keeps its slashes, and is escaped part by part. A fixed value is escaped as the code is generated; a number, a UUID
+// or a date never needs it.
 func (p Param) PathExpr() string {
 	expr := p.FormatExpr()
 
@@ -597,7 +599,7 @@ func (p Param) PathExpr() string {
 				return strconv.Quote(escapePathSegments(v))
 			}
 
-			return strconv.Quote(url.PathEscape(v))
+			return strconv.Quote(escapePathSegment(v))
 		}
 	}
 
@@ -618,19 +620,24 @@ func (p Param) PathExpr() string {
 		return "escapePathSegments(" + expr + ")"
 	}
 
-	return "url.PathEscape(" + expr + ")"
+	return "escapePathSegment(" + expr + ")"
+}
+
+// escapePathSegment is what the generated function of that name makes of s, for a fixed value.
+func escapePathSegment(s string) string {
+	switch s {
+	case ".", "..":
+		return strings.ReplaceAll(s, ".", "%2E")
+	default:
+		return strings.ReplaceAll(url.QueryEscape(s), "+", "%20")
+	}
 }
 
 // escapePathSegments is what the generated function of that name makes of s, for a fixed value.
 func escapePathSegments(s string) string {
 	parts := strings.Split(s, "/")
 	for i, part := range parts {
-		switch part {
-		case ".", "..":
-			parts[i] = strings.ReplaceAll(part, ".", "%2E")
-		default:
-			parts[i] = url.PathEscape(part)
-		}
+		parts[i] = escapePathSegment(part)
 	}
 
 	return strings.Join(parts, "/")
@@ -647,6 +654,15 @@ func allowsSlashes(p *openapi.Parameter) bool {
 	}
 
 	return json.Unmarshal(p.Extensions, &ext) == nil && ext.AllowSlashes
+}
+
+// EscapesPathSegment reports whether the generated client escapes a path parameter, with escapePathSegment.
+func (doc Document) EscapesPathSegment() bool {
+	return doc.EscapesPathSegments() || slices.ContainsFunc(doc.Operations, func(op Operation) bool {
+		return slices.ContainsFunc(op.PathParams, func(p Param) bool {
+			return strings.Contains(p.PathExpr(), "escapePathSegment")
+		})
+	})
 }
 
 // EscapesPathSegments reports whether a path parameter keeps its slashes, which the generated escapePathSegments

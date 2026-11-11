@@ -223,7 +223,7 @@ func nullableGoType(v *openapi.Schema) (*GoType, error) {
 
 	// null otherwise reads as the zero value, which is all it needs to be when that is no value of X; a type that
 	// decodes itself, such as a union, would refuse null
-	if zeroIsAValue(v, tp) || hasJSONMethods(v) || zeroIsNoNull(tp) {
+	if zeroIsAValue(v, tp) || hasJSONMethods(v) || zeroIsNoNull(tp) || zeroUnencodable(v) {
 		tp.IsPointer = true
 	}
 
