@@ -1,13 +1,13 @@
 cloud.google.com/go v0.123.0 h1:2NAUJwPR47q+E35uaJeYoNhuNEM9kM8SjgRgdeOJUSE=
 cloud.google.com/go v0.123.0/go.mod h1:xBoMV08QcqUGuPW65Qfm1o9Y4zKZBpGS+7bImXLTAZU=
-github.com/MarkRosemaker/cassette v0.0.0-20261109120533-6bb1f7aae1f2 h1:Oq2+JToLYJAPP65Zq2SGQzMNL2+/IPc4Qt2KkIJliw8=
-github.com/MarkRosemaker/cassette v0.0.0-20261109120533-6bb1f7aae1f2/go.mod h1:0Q0O6D1fHT5QdKT9BjiVY50Pc6BMoaKu2pZavyag7eg=
+github.com/MarkRosemaker/cassette v0.0.0-20261111024240-d2c1be050129 h1:RNwu5N5ixZO2m4aWf9yndRRE7rharYbN7CSawjMPgqk=
+github.com/MarkRosemaker/cassette v0.0.0-20261111024240-d2c1be050129/go.mod h1:cDzp5nSEbXdz58a/SLswUmgN8ioYrIRQKkS3NAqrtkk=
 github.com/MarkRosemaker/errpath v0.0.0-20261109120451-91cd29644c73 h1:7Ck9Aagyl3mRqKfm3FmkCvWxTx7wZzSrg+14C0zFrc0=
 github.com/MarkRosemaker/errpath v0.0.0-20261109120451-91cd29644c73/go.mod h1:VnXpUlsS3n1gSToedcQl2FCARGoA16CyitbCanUIv+I=
 github.com/MarkRosemaker/json2yaml v0.0.0-20261109120452-2329987d7bc8 h1:kZvQlxy2u7OzPYxBv35KC13QtNCwix0RIoCC7IjGZCI=
 github.com/MarkRosemaker/json2yaml v0.0.0-20261109120452-2329987d7bc8/go.mod h1:eUwIjjooIESK1Ymw4bbMdSDF6feAblyZjxyoo5o/W6U=
-github.com/MarkRosemaker/jsonutil v0.0.0-20261109120454-26f22c55639c h1:Q2xr91dMSLMVvRPzjULO2BMdZdgJFN81fuT0Co9EKa4=
-github.com/MarkRosemaker/jsonutil v0.0.0-20261109120454-26f22c55639c/go.mod h1:SzjJlgYFlzpbFGvUUoQgfEsWlbai63bvhDPK8J0MNYM=
+github.com/MarkRosemaker/jsonutil v0.0.0-20261111023756-6c211037c3df h1:QW9Qk8hzepXUy+ctR64dqGxExZ2KlWijT12vKN0Ifxo=
+github.com/MarkRosemaker/jsonutil v0.0.0-20261111023756-6c211037c3df/go.mod h1:SzjJlgYFlzpbFGvUUoQgfEsWlbai63bvhDPK8J0MNYM=
 github.com/MarkRosemaker/openapi v0.0.0-20261109211946-32ea4a5e2711 h1:z48sYsMe8dzSSdfdERCh/jBNL4QvK18x5wNQL8fKmsw=
 github.com/MarkRosemaker/openapi v0.0.0-20261109211946-32ea4a5e2711/go.mod h1:y9WLiG8TlUXFRzRnVJLws0OqetthBW9eySi2wN3jaZw=
 github.com/MarkRosemaker/openapi-codegen v0.0.0-20261111014149-c846a9c84604 h1:XyaecqwzKxSL9KMWKpf9Oz15bdMX1gHB8T3epXWvfZU=
