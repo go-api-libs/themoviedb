@@ -65,6 +65,8 @@ type Client struct {
 	{{ if $.Debug -}}
 	// Enable debug mode
 	debug bool
+	// In debug mode, add every call to the debug file, not only those the client cannot decode
+	record bool
 	// The file debug mode adds the calls it cannot decode to, defaultDebugFile if empty
 	debugFile string
 	{{ end -}}
@@ -141,6 +143,11 @@ func WithDebug(c *Client) { c.debug = true }
 func WithDebugFile(path string) ClientOption {
 	return func(c *Client) { c.debug, c.debugFile = true, path }
 }
+
+// WithRecording is a [ClientOption] that sets the debug mode to true, see [WithDebug], and adds every call to the
+// interactions, masked and once, whether the client can decode its response or not: a way to record what the API
+// really sends. As each call reads and rewrites the file, it is for recording, not for everyday use.
+func WithRecording(c *Client) { c.debug, c.record = true, true }
 {{ end -}}
 
 {{ if .HasServerOverrides }}
@@ -517,8 +524,8 @@ func escapeReserved(s string) string {
 {{- end }}
 {{- if .Debug }}
 
-// do sends req and, in debug mode, records the call, for [Client.keep] to add should the client not decode the
-// response.
+// do sends req and, in debug mode, records the call: to add it to the debug file right away with [WithRecording], or
+// for [Client.keep] to add should the client not decode the response.
 func (c *Client) do(req *http.Request) (*http.Response, *cassette.Interaction, error) {
 	if !c.debug {
 		rsp, err := c.cli.Do(req)
@@ -541,7 +548,15 @@ func (c *Client) do(req *http.Request) (*http.Response, *cassette.Interaction, e
 		return nil, nil, fmt.Errorf("recording response: %w", err)
 	}
 
-	return rsp, &cassette.Interaction{Request: recReq, Response: recRsp}, nil
+	ia := &cassette.Interaction{Request: recReq, Response: recRsp}
+	if c.record {
+		if err := c.keep(ia); err != nil {
+			rsp.Body.Close()
+			return nil, nil, fmt.Errorf("recording the call: %w", err)
+		}
+	}
+
+	return rsp, ia, nil
 }
 
 // keep adds ia, a call the client could not decode, to the interactions in the debug file right away: masked, and
