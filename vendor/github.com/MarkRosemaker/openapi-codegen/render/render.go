@@ -12,7 +12,6 @@ import (
 
 	"github.com/MarkRosemaker/openapi-codegen/config"
 	"github.com/MarkRosemaker/openapi-codegen/ir"
-	"golang.org/x/tools/imports"
 	gofumpt "mvdan.cc/gofumpt/format"
 )
 
@@ -85,8 +84,8 @@ func FilesFromFS(fsys fs.FS, doc *ir.Document, g config.Generate) ([]File, error
 	return files, nil
 }
 
-// RenderTemplate executes a template string against the IR document and
-// post-processes the result with goimports and gofumpt.
+// RenderTemplate executes a template string against the IR document, writes the imports the result uses (see
+// [writeImports]), and formats it with gofumpt.
 func RenderTemplate(tmplName, tmplContent string, doc *ir.Document) ([]byte, error) {
 	tmpl, err := template.New(tmplName).Funcs(templateFuncs()).Parse(tmplContent)
 	if err != nil {
@@ -102,13 +101,13 @@ func RenderTemplate(tmplName, tmplContent string, doc *ir.Document) ([]byte, err
 		return nil, nil
 	}
 
-	// goimports: remove unused imports, add missing ones.
-	processed, err := imports.Process(tmplName, buf.Bytes(), nil)
+	// the imports the code uses, from a fixed table, rather than goimports' guesses from what it finds installed
+	processed, err := writeImports(tmplName, buf.Bytes())
 	if err != nil {
-		return buf.Bytes(), fmt.Errorf("goimports: %w\n---\n%s", err, buf.String())
+		return buf.Bytes(), fmt.Errorf("imports: %w\n---\n%s", err, buf.String())
 	}
 
-	// gofumpt: stricter formatting on top of goimports output.
+	// gofumpt: stricter formatting on top.
 	return gofumpt.Source(processed, gofumpt.Options{
 		LangVersion: "go1.25",
 		ModulePath:  "github.com/MarkRosemaker/openapi-codegen",

@@ -5,13 +5,6 @@
 
 package {{ $.PackageName }}
 
-import (
-	{{- if or .UnionRoundTrips .TaggedRoundTrips }}
-	"bytes"
-	"encoding/json/v2"
-	{{- end }}
-	"testing"
-)
 {{- with .Enums }}
 
 // TestEnums_Valid checks that every member of an enum is valid, and that a value of its type none is, is not.

@@ -24,9 +24,10 @@ server scaffold, and tests.
 ## Introduction
 
 Generated code has a reputation for being obviously generated. This module tries
-hard not to earn it: output is run through `goimports` and `gofumpt`, names are
-converted to Go conventions rather than transliterated, and the emitted types are
-the ones you would have declared by hand.
+hard not to earn it: each file imports exactly the packages it uses, sorted,
+and is formatted with `gofumpt`, names are converted to Go conventions rather
+than transliterated, and the emitted types are the ones you would have declared
+by hand.
 
 Getting there depends on the specification being in good shape first, which is why
 this module doesn't work from the raw document. It normalizes the spec through the

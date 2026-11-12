@@ -7,13 +7,18 @@ import (
 )
 
 // Enums are the enums a generated test checks the Valid method of: each member is one, and a value of its type that none
-// is, if there is such a value, is not.
+// is, if there is such a value, is not. Besides the enums of the specification, they are the types of the tags tagged
+// structs declare for themselves (see [Tagged.Enum]), as enums of strings.
 func (doc Document) Enums() []Schema {
 	var enums []Schema
 
 	for _, s := range doc.Schemas {
 		if s.Kind == SchemaKindEnum && len(s.EnumValues) > 0 {
 			enums = append(enums, s)
+		}
+
+		if s.Tagged != nil && len(s.Tagged.Enum) > 0 {
+			enums = append(enums, Schema{Name: s.Tagged.Type, Kind: SchemaKindEnum, Type: "string", EnumValues: s.Tagged.Enum})
 		}
 	}
 

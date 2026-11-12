@@ -4,25 +4,6 @@
 
 package {{.PackageName}}
 
-import (
-	"bytes"
-	"cmp"
-	"context"
-	"encoding/json/v2"
-	"fmt"
-	"maps"
-	"net"
-	"net/http"
-	"net/url"
-	"slices"
-	"strconv"
-	"strings"
-	"time"
-
-	"cloud.google.com/go/civil"
-	"github.com/go-api-libs/api"
-	"github.com/go-api-libs/types"
-)
 
 const defaultUserAgent = "{{.UserAgent}}"
 

@@ -4,20 +4,6 @@
 
 package {{.PackageName}}
 
-import (
-	"bytes"
-	"context"
-	"encoding/json/v2"
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"testing"
-	{{ if .InteractionCalls -}}
-	"github.com/MarkRosemaker/cassette"
-	{{end -}}
-	"github.com/go-api-libs/api"
-)
 
 func newTestServer(t *testing.T, status int) *httptest.Server {
 	t.Helper()

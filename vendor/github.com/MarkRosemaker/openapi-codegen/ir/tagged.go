@@ -48,11 +48,11 @@ type TaggedOwn struct {
 func (o TaggedOwn) Need() string {
 	switch {
 	case !o.Required:
-		return "jsonTagOptional"
+		return "union.TagOptional"
 	case o.Nullable:
-		return "jsonTagRequiredOrNull"
+		return "union.TagRequiredOrNull"
 	default:
-		return "jsonTagRequired"
+		return "union.TagRequired"
 	}
 }
 

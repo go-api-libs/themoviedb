@@ -2,23 +2,6 @@
 
 package {{.PackageName}}
 
-import (
-	"context"
-	"encoding/json/v2"
-	"errors"
-	"fmt"
-	"log/slog"
-	"net"
-	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
-	"time"
-
-	"cloud.google.com/go/civil"
-	"github.com/go-api-libs/types"
-	"github.com/go-api-libs/api/server"
-)
 
 // Service defines the operations the server must implement.
 type Service interface {

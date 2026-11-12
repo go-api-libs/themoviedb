@@ -20,7 +20,7 @@ require (
 	github.com/MarkRosemaker/errpath v0.0.0-20261109120451-91cd29644c73 // indirect
 	github.com/MarkRosemaker/json2yaml v0.0.0-20261109120452-2329987d7bc8 // indirect
 	github.com/MarkRosemaker/openapi v0.0.0-20261112181423-99ba0df6a035 // indirect
-	github.com/MarkRosemaker/openapi-codegen v0.0.0-20261112182256-79f0fa399420 // indirect
+	github.com/MarkRosemaker/openapi-codegen v0.0.0-20261112192139-2af7ea70b6b3 // indirect
 	github.com/MarkRosemaker/openapi-compare v0.0.0-20261112181510-e66d95ae7e32 // indirect
 	github.com/MarkRosemaker/openapi-compress v0.0.0-20261112181754-13bab106c4f7 // indirect
 	github.com/MarkRosemaker/openapi-edit v0.0.0-20261112181511-b5884ae127ef // indirect
@@ -34,8 +34,6 @@ require (
 	github.com/go-api-libs/types v0.0.0-20261109120451-6cd1daca4971 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	golang.org/x/exp v0.0.0-20261112173441-d10d3b464990 // indirect
-	golang.org/x/mod v0.43.0 // indirect
-	golang.org/x/sync v0.25.0 // indirect
 	golang.org/x/text v0.44.0 // indirect
 	golang.org/x/tools v0.52.1-0.20261106145633-d407941a339a // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
