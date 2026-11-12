@@ -32,8 +32,8 @@ github.com/MarkRosemaker/yaml2json v0.0.0-20261109120453-1b901dbf7e8f h1:Z3r19i6
 github.com/MarkRosemaker/yaml2json v0.0.0-20261109120453-1b901dbf7e8f/go.mod h1:DxNA9SDFrzw+RHsnxjIxjUzHy0I4+3hZg7R13u3SBvE=
 github.com/ettle/strcase v0.2.0 h1:fGNiVF21fHXpX1niBgk0aROov1LagYsOwV/xqKDKR/Q=
 github.com/ettle/strcase v0.2.0/go.mod h1:DajmHElDSaX76ITe3/VHVyMin4LWSJN5Z909Wp+ED1A=
-github.com/go-api-libs/api v0.0.0-20261112190634-bde25c574d51 h1:JVrl63yl8vSasO3y4K81aIOYjvyuprdZzKJD8PqStnY=
-github.com/go-api-libs/api v0.0.0-20261112190634-bde25c574d51/go.mod h1:nJuMPHY4qEhbWBvTdDFOPK+LC3Uo8RM9kPhIQfzXv4s=
+github.com/go-api-libs/api v0.0.0-20261112202218-afda1db7f6c6 h1:e0of6CfU1dbeq82N+Gx54OHo5AWw0JGEEjqut4XcAVg=
+github.com/go-api-libs/api v0.0.0-20261112202218-afda1db7f6c6/go.mod h1:nJuMPHY4qEhbWBvTdDFOPK+LC3Uo8RM9kPhIQfzXv4s=
 github.com/go-api-libs/types v0.0.0-20261109120451-6cd1daca4971 h1:SAGMMY0sujlZjekNUL4cvoACSOKdOj55CrikCTFzAdU=
 github.com/go-api-libs/types v0.0.0-20261109120451-6cd1daca4971/go.mod h1:z0z6qkZc45AvoRnluq7PkVSlSSF25sT0diJ+vrubYfA=
 github.com/go-quicktest/qt v1.102.0 h1:HSQxCeh5YZH3EL3W39ixjtyaEhcWSXQHtHnMBzSs474=
