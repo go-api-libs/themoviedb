@@ -34,7 +34,7 @@ func TestUnions_RoundTrip(t *testing.T) {
 
 	t.Run("{{ $u.Union }}/{{ .FieldName }}", func(t *testing.T) {
 		v := {{ .Value }}
-		roundTrip(t, {{ $u.Union }}{ {{- .FieldName }}: {{ if not .ByValue }}&{{ end }}v}, func(u {{ $u.Union }}) bool { return u.{{ .FieldName }} != {{ .Unset }} })
+		apitest.RoundTrip(t, {{ $u.Union }}{ {{- .FieldName }}: {{ if not .ByValue }}&{{ end }}v}, func(u {{ $u.Union }}) bool { return u.{{ .FieldName }} != {{ .Unset }} }, jsonOpts)
 	})
 	{{- end }}
 	{{- end }}
@@ -49,41 +49,10 @@ func TestTagged_RoundTrip(t *testing.T) {
 	{{- range .Values }}
 
 	t.Run("{{ $s.Type }}/{{ .Value }}", func(t *testing.T) {
-		roundTrip(t, {{ .Literal }}, func(v {{ $s.Type }}) bool { return v.{{ $s.Field }} == {{ printf "%q" .Value }} })
+		apitest.RoundTrip(t, {{ .Literal }}, func(v {{ $s.Type }}) bool { return v.{{ $s.Field }} == {{ printf "%q" .Value }} }, jsonOpts)
 	})
 	{{- end }}
 	{{- end }}
-}
-{{- end }}
-{{- if or .UnionRoundTrips .TaggedRoundTrips }}
-
-// roundTrip encodes in and decodes it strictly into a new value, which set must report holds the variant in did, and
-// which must encode as in did.
-func roundTrip[T any](t *testing.T, in T, set func(T) bool) {
-	t.Helper()
-
-	raw, err := json.Marshal(&in, jsonOpts)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var got T
-	if err := json.Unmarshal(raw, &got, jsonOpts); err != nil {
-		t.Fatalf("%s: %v", raw, err)
-	}
-
-	if !set(got) {
-		t.Fatalf("%s decoded as another variant: %+v", raw, got)
-	}
-
-	again, err := json.Marshal(&got, jsonOpts)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !bytes.Equal(again, raw) {
-		t.Errorf("encoded %s, then %s", raw, again)
-	}
 }
 {{- end }}
 {{ end -}}

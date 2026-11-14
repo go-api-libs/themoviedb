@@ -342,9 +342,14 @@ type {{.Name}} struct {
 
 {{- if .Streamed }}
 // UnmarshalJSONFrom implements [json.UnmarshalerFrom]. Its member {{$disc}} names the alternative, which then
-// decodes each further member as it is read. With {{$disc}} first, nothing is read twice.
+// decodes each further member as it is read. With {{$disc}} first, nothing is read twice. Null sets no alternative.
 func (v *{{$typeName}}) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	*v = {{$typeName}}{}
+
+	if dec.PeekKind() == 'n' {
+		_, err := dec.ReadToken()
+		return err
+	}
 
 	tag, first, dec, err := union.FirstMember(dec, {{ printf "%q" $disc }})
 	if err != nil {
@@ -368,9 +373,14 @@ func (v *{{$typeName}}) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	return nil
 }
 {{- else }}
-// UnmarshalJSONFrom implements [json.UnmarshalerFrom].
+// UnmarshalJSONFrom implements [json.UnmarshalerFrom]. Null sets no alternative.
 func (v *{{$typeName}}) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	*v = {{$typeName}}{}
+
+	if dec.PeekKind() == 'n' {
+		_, err := dec.ReadToken()
+		return err
+	}
 
 	opts := jsonOptsOf(dec)
 	{{- if or (and $isOneOf (not .Discriminator)) .HasEnums }}
@@ -463,7 +473,8 @@ func (v *{{$typeName}}) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 {{- end }}
 
 // MarshalJSONTo implements [json.MarshalerTo]. It emits the first non-nil variant
-{{- if .Streamed }}, with {{ $disc }} first, as decoding wants it, and set to the variant's value{{ end }}.
+{{- if .Streamed }}, with {{ $disc }} first, as decoding wants it, and set to the variant's value{{ end }}, or null
+// where none is set.
 func (v *{{$typeName}}) MarshalJSONTo(enc *jsontext.Encoder) error {
 	{{- if .Streamed }}
 	var (
@@ -477,7 +488,7 @@ func (v *{{$typeName}}) MarshalJSONTo(enc *jsontext.Encoder) error {
 		variant, tag = v.{{.FieldName}}, {{ printf "%q" .Value }}
 	{{- end}}
 	default:
-		return &json.SemanticError{Err: errors.New("no alternative set")}
+		return enc.WriteToken(jsontext.Null)
 	}
 
 	out, err := json.Marshal(variant, jsonOptsTo(enc))
@@ -498,7 +509,7 @@ func (v *{{$typeName}}) MarshalJSONTo(enc *jsontext.Encoder) error {
 	{{- end}}
 	}
 
-	return &json.SemanticError{Err: errors.New("no alternative set")}
+	return enc.WriteToken(jsontext.Null)
 	{{- end }}
 }
 {{- else if eq .Kind 6}}{{/* SchemaKindTuple */}}
@@ -629,11 +640,16 @@ func (v *{{$s.Name}}) taggedMembers() []string {
 }
 
 // UnmarshalJSONFrom implements [json.UnmarshalerFrom]. It decodes the members, then checks that of those of an
-// alternative's own, only those of the one {{.Tag}} names are set.
+// alternative's own, only those of the one {{.Tag}} names are set. Null sets no alternative.
 func (v *{{$s.Name}}) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	type plain {{$s.Name}}
 
 	*v = {{$s.Name}}{}
+
+	if dec.PeekKind() == 'n' {
+		_, err := dec.ReadToken()
+		return err
+	}
 
 	raw, err := dec.ReadValue()
 	if err != nil {
@@ -661,11 +677,14 @@ func (v *{{$s.Name}}) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 }
 
 // MarshalJSONTo implements [json.MarshalerTo]. It checks the members as decoding does; with {{.Tag}} left empty, it sends
-// the value whose member is set.
+// the value whose member is set, or null where none is.
 func (v *{{$s.Name}}) MarshalJSONTo(enc *jsontext.Encoder) error {
 	type plain {{$s.Name}}
 
 	out, set := *v, v.taggedMembers()
+	if out.{{.Field}} == "" && len(set) == 0 {
+		return enc.WriteToken(jsontext.Null)
+	}
 	if tag, ok := union.InferTag(tagsOf{{$s.Name}}, set); ok && out.{{.Field}} == "" {
 		out.{{.Field}} = {{.Type}}(tag)
 	}

@@ -348,9 +348,9 @@ func unionVariants(u *openapi.Schema, variants openapi.SchemaList) (fields, choi
 		decider = &openapi.Schema{}
 	}
 
-	// a union that can be null cannot have a discriminator come first
+	// null, where the union may be it, is read before the discriminator is looked for
 	member, values, ok := discriminate(decider, leaves)
-	if !ok || countNull(variants) > 0 {
+	if !ok {
 		return fields, choices, "", nil
 	}
 
@@ -365,17 +365,6 @@ func unionVariants(u *openapi.Schema, variants openapi.SchemaList) (fields, choi
 	}
 
 	return fields, choices, member, nil
-}
-
-func countNull(l openapi.SchemaList) int {
-	n := 0
-	for _, s := range l {
-		if isNull(s) {
-			n++
-		}
-	}
-
-	return n
 }
 
 // fromAllOfSchema builds the struct of an allOf. A part that only this schema uses is folded into its fields, any

@@ -54,6 +54,22 @@ func inlineSchema(d *openapi.Document, s *openapi.Schema, name string, alwaysMov
 			s = moveSchemaToComponents(d, name, s)
 		}
 	case "": // no explicit type — oneOf / anyOf / allOf composition or bare properties
+		if alt := nonNull(s); alt != nil {
+			inline := alt.Ref == nil
+
+			// X or null is X that may be null, not a shape of its own
+			if err := inlineSchema(d, alt, name, false); err != nil {
+				return err
+			}
+
+			// what moved says what X is, as it would have if X had been written alone
+			if moved := alt.Ref; inline && moved != nil && moved.Value.Description == "" {
+				moved.Value.Description = s.Description
+			}
+
+			return nil
+		}
+
 		v := s
 		hasComposition := len(v.OneOf) > 0 || len(v.AnyOf) > 0 || len(v.AllOf) > 0
 		if hasComposition || len(v.Properties) > 0 {
@@ -165,4 +181,23 @@ func inlineSchemaList(d *openapi.Document, ss openapi.SchemaList, prefix string,
 	}
 
 	return nil
+}
+
+// nonNull is the alternative to null of a oneOf or anyOf of two, or nil where s is no such schema.
+func nonNull(s *openapi.Schema) *openapi.Schema {
+	alts := s.AnyOf
+	if len(alts) == 0 {
+		alts = s.OneOf
+	}
+
+	switch {
+	case len(alts) != 2 || len(s.AnyOf) > 0 && len(s.OneOf) > 0 || len(s.AllOf) > 0 || len(s.Properties) > 0:
+		return nil
+	case alts[1].Type == openapi.TypeNull && alts[0].Type != openapi.TypeNull:
+		return alts[0]
+	case alts[0].Type == openapi.TypeNull && alts[1].Type != openapi.TypeNull:
+		return alts[1]
+	default:
+		return nil
+	}
 }

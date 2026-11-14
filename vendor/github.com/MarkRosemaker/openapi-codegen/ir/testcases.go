@@ -162,18 +162,3 @@ func (op Operation) BodilessFailures() Responses {
 
 	return rs
 }
-
-// NeedsBodyServer reports whether a generated test answers with a body of its choosing, see newBodyServer.
-func (doc Document) NeedsBodyServer() bool {
-	return doc.HasErrorResponses() || doc.HasStructSuccess() || slices.ContainsFunc(doc.Operations, func(op Operation) bool {
-		return len(op.BodilessFailures()) > 0 || doc.DebugDecoded(op) != nil
-	})
-}
-
-// NeedsUnknownMember reports whether a generated test sends a value with a member no type declares, see
-// withUnknownMember.
-func (doc Document) NeedsUnknownMember() bool {
-	return doc.HasStructSuccess() || slices.ContainsFunc(doc.Operations, func(op Operation) bool {
-		return slices.ContainsFunc(op.ErrorResponses(), doc.LenientError)
-	})
-}

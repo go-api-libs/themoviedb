@@ -18,22 +18,22 @@ require (
 
 require (
 	github.com/MarkRosemaker/errpath v0.0.0-20261109120451-91cd29644c73 // indirect
-	github.com/MarkRosemaker/json2yaml v0.0.0-20261109120452-2329987d7bc8 // indirect
-	github.com/MarkRosemaker/openapi v0.0.0-20261112181423-99ba0df6a035 // indirect
-	github.com/MarkRosemaker/openapi-codegen v0.0.0-20261112192139-2af7ea70b6b3 // indirect
-	github.com/MarkRosemaker/openapi-compare v0.0.0-20261112181510-e66d95ae7e32 // indirect
-	github.com/MarkRosemaker/openapi-compress v0.0.0-20261112181754-13bab106c4f7 // indirect
-	github.com/MarkRosemaker/openapi-edit v0.0.0-20261112181511-b5884ae127ef // indirect
-	github.com/MarkRosemaker/openapi-enrich v0.0.0-20261112181646-990112080a63 // indirect
-	github.com/MarkRosemaker/openapi-flatten v0.0.0-20261112181512-46b453b2a7e8 // indirect
-	github.com/MarkRosemaker/openapi-merge v0.0.0-20261112181510-137dd05508c2 // indirect
-	github.com/MarkRosemaker/ordmap v0.0.0-20261112181350-ce24cb2b5e89 // indirect
-	github.com/MarkRosemaker/yaml v0.0.0-20261109161623-86a6a512ccb9 // indirect
-	github.com/MarkRosemaker/yaml2json v0.0.0-20261109120453-1b901dbf7e8f // indirect
+	github.com/MarkRosemaker/json2yaml v0.0.0-20261114002559-5de2992f679e // indirect
+	github.com/MarkRosemaker/openapi v0.0.0-20261114002923-49c60d62ff12 // indirect
+	github.com/MarkRosemaker/openapi-codegen v0.0.0-20261114003627-c0c164ca84aa // indirect
+	github.com/MarkRosemaker/openapi-compare v0.0.0-20261114003127-a7b12b03c505 // indirect
+	github.com/MarkRosemaker/openapi-compress v0.0.0-20261114003437-4577f4aba7eb // indirect
+	github.com/MarkRosemaker/openapi-edit v0.0.0-20261114003129-0b34f69d9d92 // indirect
+	github.com/MarkRosemaker/openapi-enrich v0.0.0-20261114003342-dd8b931c220d // indirect
+	github.com/MarkRosemaker/openapi-flatten v0.0.0-20261114003128-3f4705df3af0 // indirect
+	github.com/MarkRosemaker/openapi-merge v0.0.0-20261114003129-3c14968e8c8a // indirect
+	github.com/MarkRosemaker/ordmap v0.0.0-20261113130919-027ff7850b50 // indirect
+	github.com/MarkRosemaker/yaml v0.0.0-20261114002825-bdb424d364db // indirect
+	github.com/MarkRosemaker/yaml2json v0.0.0-20261114002559-cb6e42b758d5 // indirect
 	github.com/ettle/strcase v0.2.0 // indirect
 	github.com/go-api-libs/types v0.0.0-20261109120451-6cd1daca4971 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
-	golang.org/x/exp v0.0.0-20261112173441-d10d3b464990 // indirect
+	golang.org/x/exp v0.0.0-20261113113407-e3970619a1a4 // indirect
 	golang.org/x/text v0.44.0 // indirect
 	golang.org/x/tools v0.52.1-0.20261106145633-d407941a339a // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

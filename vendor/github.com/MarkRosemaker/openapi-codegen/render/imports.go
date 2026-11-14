@@ -39,6 +39,7 @@ var importPaths = map[string]string{
 	"uuid":     "uuid",
 
 	"api":      "github.com/go-api-libs/api",
+	"apitest":  "github.com/go-api-libs/api/apitest",
 	"cassette": "github.com/MarkRosemaker/cassette",
 	"civil":    "cloud.google.com/go/civil",
 	"jsonutil": "github.com/MarkRosemaker/jsonutil",

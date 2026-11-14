@@ -244,7 +244,9 @@ node being changed.
   `RenameSchemas`)
 - ✅ Repointing every reference to a duplicate component onto the one that
   survives, and removing the duplicate (`RedirectSchema`, `RedirectSchemas`)
-- ✅ Moving inline definitions into `components`, replacing each with a reference (`ExtractSchema`)
+- ✅ Moving inline definitions into `components`, replacing each with a reference (`ExtractSchema`), and
+  referring to a component (`SchemaRef`)
+- ✅ Renaming every component by a rule, such as dropping a suffix (`RenameSchemasFunc`)
 - ✅ Counting the references to each component (`CountReferences`), and
   describing them where they are used (`DescribeReferences`)
 - ✅ Removing the components an edit left without a reference

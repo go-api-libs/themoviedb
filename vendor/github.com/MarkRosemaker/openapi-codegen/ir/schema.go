@@ -214,34 +214,22 @@ func nullableVariant(s *openapi.Schema) *openapi.Schema {
 	}
 }
 
-// nullableGoType is the Go type of X or null: X itself, null reading as its zero value, unless null and the zero value
-// mean different things. They do for a number or a boolean whose zero value is a value of its own, such as a count
-// that may be 0, but not for a string, a time, a date or an object: an empty one says what null does. A required
-// field of X sends its zero value where it would have sent null, which a client sending such a field can live with.
+// nullableGoType is the Go type of X or null: X itself, null reading as its zero value. A required field of X sends
+// its zero value where it would have sent null, which a client sending such a field can live with, and an optional one
+// is a pointer only where X's would be (see [zeroIsAValue]).
 func nullableGoType(v *openapi.Schema) (*GoType, error) {
 	tp, err := SchemaGoType(v)
 	if err != nil {
 		return nil, err
 	}
 
-	// a type that decodes itself, such as a union, would refuse null, and one whose zero value cannot be encoded could
-	// not write it back
-	if zeroIsAScalarValue(v, tp) || hasJSONMethods(v) || zeroUnencodable(v) {
+	// a union reads null as no alternative and writes it back, but another type that decodes itself, such as a tuple,
+	// would refuse null, and an object requiring a union would write it back as an object of a null member
+	if hasJSONMethods(v) && !isUnion(v) && !isTaggedUnion(v) || zeroUnencodable(v) {
 		tp.IsPointer = true
 	}
 
 	return tp, nil
-}
-
-// zeroIsAScalarValue reports whether s is a number or a boolean whose zero value, that of tp, is a value s can hold
-// (see [zeroIsAValue]).
-func zeroIsAScalarValue(s *openapi.Schema, tp *GoType) bool {
-	switch deref(s).Type {
-	case openapi.TypeBoolean, openapi.TypeInteger, openapi.TypeNumber:
-		return zeroIsAValue(s, tp)
-	default:
-		return false
-	}
 }
 
 // isOneOfOnly reports whether s is an untagged union expressed purely via
@@ -588,12 +576,17 @@ func getField(jsonName string, propRef *openapi.Schema, requiredSet map[string]b
 		tag = strings.TrimSuffix(tag, `"`) + `,string"` // written as the string it mostly is
 	}
 
+	description := cmp.Or(propRef.Description, v.Description)
+	if nv := nullableVariant(v); description == "" && nv != nil {
+		description = cmp.Or(nv.Description, deref(nv).Description) // what X or null holds says what the field is
+	}
+
 	return Field{
 		Name:             fieldName,
 		JSONName:         jsonName,
 		Type:             goType.String(),
 		JSONTag:          tag,
-		Description:      cmp.Or(propRef.Description, v.Description),
+		Description:      description,
 		Required:         required,
 		ReadOnly:         propRef.ReadOnly || v.ReadOnly,
 		WriteOnly:        propRef.WriteOnly || v.WriteOnly,

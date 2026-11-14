@@ -577,7 +577,7 @@ func timeLiteral(t time.Time) string {
 // generated test reads like a value a person wrote, not a blob to decode.
 // Anything it doesn't recognize (maps, unions, oneOf/anyOf, or a mismatch
 // between v and what goType expects) falls back to decoding v's own compact
-// JSON into goType at test time via mustDecodeBody, which is always correct
+// JSON into goType at test time via apitest.MustDecode, which is always correct
 // even where a literal is not worth hand-rolling.
 func bodyLiteral(doc *ir.Document, goType string, v any) string {
 	switch {
@@ -667,7 +667,7 @@ func bodyLiteral(doc *ir.Document, goType string, v any) string {
 		return lit
 	}
 
-	return fmt.Sprintf("mustDecodeBody[%s](t, %s)", goType, fallbackJSON(v))
+	return fmt.Sprintf("apitest.MustDecode[%s](t, %s, jsonOpts)", goType, fallbackJSON(v))
 }
 
 // findSchema returns doc's named component schema for goType, or nil if
@@ -815,7 +815,7 @@ func scalarLiteral(goType string, v any) (string, bool) {
 }
 
 // fallbackJSON returns v's compact JSON encoding as a quoted Go string
-// literal, for embedding in a mustDecodeBody call. Object members are sorted
+// literal, for embedding in an apitest.MustDecode call. Object members are sorted
 // by name: v holds maps, so that generating twice writes the same code.
 func fallbackJSON(v any) string {
 	data, err := json.Marshal(v, json.Deterministic(true))

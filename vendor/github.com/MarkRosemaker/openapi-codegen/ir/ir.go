@@ -53,21 +53,7 @@ type Document struct {
 	InteractionCalls InteractionCalls `json:"-"`
 }
 
-func (d Document) NeedMustDecodeBody() bool {
-	return d.InteractionCalls.UseMustDecodeBody()
-}
-
 type InteractionCalls []InteractionCall
-
-func (ics InteractionCalls) UseMustDecodeBody() bool {
-	for _, ic := range ics {
-		if ic.UsesMustDecodeBody() {
-			return true
-		}
-	}
-
-	return false
-}
 
 // InteractionCall is one operation call extracted from a recorded interaction.
 type InteractionCall struct {
@@ -84,17 +70,11 @@ type InteractionCall struct {
 	// BodyLiteral is a Go expression for the recorded request body, set
 	// whenever Op.RequestBody is non-nil: a composite literal of the
 	// request body's type when every field could be expressed that way,
-	// falling back to a runtime JSON decode (mustDecodeBody) for values a
+	// falling back to a runtime JSON decode (apitest.MustDecode) for values a
 	// literal can't cleanly represent. Either way the replayed request
 	// carries the same body the interaction was recorded with, instead of
 	// a zero value.
 	BodyLiteral string
-}
-
-// UsesMustDecodeBody reports whether the body literal decodes a value at test time, anywhere in it: a field of a
-// struct literal may, where the rest of it is written out.
-func (ic InteractionCall) UsesMustDecodeBody() bool {
-	return strings.Contains(ic.BodyLiteral, "mustDecodeBody[")
 }
 
 // InteractionParam is one query param with its Go literal value.
@@ -715,12 +695,6 @@ func (op Operation) BaseURLExpr() string {
 // HasTagged reports whether a generated type is a [Tagged] struct, needing the helpers that check one.
 func (doc Document) HasTagged() bool {
 	return slices.ContainsFunc(doc.Schemas, func(s Schema) bool { return s.Tagged != nil })
-}
-
-// HasOptionalAuthCalls reports whether an interaction calls an operation whose credentials are optional, whose
-// recording may lack them.
-func (d Document) HasOptionalAuthCalls() bool {
-	return slices.ContainsFunc(d.InteractionCalls, func(ic InteractionCall) bool { return ic.Op.Auth != "" && ic.Op.AuthOptional })
 }
 
 // EncodesItself reports whether the type has a MarshalJSONTo method of its own.
