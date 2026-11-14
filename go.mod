@@ -25,7 +25,7 @@ require (
 	github.com/MarkRosemaker/openapi-compress v0.0.0-20261114135233-1664a6a03857 // indirect
 	github.com/MarkRosemaker/openapi-edit v0.0.0-20261114135009-67d93f3a1aef // indirect
 	github.com/MarkRosemaker/openapi-enrich v0.0.0-20261114135147-10a8ae951294 // indirect
-	github.com/MarkRosemaker/openapi-flatten v0.0.0-20261114135009-b46b792b06be // indirect
+	github.com/MarkRosemaker/openapi-flatten v0.0.0-20261114150747-5657bb8ebebf // indirect
 	github.com/MarkRosemaker/openapi-merge v0.0.0-20261114135009-40585428de79 // indirect
 	github.com/MarkRosemaker/ordmap v0.0.0-20261114134829-166766214acc // indirect
 	github.com/MarkRosemaker/yaml v0.0.0-20261114134834-d7670451bac1 // indirect

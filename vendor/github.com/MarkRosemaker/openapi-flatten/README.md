@@ -213,6 +213,11 @@ repeating themselves.
 
 All names are converted to Go-style PascalCase (e.g., `create pet bad request` → `CreatePetBadRequest`). If the generated name is already taken, a numeric suffix is appended (`Name2`, `Name3`, …) to avoid collisions.
 
+A property's schema is named by its parent plus the property (`PetOwner`), or by the property alone where its name
+has two words or more and is free (`motion_adjustments` → `MotionAdjustments`): such a name says what the schema is
+without its parent. A union keeps its parent (`PetLastRunAt`), as its property says what the value means rather than
+what it is.
+
 An `allOf` entry is named by its parent, the keyword and its position (`PetAllOf1`). A `oneOf` or `anyOf` alternative is named by its `title` if it has one (`"A person"` → `APerson`), and otherwise the same way (`PetOneOf1`). The schema of an object's keys is named after the object plus `Key` (`PetKey`), and a `not` schema plus `Not` (`PetNot`).
 
 ## Error reporting

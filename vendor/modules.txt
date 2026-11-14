@@ -37,7 +37,7 @@ github.com/MarkRosemaker/openapi-edit
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-enrich
 github.com/MarkRosemaker/openapi-enrich/cmd/openapi-enrich
-# github.com/MarkRosemaker/openapi-flatten v0.0.0-20261114135009-b46b792b06be
+# github.com/MarkRosemaker/openapi-flatten v0.0.0-20261114150747-5657bb8ebebf
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-flatten
 github.com/MarkRosemaker/openapi-flatten/cmd/openapi-flatten
