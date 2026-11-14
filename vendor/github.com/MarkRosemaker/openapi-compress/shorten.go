@@ -3,7 +3,6 @@ package compress
 import (
 	"maps"
 	"sort"
-	"strconv"
 	"strings"
 	"unicode"
 
@@ -26,6 +25,10 @@ var noiseWords = map[string]bool{
 	// Format indicators
 	"JSON": true, "Json": true, "XML": true, "Xml": true,
 }
+
+// roleWords are the noise words that tell a request from a response, which a short name keeps where without them
+// it would be another schema's.
+var roleWords = map[string]bool{"Response": true, "Request": true, "Body": true}
 
 // splitCamelCase splits a CamelCase/PascalCase identifier into its component
 // words.  Consecutive uppercase letters are treated as an abbreviation so that
@@ -119,15 +122,29 @@ func isVersionSegment(w string) bool {
 
 // shortName computes a shortened version of name that is not already in
 // existing.  It removes noise words, an HTTP method it begins with, version segments, and digit-only tokens
-// (e.g. path parameters like CIK numbers), deduplicates consecutive identical
-// words (case-insensitive), then ensures uniqueness.
-// Returns name unchanged if no meaningful shortening is possible.
+// (e.g. path parameters like CIK numbers), and deduplicates consecutive identical
+// words (case-insensitive). Where that name is another schema's, it keeps the words that tell a request from a
+// response, as PetByPetIDResponse beside PetByPetID; where that one is taken too, name stays as it is, which says
+// more than a number would.
 func shortName(name string, existing openapi.Schemas) string {
+	for _, keepRole := range []bool{false, true} {
+		candidate := shorten(name, keepRole)
+		if _, taken := existing[candidate]; !taken || candidate == name {
+			return candidate
+		}
+	}
+
+	return name
+}
+
+// shorten is name without its noise words, an HTTP method it begins with, version segments and digit-only tokens,
+// and with consecutive duplicate words once; with keepRole, the noise words that tell a request from a response stay.
+func shorten(name string, keepRole bool) string {
 	words := splitCamelCase(name)
 
 	filtered := make([]string, 0, len(words)*2)
 	for i, w := range words {
-		if noiseWords[w] || isVersionSegment(w) || i == 0 && methodWords[w] {
+		if noiseWords[w] && !(keepRole && roleWords[w]) || isVersionSegment(w) || i == 0 && methodWords[w] {
 			continue
 		}
 		// Further split at letter/digit boundaries and drop digit-only tokens.
@@ -151,28 +168,7 @@ func shortName(name string, existing openapi.Schemas) string {
 		}
 	}
 
-	candidate := strings.Join(deduped, "")
-	if candidate == name {
-		return name
-	}
-
-	return uniqueName(candidate, name, existing)
-}
-
-// uniqueName returns candidate if it is not taken in existing (ignoring
-// currentName, since that slot will be freed by the rename).  Otherwise it
-// appends a numeric suffix until a free name is found.
-func uniqueName(candidate, currentName string, existing openapi.Schemas) string {
-	if _, ok := existing[candidate]; !ok || candidate == currentName {
-		return candidate
-	}
-
-	for i := 2; ; i++ {
-		n := candidate + strconv.Itoa(i)
-		if _, ok := existing[n]; !ok {
-			return n
-		}
-	}
+	return strings.Join(deduped, "")
 }
 
 // shortenMergedSchemaNames renames each schema in targets to a shorter name.

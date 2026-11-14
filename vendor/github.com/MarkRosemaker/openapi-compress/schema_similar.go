@@ -187,10 +187,22 @@ func propertyNameUnion(a, b openapi.Schemas) []string {
 	return names
 }
 
-// fillExamples gives a, and the schemas within it, the examples b has where a has none, so merging b away loses none of them.
-// A reference is not followed: the schema it points to keeps its own examples.
-func fillExamples(a, b *openapi.Schema) {
-	if a == nil || b == nil || a.Ref != nil || b.Ref != nil {
+// fillExamples gives a, and the schemas within it, the examples b has where a has none, and the schemas within a
+// the descriptions, so merging b away loses none of them: what a property is for is the same in both. a's own
+// description is left alone, as references to the two keep theirs (see describeWhereUsed). A reference is not
+// followed: the schema it points to keeps its own.
+func fillExamples(a, b *openapi.Schema) { fillMissing(a, b, false) }
+
+func fillMissing(a, b *openapi.Schema, within bool) {
+	if a == nil || b == nil {
+		return
+	}
+
+	if within && a.Description == "" {
+		a.Description = b.Description
+	}
+
+	if a.Ref != nil || b.Ref != nil {
 		return
 	}
 
@@ -203,23 +215,23 @@ func fillExamples(a, b *openapi.Schema) {
 	}
 
 	for name, p := range a.Properties {
-		fillExamples(p, b.Properties[name])
+		fillMissing(p, b.Properties[name], true)
 	}
 
-	fillExamples(a.Items, b.Items)
-	fillExamples(a.Not, b.Not)
-	fillExamples(a.PropertyNames, b.PropertyNames)
+	fillMissing(a.Items, b.Items, true)
+	fillMissing(a.Not, b.Not, true)
+	fillMissing(a.PropertyNames, b.PropertyNames, true)
 
 	// schemas of the same shape list the same alternatives and parts, in the same order
 	for _, l := range [][2]openapi.SchemaList{{a.PrefixItems, b.PrefixItems}, {a.AllOf, b.AllOf}, {a.OneOf, b.OneOf}, {a.AnyOf, b.AnyOf}} {
 		for i, p := range l[0] {
 			if i < len(l[1]) {
-				fillExamples(p, l[1][i])
+				fillMissing(p, l[1][i], true)
 			}
 		}
 	}
 
 	if a.AdditionalProperties != nil && b.AdditionalProperties != nil {
-		fillExamples(a.AdditionalProperties.Schema, b.AdditionalProperties.Schema)
+		fillMissing(a.AdditionalProperties.Schema, b.AdditionalProperties.Schema, true)
 	}
 }

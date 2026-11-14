@@ -36,7 +36,9 @@ covering both.
 - **Merges similar schemas** above a configurable similarity threshold
 - **Rewrites every `$ref`** throughout the document, including deep inside nested schemas
 - **Deduplicates parameters** in the same way
-- **Shortens the names** of merged schemas, dropping generated noise like `OkJSONResponse`
+- **Shortens the names** of merged schemas, dropping generated noise like `OkJSONResponse`. Where the short
+  name is another schema's, `Response`, `Request` or `Body` stays (`PetByPetIDResponse` beside `PetByPetID`), and
+  where that is taken too, the name stays as it is rather than gaining a number
 
 ### How similarity works
 
@@ -76,6 +78,9 @@ A description says what a schema is used for in one place, not what shape it
 has. When the schemas that merge disagree on it, each one's description moves
 beside the `$ref`s that pointed at it, and the schema kept has none, so no
 reference shows another's. A reference with a description of its own keeps it.
+Within the schema kept, a property, item or alternative that has no description
+takes one from those merged into it, as examples do: what a property is for is
+the same in both. Where both describe it, the one kept says what it does.
 
 ## Usage
 
