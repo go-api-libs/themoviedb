@@ -221,6 +221,14 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 	//
 	{{- end }}
 {{- end }}
+{{- with .RequestBody }}{{ with .Description }}
+{{ toGoComment (printf "Body: %s" .) }}
+//
+{{- end }}{{ end }}
+{{- with .SuccessDescription }}
+{{ toGoComment (printf "Returns: %s" .) }}
+//
+{{- end }}
 //	{{ .Method }} {{ .PathTemplate }}
 {{- if .Deprecated}}
 //

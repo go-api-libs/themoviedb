@@ -688,6 +688,7 @@ func fromRequestBody(rb *openapi.RequestBody) (*ReqBody, error) {
 			TypeName:    tp.String(),
 			ContentType: string(mr),
 			Required:    rb.Required,
+			Description: refDescription(mt.Schema),
 		}, nil
 	}
 
@@ -773,6 +774,8 @@ func fromResponses(responses openapi.OperationResponses) (Responses, *GoType, bo
 			IsSuccess:   isSuccess,
 			IsRawBytes:  isRawBytes,
 			IsStream:    isStream,
+
+			BodyDescription: refDescription(jsonSchema),
 		})
 
 		// an empty object is still decoded, so anything in it is an error, but there is nothing to return
@@ -871,4 +874,14 @@ func isEmptyObject(s *openapi.Schema) bool {
 
 	return s != nil && s.Type == openapi.TypeObject && len(s.Properties) == 0 && mapValues(s) == nil &&
 		len(s.AllOf) == 0 && len(s.OneOf) == 0 && len(s.AnyOf) == 0
+}
+
+// refDescription is what the specification says beside s, a reference to a schema, of where it is used: "" for a
+// schema of its own, whose description its type says.
+func refDescription(s *openapi.Schema) string {
+	if s == nil || s.Ref == nil {
+		return ""
+	}
+
+	return s.Description
 }

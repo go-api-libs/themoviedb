@@ -82,6 +82,11 @@ Within the schema kept, a property, item or alternative that has no description
 takes one from those merged into it, as examples do: what a property is for is
 the same in both. Where both describe it, the one kept says what it does.
 
+A default is the same: what a value is when left out is the operation's. Where
+the schemas that merge disagree on it, as two enums of views one request
+defaults to `high top-down` and another to `low top-down`, each one's default
+moves beside the `$ref`s that pointed at it, and the schema kept has none.
+
 ## Usage
 
 ```bash

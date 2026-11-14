@@ -2,6 +2,7 @@ package compress
 
 import (
 	"cmp"
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"math"
 	"reflect"
@@ -158,6 +159,8 @@ func deduplicateSchemasAtThreshold(d *openapi.Document, threshold float64, deriv
 	if err := edit.DescribeReferences(d, describeWhereUsed(schemas, replacements)); err != nil {
 		return nil, err
 	}
+
+	defaultReferences(d, defaultWhereUsed(schemas, replacements))
 
 	if err := edit.RedirectSchemas(d, replacements); err != nil {
 		return nil, err
@@ -408,29 +411,67 @@ func sharedNames(a, b openapi.Schemas) int {
 // A description says what a schema is used for in one place, not what shape it has, so after the merge it belongs
 // beside the references to each schema rather than on the one kept, where every reference would show it.
 func describeWhereUsed(schemas openapi.Schemas, replacements map[string]string) map[string]string {
+	return whereUsed(schemas, replacements,
+		func(s *openapi.Schema) string { return s.Description },
+		func(s *openapi.Schema) { s.Description = "" })
+}
+
+// defaultWhereUsed returns the default of each schema merging into another, or being merged into, wherever the
+// schemas merging into one disagree on it, and takes it off the schema kept: what a value is when left out is the
+// operation's, as an enum of views one request defaults to "high top-down" and another to "low top-down".
+func defaultWhereUsed(schemas openapi.Schemas, replacements map[string]string) map[string]string {
+	return whereUsed(schemas, replacements,
+		func(s *openapi.Schema) string { return string(s.Default) },
+		func(s *openapi.Schema) { s.Default = nil })
+}
+
+// whereUsed returns what get reads of each schema merging into another, or being merged into, wherever the schemas
+// merging into one disagree on it, and clears it on the schema kept.
+func whereUsed(schemas openapi.Schemas, replacements map[string]string, get func(*openapi.Schema) string, clear func(*openapi.Schema)) map[string]string {
 	groups := map[string][]string{}
 	for name, canonical := range replacements {
 		groups[canonical] = append(groups[canonical], name)
 	}
 
-	describe := map[string]string{}
+	used := map[string]string{}
 
 	for canonical, merged := range groups {
 		members := append(merged, canonical)
 
-		desc := schemas[canonical].Description
-		if !slices.ContainsFunc(members, func(name string) bool { return schemas[name].Description != desc }) {
+		kept := get(schemas[canonical])
+		if !slices.ContainsFunc(members, func(name string) bool { return get(schemas[name]) != kept }) {
 			continue
 		}
 
 		for _, name := range members {
-			if d := schemas[name].Description; d != "" {
-				describe[name] = d
+			if v := get(schemas[name]); v != "" {
+				used[name] = v
 			}
 		}
 
-		schemas[canonical].Description = ""
+		clear(schemas[canonical])
 	}
 
-	return describe
+	return used
+}
+
+// schemaRefPrefix starts a reference to a schema of components.schemas.
+const schemaRefPrefix = "#/components/schemas/"
+
+// defaultReferences gives every reference to a schema in defaults the default listed for it, beside the $ref, unless
+// the reference has a default of its own already.
+func defaultReferences(d *openapi.Document, defaults map[string]string) {
+	if len(defaults) == 0 {
+		return
+	}
+
+	edit.WalkSchemas(d, func(s *openapi.Schema) {
+		if s.Ref == nil || len(s.Default) > 0 {
+			return
+		}
+
+		if v, ok := defaults[strings.TrimPrefix(s.Ref.Identifier, schemaRefPrefix)]; ok {
+			s.Default = jsontext.Value(v)
+		}
+	})
 }

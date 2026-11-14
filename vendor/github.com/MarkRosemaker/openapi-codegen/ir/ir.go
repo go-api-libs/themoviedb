@@ -641,6 +641,21 @@ type Response struct {
 	// IsStream is true for a success response whose media type is not text, such as a zip, a PDF or an image: GoType
 	// is io.ReadCloser, the response body itself, which the caller reads and closes.
 	IsStream bool `json:"isStream,omitzero"`
+	// BodyDescription is what the specification says beside the reference to the body's schema, of this response
+	// alone, as a merged schema's description that differed from another's.
+	BodyDescription string `json:"bodyDescription,omitzero"`
+}
+
+// SuccessDescription is what the specification says beside the reference to the schema of the body the operation
+// returns, if anything.
+func (op Operation) SuccessDescription() string {
+	for _, r := range op.Responses {
+		if r.IsSuccess && r.BodyDescription != "" {
+			return r.BodyDescription
+		}
+	}
+
+	return ""
 }
 
 // IsJSON reports whether the response's media type is a JSON one, whose body the client decodes.
@@ -653,6 +668,9 @@ type ReqBody struct {
 	TypeName    string `json:"typeName,omitzero"`
 	ContentType string `json:"contentType,omitzero"`
 	Required    bool   `json:"required,omitzero"`
+	// Description is what the specification says beside the reference to the body's schema, of this operation's
+	// body alone, which the type's own description, shared by every operation, cannot say.
+	Description string `json:"description,omitzero"`
 }
 
 type Auth struct {
