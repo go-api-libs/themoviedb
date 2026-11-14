@@ -5,85 +5,29 @@
 package themoviedb
 
 import (
-	"bytes"
 	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"errors"
 	"io"
 	"io/fs"
-	"maps"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
-	"slices"
-	"strconv"
-	"strings"
 	"testing"
-	"time"
 
 	"github.com/MarkRosemaker/cassette"
 	"github.com/go-api-libs/api"
+	"github.com/go-api-libs/api/apitest"
 )
-
-func newTestServer(t *testing.T, status int) *httptest.Server {
-	t.Helper()
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(status)
-	}))
-	t.Cleanup(srv.Close)
-	return srv
-}
-
-// newBodyServer is the base URL of a server that answers every request with status, contentType and body.
-func newBodyServer(t *testing.T, status int, contentType string, body []byte) *url.URL {
-	t.Helper()
-
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", contentType)
-		w.WriteHeader(status)
-		_, _ = w.Write(body)
-	}))
-	t.Cleanup(srv.Close)
-
-	u, err := url.Parse(srv.URL)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return u
-}
-
-// withUnknownMember is v as JSON, with a member no type declares added to it.
-func withUnknownMember(t *testing.T, v any) []byte {
-	t.Helper()
-
-	b, err := json.Marshal(v, jsonOpts)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if string(b) == "{}" {
-		return []byte(`{"not_a_member_of_any_type": true}`)
-	}
-
-	return append([]byte(`{"not_a_member_of_any_type": true, `), b[1:]...)
-}
-
-type roundTripFunc func(*http.Request) (*http.Response, error)
-
-func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) {
-	return f(r)
-}
 
 func TestClient_Error(t *testing.T) {
 	t.Run("ValidateKey", func(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -98,7 +42,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -175,7 +119,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ValidKey{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ValidKey{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -196,7 +140,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -221,7 +165,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -241,7 +185,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusUnauthorized, "application/json", body)))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusUnauthorized, "application/json", body)))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -258,7 +202,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("401 response decoding error", func(t *testing.T) {
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusUnauthorized, "application/json", []byte("invalid json"))))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusUnauthorized, "application/json", []byte("invalid json"))))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -271,7 +215,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("401 response unknown content type", func(t *testing.T) {
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusUnauthorized, "foo", nil)))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusUnauthorized, "foo", nil)))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -286,7 +230,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("401 response debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusUnauthorized, "application/json", withUnknownMember(t, Error{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusUnauthorized, "application/json", apitest.WithUnknownMember(t, Error{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -309,7 +253,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -324,7 +268,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -401,7 +345,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AccountDetailsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, AccountDetailsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -422,7 +366,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -447,7 +391,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -466,7 +410,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -481,7 +425,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -561,7 +505,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -600,7 +544,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -636,7 +580,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListClear{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -657,7 +601,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -682,7 +626,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -701,7 +645,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -716,7 +660,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -796,7 +740,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -835,7 +779,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -871,7 +815,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListClear{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -892,7 +836,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -917,7 +861,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -936,7 +880,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -951,7 +895,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -1028,7 +972,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1053,7 +997,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1072,7 +1016,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -1087,7 +1031,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -1164,7 +1108,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1189,7 +1133,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1208,7 +1152,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -1223,7 +1167,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -1300,7 +1244,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AccountListsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, AccountListsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1321,7 +1265,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1346,7 +1290,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1365,7 +1309,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -1380,7 +1324,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -1457,7 +1401,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AccountRatedMoviesOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, AccountRatedMoviesOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1478,7 +1422,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1503,7 +1447,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1522,7 +1466,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -1537,7 +1481,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -1614,7 +1558,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AccountRatedTvOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, AccountRatedTvOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1635,7 +1579,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1660,7 +1604,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1679,7 +1623,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -1694,7 +1638,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -1771,7 +1715,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1796,7 +1740,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1815,7 +1759,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -1830,7 +1774,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -1907,7 +1851,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1932,7 +1876,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -1951,7 +1895,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -1966,7 +1910,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -2043,7 +1987,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2068,7 +2012,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2087,7 +2031,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -2102,7 +2046,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -2179,7 +2123,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AuthenticationCreateGuestSessionOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, AuthenticationCreateGuestSessionOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2200,7 +2144,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2225,7 +2169,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2244,7 +2188,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -2259,7 +2203,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -2336,7 +2280,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AuthenticationCreateToken{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, AuthenticationCreateToken{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2357,7 +2301,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2382,7 +2326,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2401,7 +2345,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -2416,7 +2360,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -2496,7 +2440,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -2535,7 +2479,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -2571,7 +2515,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AuthenticationCreateSession{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, AuthenticationCreateSession{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2592,7 +2536,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2617,7 +2561,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2636,7 +2580,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -2651,7 +2595,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -2731,7 +2675,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -2770,7 +2714,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -2806,7 +2750,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AuthenticationCreateSession{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, AuthenticationCreateSession{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2827,7 +2771,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2852,7 +2796,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2871,7 +2815,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -2886,7 +2830,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -2966,7 +2910,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -3005,7 +2949,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -3041,7 +2985,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AuthenticationCreateToken{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, AuthenticationCreateToken{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3062,7 +3006,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3087,7 +3031,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3106,7 +3050,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -3121,7 +3065,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -3201,7 +3145,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -3240,7 +3184,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -3276,7 +3220,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AuthenticationDeleteSessionOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, AuthenticationDeleteSessionOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3297,7 +3241,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3322,7 +3266,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3341,7 +3285,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -3356,7 +3300,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -3433,7 +3377,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CertificationMovieListOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, CertificationMovieListOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3454,7 +3398,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3479,7 +3423,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3498,7 +3442,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -3513,7 +3457,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -3590,7 +3534,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CertificationsByRegionWrapper{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, CertificationsByRegionWrapper{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3611,7 +3555,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3636,7 +3580,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3655,7 +3599,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -3670,7 +3614,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -3747,7 +3691,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ChangesTvList{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ChangesTvList{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3768,7 +3712,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3793,7 +3737,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3812,7 +3756,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -3827,7 +3771,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -3904,7 +3848,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ChangesTvList{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ChangesTvList{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3925,7 +3869,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3950,7 +3894,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -3969,7 +3913,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -3984,7 +3928,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -4061,7 +4005,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ChangesTvList{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ChangesTvList{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4082,7 +4026,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4107,7 +4051,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4126,7 +4070,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -4141,7 +4085,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -4218,7 +4162,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CollectionDetailsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, CollectionDetailsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4239,7 +4183,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4264,7 +4208,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4283,7 +4227,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -4298,7 +4242,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -4375,7 +4319,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CollectionImagesOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, CollectionImagesOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4396,7 +4340,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4421,7 +4365,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4440,7 +4384,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -4455,7 +4399,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -4532,7 +4476,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CollectionTranslationsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, CollectionTranslationsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4553,7 +4497,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4578,7 +4522,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4597,7 +4541,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -4612,7 +4556,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -4689,7 +4633,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CompanyDetailsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, CompanyDetailsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4710,7 +4654,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4735,7 +4679,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4754,7 +4698,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -4769,7 +4713,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -4846,7 +4790,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, DetailsCopy{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, DetailsCopy{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4867,7 +4811,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4892,7 +4836,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -4911,7 +4855,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -4926,7 +4870,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -5003,7 +4947,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CompanyImages{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, CompanyImages{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5024,7 +4968,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5049,7 +4993,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5068,7 +5012,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -5083,7 +5027,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -5160,7 +5104,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ConfigurationDetailsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ConfigurationDetailsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5181,7 +5125,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5206,7 +5150,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5225,7 +5169,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -5240,7 +5184,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -5317,7 +5261,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5342,7 +5286,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5361,7 +5305,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -5376,7 +5320,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -5453,7 +5397,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5478,7 +5422,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5497,7 +5441,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -5512,7 +5456,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -5589,7 +5533,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5614,7 +5558,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5633,7 +5577,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -5648,7 +5592,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -5725,7 +5669,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5750,7 +5694,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5769,7 +5713,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -5784,7 +5728,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -5861,7 +5805,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5886,7 +5830,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -5905,7 +5849,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -5920,7 +5864,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -5997,7 +5941,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CreditDetailsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, CreditDetailsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6018,7 +5962,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6043,7 +5987,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6062,7 +6006,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -6077,7 +6021,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -6154,7 +6098,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6179,7 +6123,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6198,7 +6142,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -6213,7 +6157,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -6290,7 +6234,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, DiscoverTv{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, DiscoverTv{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6311,7 +6255,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6336,7 +6280,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6355,7 +6299,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -6370,7 +6314,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -6447,7 +6391,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, FindByIDOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, FindByIDOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6468,7 +6412,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6493,7 +6437,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6512,7 +6456,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -6527,7 +6471,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -6604,7 +6548,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, GenreTvList{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, GenreTvList{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6625,7 +6569,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6650,7 +6594,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6669,7 +6613,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -6684,7 +6628,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -6761,7 +6705,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, GenreTvList{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, GenreTvList{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6782,7 +6726,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6807,7 +6751,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6826,7 +6770,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -6841,7 +6785,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -6918,7 +6862,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, GuestSessionRatedMoviesOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, GuestSessionRatedMoviesOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6939,7 +6883,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6964,7 +6908,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -6983,7 +6927,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -6998,7 +6942,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -7075,7 +7019,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, GuestSessionRatedTvOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, GuestSessionRatedTvOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7096,7 +7040,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7121,7 +7065,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7140,7 +7084,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -7155,7 +7099,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -7232,7 +7176,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, GuestSessionRatedTvEpisodesOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, GuestSessionRatedTvEpisodesOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7253,7 +7197,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7278,7 +7222,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7297,7 +7241,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -7312,7 +7256,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -7389,7 +7333,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, Keyword{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, Keyword{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7410,7 +7354,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7435,7 +7379,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7454,7 +7398,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -7469,7 +7413,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -7546,7 +7490,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, KeywordMoviesOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, KeywordMoviesOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7567,7 +7511,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7592,7 +7536,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7611,7 +7555,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -7626,7 +7570,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -7706,7 +7650,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -7745,7 +7689,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -7781,7 +7725,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListClear{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7802,7 +7746,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7827,7 +7771,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7846,7 +7790,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -7861,7 +7805,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -7938,7 +7882,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListCheckItemStatusOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListCheckItemStatusOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7959,7 +7903,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -7984,7 +7928,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8003,7 +7947,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -8018,7 +7962,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -8095,7 +8039,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListClear{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8116,7 +8060,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8141,7 +8085,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8160,7 +8104,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -8175,7 +8119,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -8255,7 +8199,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -8294,7 +8238,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -8330,7 +8274,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListCreateOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListCreateOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8351,7 +8295,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8376,7 +8320,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8395,7 +8339,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -8410,7 +8354,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -8487,7 +8431,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListDetailsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListDetailsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8508,7 +8452,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8533,7 +8477,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8552,7 +8496,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -8567,7 +8511,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -8644,7 +8588,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListClear{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8665,7 +8609,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8690,7 +8634,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8709,7 +8653,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -8724,7 +8668,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -8804,7 +8748,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -8843,7 +8787,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -8879,7 +8823,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListClear{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8900,7 +8844,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8925,7 +8869,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -8944,7 +8888,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -8959,7 +8903,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -9036,7 +8980,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieNowPlayingListOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieNowPlayingListOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9057,7 +9001,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9082,7 +9026,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9101,7 +9045,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -9116,7 +9060,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -9193,7 +9137,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9218,7 +9162,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9237,7 +9181,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -9252,7 +9196,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -9329,7 +9273,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9354,7 +9298,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9373,7 +9317,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -9388,7 +9332,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -9465,7 +9409,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieUpcomingListOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieUpcomingListOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9486,7 +9430,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9511,7 +9455,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9530,7 +9474,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -9545,7 +9489,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -9622,7 +9566,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9647,7 +9591,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9666,7 +9610,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -9681,7 +9625,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -9758,7 +9702,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieAccountStates{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieAccountStates{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9779,7 +9723,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9804,7 +9748,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9823,7 +9767,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -9838,7 +9782,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -9915,7 +9859,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AlternativeTitlesOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, AlternativeTitlesOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9936,7 +9880,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9961,7 +9905,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -9980,7 +9924,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -9995,7 +9939,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -10072,7 +10016,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieChangesOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieChangesOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10093,7 +10037,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10118,7 +10062,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10137,7 +10081,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -10152,7 +10096,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -10229,7 +10173,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieCreditsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieCreditsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10250,7 +10194,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10275,7 +10219,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10294,7 +10238,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -10309,7 +10253,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -10386,7 +10330,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieExternalIdsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieExternalIdsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10407,7 +10351,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10432,7 +10376,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10451,7 +10395,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -10466,7 +10410,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -10543,7 +10487,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieImages{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieImages{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10564,7 +10508,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10589,7 +10533,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10608,7 +10552,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -10623,7 +10567,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -10700,7 +10644,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieKeywordsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieKeywordsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10721,7 +10665,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10746,7 +10690,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10765,7 +10709,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -10780,7 +10724,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -10857,7 +10801,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieLatestIDOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieLatestIDOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10878,7 +10822,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10903,7 +10847,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -10922,7 +10866,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -10937,7 +10881,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -11014,7 +10958,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieListsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieListsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11035,7 +10979,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11060,7 +11004,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11079,7 +11023,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -11094,7 +11038,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -11122,7 +11066,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -11137,7 +11081,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -11214,7 +11158,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieReleaseDatesOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieReleaseDatesOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11235,7 +11179,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11260,7 +11204,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11279,7 +11223,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -11294,7 +11238,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -11371,7 +11315,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieReviewsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieReviewsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11392,7 +11336,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11417,7 +11361,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11436,7 +11380,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -11451,7 +11395,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -11528,7 +11472,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11553,7 +11497,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11572,7 +11516,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -11587,7 +11531,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -11664,7 +11608,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieTranslationsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieTranslationsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11685,7 +11629,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11710,7 +11654,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11729,7 +11673,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -11744,7 +11688,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -11821,7 +11765,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieVideos{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieVideos{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11842,7 +11786,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11867,7 +11811,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11886,7 +11830,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -11901,7 +11845,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -11978,7 +11922,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieWatchProvidersOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieWatchProvidersOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -11999,7 +11943,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12024,7 +11968,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12043,7 +11987,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -12058,7 +12002,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -12138,7 +12082,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -12177,7 +12121,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -12213,7 +12157,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListClear{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12234,7 +12178,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12259,7 +12203,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12278,7 +12222,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -12293,7 +12237,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -12370,7 +12314,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListClear{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12391,7 +12335,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12416,7 +12360,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12435,7 +12379,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -12450,7 +12394,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -12527,7 +12471,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, NetworkDetailsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, NetworkDetailsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12548,7 +12492,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12573,7 +12517,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12592,7 +12536,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -12607,7 +12551,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -12684,7 +12628,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, DetailsCopy{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, DetailsCopy{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12705,7 +12649,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12730,7 +12674,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12749,7 +12693,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -12764,7 +12708,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -12841,7 +12785,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, CompanyImages{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, CompanyImages{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12862,7 +12806,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12887,7 +12831,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -12906,7 +12850,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -12921,7 +12865,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -12998,7 +12942,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonPopularListOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, PersonPopularListOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13019,7 +12963,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13044,7 +12988,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13063,7 +13007,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -13078,7 +13022,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -13155,7 +13099,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonDetailsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, PersonDetailsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13176,7 +13120,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13201,7 +13145,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13220,7 +13164,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -13235,7 +13179,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -13312,7 +13256,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonChangesOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, PersonChangesOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13333,7 +13277,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13358,7 +13302,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13377,7 +13321,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -13392,7 +13336,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -13469,7 +13413,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonCombinedCreditsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, PersonCombinedCreditsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13490,7 +13434,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13515,7 +13459,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13534,7 +13478,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -13549,7 +13493,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -13626,7 +13570,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonExternalIdsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, PersonExternalIdsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13647,7 +13591,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13672,7 +13616,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13691,7 +13635,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -13706,7 +13650,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -13783,7 +13727,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonImagesOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, PersonImagesOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13804,7 +13748,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13829,7 +13773,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13848,7 +13792,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -13863,7 +13807,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -13940,7 +13884,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonLatestIDOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, PersonLatestIDOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13961,7 +13905,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -13986,7 +13930,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14005,7 +13949,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -14020,7 +13964,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -14097,7 +14041,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonMovieCreditsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, PersonMovieCreditsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14118,7 +14062,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14143,7 +14087,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14162,7 +14106,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -14177,7 +14121,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -14254,7 +14198,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonTvCreditsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, PersonTvCreditsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14275,7 +14219,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14300,7 +14244,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14319,7 +14263,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -14334,7 +14278,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -14411,7 +14355,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, PersonTaggedImagesOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, PersonTaggedImagesOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14432,7 +14376,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14457,7 +14401,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14476,7 +14420,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -14491,7 +14435,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -14568,7 +14512,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TranslationsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TranslationsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14589,7 +14533,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14614,7 +14558,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14633,7 +14577,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -14648,7 +14592,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -14725,7 +14669,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ReviewDetailsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ReviewDetailsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14746,7 +14690,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14771,7 +14715,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14790,7 +14734,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -14805,7 +14749,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -14882,7 +14826,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, SearchCollectionOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, SearchCollectionOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14903,7 +14847,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14928,7 +14872,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -14947,7 +14891,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -14962,7 +14906,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -15039,7 +14983,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, SearchCompanyOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, SearchCompanyOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15060,7 +15004,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15085,7 +15029,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15104,7 +15048,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -15119,7 +15063,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -15196,7 +15140,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, SearchKeywordOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, SearchKeywordOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15217,7 +15161,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15242,7 +15186,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15261,7 +15205,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -15276,7 +15220,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -15353,7 +15297,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15378,7 +15322,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15397,7 +15341,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -15412,7 +15356,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -15489,7 +15433,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, SearchMultiOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, SearchMultiOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15510,7 +15454,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15535,7 +15479,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15554,7 +15498,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -15569,7 +15513,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -15646,7 +15590,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, SearchPersonOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, SearchPersonOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15667,7 +15611,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15692,7 +15636,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15711,7 +15655,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -15726,7 +15670,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -15803,7 +15747,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15828,7 +15772,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15847,7 +15791,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -15862,7 +15806,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -15939,7 +15883,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TrendingAll{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TrendingAll{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15960,7 +15904,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -15985,7 +15929,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16004,7 +15948,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -16019,7 +15963,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -16096,7 +16040,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TrendingAll{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TrendingAll{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16117,7 +16061,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16142,7 +16086,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16161,7 +16105,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -16176,7 +16120,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -16253,7 +16197,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TrendingPeopleOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TrendingPeopleOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16274,7 +16218,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16299,7 +16243,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16318,7 +16262,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -16333,7 +16277,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -16410,7 +16354,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TrendingTv{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TrendingTv{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16431,7 +16375,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16456,7 +16400,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16475,7 +16419,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -16490,7 +16434,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -16567,7 +16511,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, DiscoverTv{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, DiscoverTv{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16588,7 +16532,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16613,7 +16557,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16632,7 +16576,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -16647,7 +16591,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -16724,7 +16668,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, DiscoverTv{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, DiscoverTv{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16745,7 +16689,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16770,7 +16714,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16789,7 +16733,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -16804,7 +16748,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -16881,7 +16825,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, DiscoverTv{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, DiscoverTv{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16902,7 +16846,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16927,7 +16871,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -16946,7 +16890,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -16961,7 +16905,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -17038,7 +16982,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesTopRatedListOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeriesTopRatedListOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17059,7 +17003,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17084,7 +17028,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17103,7 +17047,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -17118,7 +17062,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -17195,7 +17139,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17220,7 +17164,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17239,7 +17183,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -17254,7 +17198,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -17331,7 +17275,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieAccountStates{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieAccountStates{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17352,7 +17296,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17377,7 +17321,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17396,7 +17340,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -17411,7 +17355,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -17488,7 +17432,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesAggregateCreditsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeriesAggregateCreditsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17509,7 +17453,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17534,7 +17478,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17553,7 +17497,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -17568,7 +17512,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -17645,7 +17589,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, AlternativeTitlesWrapper{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, AlternativeTitlesWrapper{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17666,7 +17610,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17691,7 +17635,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17710,7 +17654,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -17725,7 +17669,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -17802,7 +17746,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ShowChangesWrapper{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ShowChangesWrapper{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17823,7 +17767,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17848,7 +17792,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17867,7 +17811,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -17882,7 +17826,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -17959,7 +17903,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesContentRatingsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeriesContentRatingsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -17980,7 +17924,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18005,7 +17949,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18024,7 +17968,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -18039,7 +17983,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -18116,7 +18060,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesCreditsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeriesCreditsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18137,7 +18081,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18162,7 +18106,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18181,7 +18125,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -18196,7 +18140,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -18273,7 +18217,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesEpisodeGroupsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeriesEpisodeGroupsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18294,7 +18238,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18319,7 +18263,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18338,7 +18282,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -18353,7 +18297,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -18430,7 +18374,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesExternalIdsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeriesExternalIdsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18451,7 +18395,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18476,7 +18420,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18495,7 +18439,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -18510,7 +18454,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -18587,7 +18531,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieImages{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieImages{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18608,7 +18552,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18633,7 +18577,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18652,7 +18596,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -18667,7 +18611,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -18744,7 +18688,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesKeywordsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeriesKeywordsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18765,7 +18709,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18790,7 +18734,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18809,7 +18753,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -18824,7 +18768,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -18901,7 +18845,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesLatestIDOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeriesLatestIDOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18922,7 +18866,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18947,7 +18891,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -18966,7 +18910,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -18981,7 +18925,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -19058,7 +19002,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListsCopyOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListsCopyOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19079,7 +19023,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19104,7 +19048,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19123,7 +19067,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -19138,7 +19082,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -19215,7 +19159,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TrendingTv{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TrendingTv{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19236,7 +19180,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19261,7 +19205,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19280,7 +19224,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -19295,7 +19239,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -19372,7 +19316,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesReviewsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeriesReviewsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19393,7 +19337,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19418,7 +19362,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19437,7 +19381,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -19452,7 +19396,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -19529,7 +19473,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesScreenedTheatricallyOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeriesScreenedTheatricallyOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19550,7 +19494,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19575,7 +19519,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19594,7 +19538,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -19609,7 +19553,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -19686,7 +19630,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesSimilarOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeriesSimilarOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19707,7 +19651,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19732,7 +19676,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19751,7 +19695,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -19766,7 +19710,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -19843,7 +19787,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesTranslationsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeriesTranslationsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19864,7 +19808,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19889,7 +19833,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -19908,7 +19852,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -19923,7 +19867,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -20000,7 +19944,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieVideos{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieVideos{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20021,7 +19965,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20046,7 +19990,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20065,7 +20009,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -20080,7 +20024,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -20157,7 +20101,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeriesWatchProvidersOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeriesWatchProvidersOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20178,7 +20122,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20203,7 +20147,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20222,7 +20166,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -20237,7 +20181,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -20317,7 +20261,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -20356,7 +20300,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -20392,7 +20336,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListClear{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20413,7 +20357,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20438,7 +20382,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20457,7 +20401,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -20472,7 +20416,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -20549,7 +20493,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListClear{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20570,7 +20514,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20595,7 +20539,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20614,7 +20558,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -20629,7 +20573,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -20706,7 +20650,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20731,7 +20675,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20751,7 +20695,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusNotFound, "application/json", body)))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusNotFound, "application/json", body)))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20768,7 +20712,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("404 response decoding error", func(t *testing.T) {
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusNotFound, "application/json", []byte("invalid json"))))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusNotFound, "application/json", []byte("invalid json"))))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20781,7 +20725,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("404 response unknown content type", func(t *testing.T) {
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusNotFound, "foo", nil)))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusNotFound, "foo", nil)))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20796,7 +20740,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("404 response debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusNotFound, "application/json", withUnknownMember(t, Error{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusNotFound, "application/json", apitest.WithUnknownMember(t, Error{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20819,7 +20763,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -20834,7 +20778,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -20911,7 +20855,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonAccountStatesOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeasonAccountStatesOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20932,7 +20876,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20957,7 +20901,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -20976,7 +20920,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -20991,7 +20935,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -21068,7 +21012,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonAggregateCreditsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeasonAggregateCreditsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21089,7 +21033,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21114,7 +21058,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21133,7 +21077,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -21148,7 +21092,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -21225,7 +21169,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, SeasonChangesWrapper{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, SeasonChangesWrapper{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21246,7 +21190,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21271,7 +21215,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21290,7 +21234,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -21305,7 +21249,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -21382,7 +21326,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonCreditsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeasonCreditsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21403,7 +21347,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21428,7 +21372,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21447,7 +21391,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -21462,7 +21406,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -21539,7 +21483,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonExternalIdsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeasonExternalIdsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21560,7 +21504,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21585,7 +21529,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21604,7 +21548,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -21619,7 +21563,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -21696,7 +21640,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonImagesOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeasonImagesOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21717,7 +21661,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21742,7 +21686,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21761,7 +21705,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -21776,7 +21720,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -21853,7 +21797,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonTranslations{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeasonTranslations{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21874,7 +21818,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21899,7 +21843,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -21918,7 +21862,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -21933,7 +21877,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -22010,7 +21954,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieVideos{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieVideos{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22031,7 +21975,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22056,7 +22000,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22075,7 +22019,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -22090,7 +22034,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -22167,7 +22111,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonWatchProvidersOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeasonWatchProvidersOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22188,7 +22132,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22213,7 +22157,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22232,7 +22176,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -22247,7 +22191,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -22324,7 +22268,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22349,7 +22293,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22368,7 +22312,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -22383,7 +22327,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -22460,7 +22404,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieAccountStates{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieAccountStates{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22481,7 +22425,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22506,7 +22450,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22525,7 +22469,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -22540,7 +22484,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -22617,7 +22561,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, EpisodeChangesWrapper{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, EpisodeChangesWrapper{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22638,7 +22582,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22663,7 +22607,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22682,7 +22626,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -22697,7 +22641,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -22774,7 +22718,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvEpisodeCreditsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvEpisodeCreditsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22795,7 +22739,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22820,7 +22764,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22839,7 +22783,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -22854,7 +22798,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -22931,7 +22875,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvEpisodeExternalIdsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvEpisodeExternalIdsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22952,7 +22896,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22977,7 +22921,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -22996,7 +22940,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -23011,7 +22955,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -23088,7 +23032,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvEpisodeImagesOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvEpisodeImagesOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23109,7 +23053,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23134,7 +23078,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23153,7 +23097,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -23168,7 +23112,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -23245,7 +23189,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvSeasonTranslations{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvSeasonTranslations{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23266,7 +23210,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23291,7 +23235,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23310,7 +23254,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -23325,7 +23269,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -23402,7 +23346,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, MovieVideos{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, MovieVideos{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23423,7 +23367,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23448,7 +23392,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23467,7 +23411,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -23482,7 +23426,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -23562,7 +23506,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -23601,7 +23545,7 @@ func TestClient_Error(t *testing.T) {
 				sent []byte
 			)
 
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(r *http.Request) (*http.Response, error) {
 					got = r
 
@@ -23637,7 +23581,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListClear{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23658,7 +23602,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23683,7 +23627,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23702,7 +23646,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -23717,7 +23661,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -23794,7 +23738,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, ListClear{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, ListClear{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23815,7 +23759,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23840,7 +23784,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23859,7 +23803,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -23874,7 +23818,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -23951,7 +23895,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, TvEpisodeGroupDetailsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, TvEpisodeGroupDetailsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23972,7 +23916,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -23997,7 +23941,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -24016,7 +23960,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -24031,7 +23975,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -24108,7 +24052,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, WatchProvidersAvailableRegionsOk{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, WatchProvidersAvailableRegionsOk{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -24129,7 +24073,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -24154,7 +24098,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -24173,7 +24117,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -24188,7 +24132,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -24265,7 +24209,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, WatchProviderTvList{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, WatchProviderTvList{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -24286,7 +24230,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -24311,7 +24255,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -24330,7 +24274,7 @@ func TestClient_Error(t *testing.T) {
 		t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
 		t.Run("transport error", func(t *testing.T) {
-			c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
 			)}))
 			if err != nil {
@@ -24345,7 +24289,7 @@ func TestClient_Error(t *testing.T) {
 		})
 
 		t.Run("unknown status code", func(t *testing.T) {
-			srv := newTestServer(t, http.StatusTeapot)
+			srv := apitest.NewServer(t, http.StatusTeapot)
 
 			baseURL, err := url.Parse(srv.URL)
 			if err != nil {
@@ -24422,7 +24366,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps an unknown member", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", withUnknownMember(t, WatchProviderTvList{}))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", apitest.WithUnknownMember(t, WatchProviderTvList{}, jsonOpts))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -24443,7 +24387,7 @@ func TestClient_Error(t *testing.T) {
 		t.Run("debug mode keeps a body it cannot decode", func(t *testing.T) {
 			file := filepath.Join(t.TempDir(), "interactions.json")
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(file))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -24468,7 +24412,7 @@ func TestClient_Error(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c, err := NewClient(WithBaseURL(newBodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, http.StatusOK, "application/json", []byte("invalid json"))), WithDebugFile(filepath.Join(blocker, "interactions.json")))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -24492,7 +24436,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -24520,7 +24464,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -24548,7 +24492,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -24576,7 +24520,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -24616,7 +24560,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -24656,7 +24600,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -24688,7 +24632,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -24728,7 +24672,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -24768,7 +24712,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -24808,7 +24752,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -24848,7 +24792,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -24888,7 +24832,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -24916,7 +24860,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -24944,7 +24888,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -24972,7 +24916,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25000,7 +24944,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25032,7 +24976,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25060,7 +25004,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25088,7 +25032,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25248,7 +25192,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25388,7 +25332,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25420,7 +25364,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25448,7 +25392,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25476,7 +25420,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25512,7 +25456,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25548,7 +25492,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25584,7 +25528,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25620,7 +25564,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25648,7 +25592,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25680,7 +25624,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25712,7 +25656,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25740,7 +25684,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25772,7 +25716,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25800,7 +25744,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25828,7 +25772,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25864,7 +25808,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25900,7 +25844,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25936,7 +25880,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -25972,7 +25916,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26004,7 +25948,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26036,7 +25980,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26064,7 +26008,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26092,7 +26036,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26120,7 +26064,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26152,7 +26096,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26184,7 +26128,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26216,7 +26160,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26248,7 +26192,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26280,7 +26224,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26308,7 +26252,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26340,7 +26284,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26372,7 +26316,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26404,7 +26348,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26436,7 +26380,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26464,7 +26408,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26492,7 +26436,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26520,7 +26464,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26548,7 +26492,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26576,7 +26520,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26620,7 +26564,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26652,7 +26596,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26684,7 +26628,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26736,7 +26680,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26776,7 +26720,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26816,7 +26760,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26864,7 +26808,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26892,7 +26836,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26920,7 +26864,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26948,7 +26892,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -26976,7 +26920,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27012,7 +26956,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27048,7 +26992,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27080,7 +27024,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27112,7 +27056,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27144,7 +27088,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27176,7 +27120,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27204,7 +27148,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27232,7 +27176,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27260,7 +27204,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27292,7 +27236,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27324,7 +27268,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27356,7 +27300,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27388,7 +27332,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27420,7 +27364,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27452,7 +27396,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27484,7 +27428,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27516,7 +27460,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27548,7 +27492,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27580,7 +27524,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27608,7 +27552,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27636,7 +27580,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27664,7 +27608,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27696,7 +27640,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27728,7 +27672,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27756,7 +27700,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27788,7 +27732,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27820,7 +27764,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27848,7 +27792,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27880,7 +27824,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27912,7 +27856,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27944,7 +27888,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -27976,7 +27920,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -28004,7 +27948,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -28036,7 +27980,7 @@ func TestClient_Params(t *testing.T) {
 
 		var got *http.Request
 
-		c, err := NewClient(WithHTTPClient(&http.Client{Transport: roundTripFunc(
+		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 			func(r *http.Request) (*http.Response, error) {
 				got = r
 
@@ -28065,311 +28009,11 @@ func TestClient_Params(t *testing.T) {
 	})
 }
 
-func replay(t *testing.T) http.RoundTripper {
-	t.Helper()
-
-	interactions, err := cassette.InteractionsReadFile("../../api/interactions.json")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	match := cassette.MatchRequest(
-		cassette.CompareHeaders("User-Agent"),
-	)
-
-	rec := cassette.Replay(interactions, cassette.InOrder(), cassette.WithMatcher(func(req *http.Request, ia cassette.Request) error {
-		err := match(req, ia)
-		if err == nil || req.Body == nil {
-			return err
-		}
-
-		sent, rerr := io.ReadAll(req.Body)
-		if rerr != nil {
-			return err
-		}
-
-		req.Body = io.NopCloser(bytes.NewReader(sent))
-
-		var a, b any
-		if json.Unmarshal(ia.Body, &a) != nil || json.Unmarshal(sent, &b) != nil || !jsonSameButTags(a, b) {
-			return err
-		}
-
-		ia.Body = sent
-
-		return match(req, ia)
-	}))
-
-	t.Cleanup(func() {
-		if unused := rec.Unused(); len(unused) > 0 {
-			t.Errorf("%d recorded interactions were never replayed, the first: %s %s", len(unused), unused[0].Request.Method, &unused[0].Request.URL)
-		}
-	})
-
-	return rec
-}
-
-// lastBody passes requests on to next, and keeps the body of the last response, so that a test can compare what a call
-// decoded with what was sent.
-type lastBody struct {
-	next http.RoundTripper
-	body []byte
-}
-
-func (l *lastBody) RoundTrip(req *http.Request) (*http.Response, error) {
-	rsp, err := l.next.RoundTrip(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer rsp.Body.Close()
-
-	if l.body, err = io.ReadAll(rsp.Body); err != nil {
-		return nil, err
-	}
-
-	rsp.Body = io.NopCloser(bytes.NewReader(l.body))
-
-	return rsp, nil
-}
-
-// decodedAsSent fails unless out, what a call decoded from body, encodes to what body holds. A member one side lacks is
-// fine where the other holds nothing there (null, false, 0, "", [], an object of nothing but such members, or the zero
-// text of a date, a time or a UUID), as an optional value left out is, and so is a tag one side leaves out (see
-// jsonInferredTag); members may come in another order. A value may be written another way, as long as it
-// is the same: a time as the same instant, a UUID with or without dashes, a number as a string of it.
-func decodedAsSent(t *testing.T, op string, out any, body []byte) {
-	t.Helper()
-
-	encoded, err := json.Marshal(out, jsonOpts)
-	if err != nil {
-		t.Fatalf("%s: encoding what was decoded: %v", op, err)
-	}
-
-	var sent, got any
-	if err := json.Unmarshal(body, &sent); err != nil {
-		t.Fatalf("%s: the recorded body: %v", op, err)
-	}
-
-	if err := json.Unmarshal(encoded, &got); err != nil {
-		t.Fatalf("%s: %v", op, err)
-	}
-
-	if at, same := jsonSame(sent, got, ""); !same {
-		t.Errorf("%s: decoded something else than was sent, at %q:\nsent %s\ngot  %s", op, at, body, encoded)
-	}
-}
-
-// jsonSame reports whether the JSON values a and b, decoded into any, hold the same, as decodedAsSent compares them,
-// and where they first differ if not.
-func jsonSame(a, b any, at string) (string, bool) {
-	if jsonEmpty(a) && jsonEmpty(b) || jsonSameInstant(a, b) || jsonSameInstant(b, a) ||
-		jsonSameNumber(a, b) || jsonSameNumber(b, a) {
-		return "", true
-	}
-
-	switch a := a.(type) {
-	case map[string]any:
-		b, ok := b.(map[string]any)
-		if !ok {
-			return at, false
-		}
-
-		names := slices.Sorted(maps.Keys(a))
-		for name := range b {
-			if _, ok := a[name]; !ok {
-				names = append(names, name)
-			}
-		}
-
-		for _, name := range names {
-			if jsonInferredTag(a, b, name) || jsonInferredTag(b, a, name) {
-				continue
-			}
-
-			if where, same := jsonSame(a[name], b[name], at+"/"+name); !same {
-				return where, false
-			}
-		}
-
-		return "", true
-	case []any:
-		b, ok := b.([]any)
-		if !ok || len(a) != len(b) {
-			return at, false
-		}
-
-		for i := range a {
-			if where, same := jsonSame(a[i], b[i], at+"/"+strconv.Itoa(i)); !same {
-				return where, false
-			}
-		}
-
-		return "", true
-	case string:
-		b, ok := b.(string)
-		if !ok {
-			return at, false
-		}
-
-		if a == b {
-			return "", true
-		}
-
-		if ua, ok := jsonUUID(a); ok {
-			if ub, ok := jsonUUID(b); ok {
-				return at, ua == ub
-			}
-		}
-
-		ta, errA := time.Parse(time.RFC3339Nano, a)
-		tb, errB := time.Parse(time.RFC3339Nano, b)
-
-		return at, errA == nil && errB == nil && ta.Equal(tb)
-	default:
-		return at, a == b
-	}
-}
-
-// jsonSameInstant reports whether a is a Unix time, in seconds or milliseconds, and b a date-time of the same instant,
-// as a type that takes either writes one as the other.
-func jsonSameInstant(a, b any) bool {
-	n, ok := a.(float64)
-	if !ok {
-		return false
-	}
-
-	s, ok := b.(string)
-	if !ok {
-		return false
-	}
-
-	ts, err := time.Parse(time.RFC3339Nano, s)
-
-	return err == nil && (float64(ts.Unix()) == n || float64(ts.UnixMilli()) == n)
-}
-
-// jsonSameNumber reports whether a is a number and b a string of the same number, as a string type writes one.
-func jsonSameNumber(a, b any) bool {
-	n, ok := a.(float64)
-	if !ok {
-		return false
-	}
-
-	s, ok := b.(string)
-	if !ok {
-		return false
-	}
-
-	f, err := strconv.ParseFloat(s, 64)
-
-	return err == nil && f == n
-}
-
-// jsonUUID is s, a UUID with or without dashes, as its 32 hex digits in lower case.
-func jsonUUID(s string) (string, bool) {
-	hex := strings.ToLower(strings.ReplaceAll(s, "-", ""))
-	if len(hex) != 32 || len(s) != 32 && len(s) != 36 || strings.Trim(hex, "0123456789abcdef") != "" {
-		return "", false
-	}
-
-	return hex, true
-}
-
-// jsonEmpty reports whether v, a JSON value decoded into any, holds nothing: null, false, 0, "", [], an object whose
-// members hold nothing, or the text a zero date, time or UUID is written as, which is what an empty one decodes into:
-// null read into a struct is written back as its members, empty.
-func jsonEmpty(v any) bool {
-	switch v := v.(type) {
-	case nil:
-		return true
-	case bool:
-		return !v
-	case float64:
-		return v == 0
-	case string:
-		return v == "" || v == "0000-00-00" || v == "0001-01-01T00:00:00Z" || v == "00000000-0000-0000-0000-000000000000"
-	case []any:
-		return len(v) == 0
-	case map[string]any:
-		for _, m := range v {
-			if !jsonEmpty(m) {
-				return false
-			}
-		}
-
-		return true
-	default:
-		return false
-	}
-}
-
-// jsonInferredTag reports whether the object a lacks the member name, which b holds as a tag: the name of a member both
-// hold. A tagged object may leave its tag out, and decoding it infers the tag from the member that is set, which
-// encoding then writes.
-func jsonInferredTag(a, b map[string]any, name string) bool {
-	if _, ok := a[name]; ok {
-		return false
-	}
-
-	tag, ok := b[name].(string)
-	if !ok {
-		return false
-	}
-
-	_, inA := a[tag]
-	_, inB := b[tag]
-
-	return inA && inB
-}
-
-// jsonSameButTags reports whether the JSON values a and b, decoded into any, are the same, but for tags either leaves
-// out (see jsonInferredTag): the request a call sends for one that was recorded without them.
-func jsonSameButTags(a, b any) bool {
-	switch a := a.(type) {
-	case map[string]any:
-		b, ok := b.(map[string]any)
-		if !ok {
-			return false
-		}
-
-		for name := range a {
-			if _, ok := b[name]; !ok && !jsonInferredTag(b, a, name) {
-				return false
-			}
-		}
-
-		for name, vb := range b {
-			va, ok := a[name]
-			if !ok && !jsonInferredTag(a, b, name) || ok && !jsonSameButTags(va, vb) {
-				return false
-			}
-		}
-
-		return true
-	case []any:
-		b, ok := b.([]any)
-		if !ok || len(a) != len(b) {
-			return false
-		}
-
-		for i := range a {
-			if !jsonSameButTags(a[i], b[i]) {
-				return false
-			}
-		}
-
-		return true
-	default:
-		return a == b
-	}
-}
-
 func TestClient_Interactions(t *testing.T) {
 	ctx := t.Context()
 	t.Setenv("TMDB_API_TOKEN", "**************************************************")
 
-	last := &lastBody{next: replay(t)}
+	last := &apitest.LastBody{Next: apitest.Replay(t, "../../api/interactions.json")}
 
 	c, err := NewClient(WithHTTPClient(&http.Client{Transport: last}))
 	if err != nil {
@@ -28382,7 +28026,7 @@ func TestClient_Interactions(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("SearchMovies: %v", err)
 	} else {
-		decodedAsSent(t, "SearchMovies", out, last.body)
+		apitest.DecodedAsSent(t, "SearchMovies", out, last.Body, jsonOpts)
 	}
 
 	if out, err := c.SearchMovies(ctx, SearchMoviesParams{
@@ -28390,13 +28034,13 @@ func TestClient_Interactions(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("SearchMovies: %v", err)
 	} else {
-		decodedAsSent(t, "SearchMovies", out, last.body)
+		apitest.DecodedAsSent(t, "SearchMovies", out, last.Body, jsonOpts)
 	}
 
 	if out, err := c.GetMovie(ctx, 55931, &GetMovieParams{}); err != nil {
 		t.Fatalf("GetMovie: %v", err)
 	} else {
-		decodedAsSent(t, "GetMovie", out, last.body)
+		apitest.DecodedAsSent(t, "GetMovie", out, last.Body, jsonOpts)
 	}
 
 	if out, err := c.SearchShows(ctx, SearchShowsParams{
@@ -28404,25 +28048,25 @@ func TestClient_Interactions(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("SearchShows: %v", err)
 	} else {
-		decodedAsSent(t, "SearchShows", out, last.body)
+		apitest.DecodedAsSent(t, "SearchShows", out, last.Body, jsonOpts)
 	}
 
 	if out, err := c.GetShowSeason(ctx, 65494, 1, &GetShowSeasonParams{}); err != nil {
 		t.Fatalf("GetShowSeason: %v", err)
 	} else {
-		decodedAsSent(t, "GetShowSeason", out, last.body)
+		apitest.DecodedAsSent(t, "GetShowSeason", out, last.Body, jsonOpts)
 	}
 
 	if out, err := c.GetShow(ctx, 65494, &GetShowParams{}); err != nil {
 		t.Fatalf("GetShow: %v", err)
 	} else {
-		decodedAsSent(t, "GetShow", out, last.body)
+		apitest.DecodedAsSent(t, "GetShow", out, last.Body, jsonOpts)
 	}
 
 	if out, err := c.GetEpisodeDetails(ctx, 65494, 1, 1, &GetEpisodeDetailsParams{}); err != nil {
 		t.Fatalf("GetEpisodeDetails: %v", err)
 	} else {
-		decodedAsSent(t, "GetEpisodeDetails", out, last.body)
+		apitest.DecodedAsSent(t, "GetEpisodeDetails", out, last.Body, jsonOpts)
 	}
 
 	if _, err := c.GetShowSeason(ctx, 6138, 2, &GetShowSeasonParams{}); err == nil {

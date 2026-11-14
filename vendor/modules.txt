@@ -59,6 +59,7 @@ github.com/ettle/strcase
 # github.com/go-api-libs/api v0.0.0-20261114003029-290d1ecef643
 ## explicit; go 1.27
 github.com/go-api-libs/api
+github.com/go-api-libs/api/apitest
 # github.com/go-api-libs/types v0.0.0-20261109120451-6cd1daca4971
 ## explicit; go 1.27
 github.com/go-api-libs/types
