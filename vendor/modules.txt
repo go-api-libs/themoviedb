@@ -56,7 +56,7 @@ github.com/MarkRosemaker/yaml2json
 # github.com/ettle/strcase v0.2.0
 ## explicit; go 1.12
 github.com/ettle/strcase
-# github.com/go-api-libs/api v0.0.0-20261115155546-20ff98863ae1
+# github.com/go-api-libs/api v0.0.0-20261115172114-130f6fc73195
 ## explicit; go 1.27
 github.com/go-api-libs/api
 github.com/go-api-libs/api/apitest

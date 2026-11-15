@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -52,7 +54,10 @@ type RoundTripFunc func(*http.Request) (*http.Response, error)
 func (f RoundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
 
 // unknownMember is a member no type declares.
-const unknownMember = `"not_a_member_of_any_type": true`
+const (
+	unknownMemberName = `"not_a_member_of_any_type"`
+	unknownMember     = unknownMemberName + `: true`
+)
 
 // WithUnknownMember is v as JSON, encoded as opts say, with a member no type declares added to it.
 func WithUnknownMember(t testing.TB, v any, opts json.Options) []byte {
@@ -84,7 +89,9 @@ func MustDecode[T any](t testing.TB, data string, opts json.Options) T {
 }
 
 // RoundTrip encodes in and decodes it strictly into a new value, both as opts say. set must report that the new value
-// holds the variant in did, and it must encode as in did.
+// holds the variant in did, and it must encode as in did. Where in encodes as an object, decoding it with a member no
+// type declares must fail, or keep the member, as a type of additional properties does: a strict decoder drops
+// nothing.
 func RoundTrip[T any](t testing.TB, in T, set func(T) bool, opts json.Options) {
 	t.Helper()
 
@@ -109,5 +116,50 @@ func RoundTrip[T any](t testing.TB, in T, set func(T) bool, opts json.Options) {
 
 	if string(again) != string(raw) {
 		t.Errorf("encoded %s, then %s", raw, again)
+	}
+
+	// a member no type declares is refused, or kept by a type that keeps what it does not declare: never dropped
+	if len(raw) == 0 || raw[0] != '{' {
+		return
+	}
+
+	extra := WithUnknownMember(t, &got, opts)
+
+	var with T
+	if err := json.Unmarshal(extra, &with, opts); err != nil {
+		return
+	}
+
+	kept, err := json.Marshal(&with, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(string(kept), unknownMemberName) {
+		t.Errorf("%s decoded, dropping the member no type declares: %s", extra, kept)
+	}
+}
+
+// Null checks the zero T, a union holding no alternative, encodes as null, and null decodes as a T holding none, as
+// opts say.
+func Null[T any](t testing.TB, opts json.Options) {
+	t.Helper()
+
+	var zero T
+
+	raw, err := json.Marshal(&zero, opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(raw) != "null" {
+		t.Errorf("the zero %T encoded as %s, want null", zero, raw)
+	}
+
+	var got T
+	if err := json.Unmarshal([]byte("null"), &got, opts); err != nil {
+		t.Errorf("null: %v", err)
+	} else if !reflect.ValueOf(got).IsZero() {
+		t.Errorf("null decoded as %+v", got)
 	}
 }
