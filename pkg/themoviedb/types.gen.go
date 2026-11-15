@@ -7,6 +7,7 @@ package themoviedb
 import (
 	"encoding/json/v2"
 	"net/url"
+	"slices"
 
 	"cloud.google.com/go/civil"
 	"github.com/MarkRosemaker/jsonutil"
@@ -885,8 +886,20 @@ type Actor struct {
 	PersonExtra
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *Actor) unknownEnum() bool {
+	return v.Person.unknownEnum()
+}
+
 // Actors defines a model
 type Actors []Actor
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v Actors) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x Actor) bool { return x.unknownEnum() })
+}
 
 // AlternativeTitle defines a model
 type AlternativeTitle struct {
@@ -938,10 +951,22 @@ type AuthenticationDeleteSessionOk struct {
 // Cast defines a model
 type Cast []CastMember
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v Cast) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x CastMember) bool { return x.unknownEnum() })
+}
+
 // CastMember defines a model
 type CastMember struct {
 	CastID int `json:"cast_id,omitzero"`
 	Actor
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *CastMember) unknownEnum() bool {
+	return v.Actor.unknownEnum()
 }
 
 // Certification defines a model
@@ -1207,10 +1232,22 @@ type ConfigurationDetailsOkImages struct {
 // ConfigurationJobsOk defines a model
 type ConfigurationJobsOk []ConfigurationJobsOkItem
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v ConfigurationJobsOk) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x ConfigurationJobsOkItem) bool { return x.unknownEnum() })
+}
+
 // ConfigurationJobsOkItem defines a model
 type ConfigurationJobsOkItem struct {
 	Department Department `json:"department,omitzero"`
 	Jobs       []string   `json:"jobs,omitzero"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *ConfigurationJobsOkItem) unknownEnum() bool {
+	return v.Department != "" && !v.Department.Valid()
 }
 
 // ConfigurationTimezonesOk defines a model
@@ -1240,6 +1277,14 @@ type CreditDetailsOk struct {
 	MediaType  string                 `json:"media_type,omitzero"`
 	ID         string                 `json:"id,omitzero"`
 	Person     *CreditDetailsOkPerson `json:"person,omitzero"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *CreditDetailsOk) unknownEnum() bool {
+	return v.Department != "" && !v.Department.Valid() ||
+		v.Job != "" && !v.Job.Valid() ||
+		v.Person != nil && v.Person.unknownEnum()
 }
 
 // CreditDetailsOkMedia defines a model
@@ -1293,8 +1338,21 @@ type CreditDetailsOkPerson struct {
 	ProfilePath        string     `json:"profile_path,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *CreditDetailsOkPerson) unknownEnum() bool {
+	return v.Gender != 0 && !v.Gender.Valid() ||
+		v.KnownForDepartment != "" && !v.KnownForDepartment.Valid()
+}
+
 // Crew defines a model
 type Crew []CrewMember
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v Crew) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x CrewMember) bool { return x.unknownEnum() })
+}
 
 // CrewMember defines a model
 type CrewMember struct {
@@ -1302,6 +1360,14 @@ type CrewMember struct {
 	Department Department `json:"department,omitzero"`
 	Job        Job        `json:"job,omitzero"`
 	PersonExtra
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *CrewMember) unknownEnum() bool {
+	return v.Person.unknownEnum() ||
+		v.Department != "" && !v.Department.Valid() ||
+		v.Job != "" && !v.Job.Valid()
 }
 
 // Department defines a model
@@ -1379,6 +1445,12 @@ type Episode struct {
 	EpisodeTypeWrapper
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *Episode) unknownEnum() bool {
+	return v.EpisodeTypeWrapper.unknownEnum()
+}
+
 // EpisodeBase defines a model
 type EpisodeBase struct {
 	// The ID of the episode
@@ -1427,6 +1499,13 @@ type EpisodeDetails struct {
 	EpisodeMetadata
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *EpisodeDetails) unknownEnum() bool {
+	return v.EpisodeTypeWrapper.unknownEnum() ||
+		v.EpisodeMetadata.unknownEnum()
+}
+
 // The ID of an episode
 type EpisodeID int32
 
@@ -1434,6 +1513,13 @@ type EpisodeID int32
 type EpisodeMetadata struct {
 	Crew       Crew   `json:"crew,omitzero"`
 	GuestStars Actors `json:"guest_stars,omitzero"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *EpisodeMetadata) unknownEnum() bool {
+	return v.Crew.unknownEnum() ||
+		v.GuestStars.unknownEnum()
 }
 
 // EpisodeType defines a model
@@ -1459,8 +1545,20 @@ type EpisodeTypeWrapper struct {
 	EpisodeType EpisodeType `json:"episode_type,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *EpisodeTypeWrapper) unknownEnum() bool {
+	return v.EpisodeType != "" && !v.EpisodeType.Valid()
+}
+
 // Episodes defines a model
 type Episodes []ShowEpisodeDetails
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v Episodes) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x ShowEpisodeDetails) bool { return x.unknownEnum() })
+}
 
 // Error defines a model
 type Error struct {
@@ -1871,6 +1969,13 @@ type MovieCreditsOk struct {
 	Crew Crew `json:"crew,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *MovieCreditsOk) unknownEnum() bool {
+	return v.Cast.unknownEnum() ||
+		v.Crew.unknownEnum()
+}
+
 // MovieDetails defines a model
 type MovieDetails struct {
 	MovieCommon
@@ -1887,6 +1992,12 @@ type MovieDetails struct {
 	SpokenLanguages     Languages   `json:"spoken_languages,omitzero"`
 	Status              Status      `json:"status,omitzero"`
 	Tagline             string      `json:"tagline,omitzero"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *MovieDetails) unknownEnum() bool {
+	return v.Status != "" && !v.Status.Valid()
 }
 
 // MovieExternalIdsOk defines a model
@@ -2333,6 +2444,12 @@ type PaginatedResponse struct {
 // People defines a model
 type People []Person
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v People) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x Person) bool { return x.unknownEnum() })
+}
+
 // Person defines a model
 type Person struct {
 	// The ID of the person
@@ -2342,6 +2459,12 @@ type Person struct {
 	Gender       Gender   `json:"gender"`
 	ProfilePath  string   `json:"profile_path,omitzero"`
 	CreditID     string   `json:"credit_id"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *Person) unknownEnum() bool {
+	return !v.Gender.Valid()
 }
 
 // PersonCast defines a model
@@ -2402,6 +2525,12 @@ type PersonCombinedCreditsOk struct {
 	ID   int                         `json:"id,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *PersonCombinedCreditsOk) unknownEnum() bool {
+	return v.Crew.unknownEnum()
+}
+
 // PersonCombinedCreditsOkCast defines a model
 type PersonCombinedCreditsOkCast []PersonCombinedCreditsOkCastMember
 
@@ -2430,6 +2559,12 @@ type PersonCombinedCreditsOkCastMember struct {
 // PersonCombinedCreditsOkCrew defines a model
 type PersonCombinedCreditsOkCrew []PersonCombinedCreditsOkCrewItem
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v PersonCombinedCreditsOkCrew) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x PersonCombinedCreditsOkCrewItem) bool { return x.unknownEnum() })
+}
+
 // PersonCombinedCreditsOkCrewItem defines a model
 type PersonCombinedCreditsOkCrewItem struct {
 	Adult            *bool      `json:"adult,omitzero"`
@@ -2452,6 +2587,13 @@ type PersonCombinedCreditsOkCrewItem struct {
 	MediaType        string     `json:"media_type,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *PersonCombinedCreditsOkCrewItem) unknownEnum() bool {
+	return v.Department != "" && !v.Department.Valid() ||
+		v.Job != "" && !v.Job.Valid()
+}
+
 // PersonDetails defines a model
 type PersonDetails struct {
 	Person
@@ -2459,6 +2601,13 @@ type PersonDetails struct {
 	Popularity         float64    `json:"popularity"`
 	CreditID           string     `json:"credit_id"`
 	Adult              bool       `json:"adult"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *PersonDetails) unknownEnum() bool {
+	return v.Person.unknownEnum() ||
+		!v.KnownForDepartment.Valid()
 }
 
 // PersonDetailsOk defines a model
@@ -2477,6 +2626,13 @@ type PersonDetailsOk struct {
 	PlaceOfBirth       string     `json:"place_of_birth,omitzero"`
 	Popularity         float64    `json:"popularity,omitzero"`
 	ProfilePath        string     `json:"profile_path,omitzero"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *PersonDetailsOk) unknownEnum() bool {
+	return v.Gender != 0 && !v.Gender.Valid() ||
+		v.KnownForDepartment != "" && !v.KnownForDepartment.Valid()
 }
 
 // PersonExternalIdsOk defines a model
@@ -2528,6 +2684,13 @@ type PersonLatestIDOk struct {
 	ProfilePath        *struct{}  `json:"profile_path,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *PersonLatestIDOk) unknownEnum() bool {
+	return v.Gender != 0 && !v.Gender.Valid() ||
+		v.KnownForDepartment != "" && !v.KnownForDepartment.Valid()
+}
+
 // PersonMovieCreditsOk defines a model
 type PersonMovieCreditsOk struct {
 	Cast PersonCast               `json:"cast,omitzero"`
@@ -2535,8 +2698,20 @@ type PersonMovieCreditsOk struct {
 	ID   int                      `json:"id,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *PersonMovieCreditsOk) unknownEnum() bool {
+	return v.Crew.unknownEnum()
+}
+
 // PersonMovieCreditsOkCrew defines a model
 type PersonMovieCreditsOkCrew []PersonMovieCreditsOkCrewItem
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v PersonMovieCreditsOkCrew) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x PersonMovieCreditsOkCrewItem) bool { return x.unknownEnum() })
+}
 
 // PersonMovieCreditsOkCrewItem defines a model
 type PersonMovieCreditsOkCrewItem struct {
@@ -2559,6 +2734,13 @@ type PersonMovieCreditsOkCrewItem struct {
 	Job              Job        `json:"job,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *PersonMovieCreditsOkCrewItem) unknownEnum() bool {
+	return v.Department != "" && !v.Department.Valid() ||
+		v.Job != "" && !v.Job.Valid()
+}
+
 // PersonPopularListOk defines a model
 type PersonPopularListOk struct {
 	Page         int                        `json:"page,omitzero"`
@@ -2567,8 +2749,20 @@ type PersonPopularListOk struct {
 	TotalResults int                        `json:"total_results,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *PersonPopularListOk) unknownEnum() bool {
+	return v.Results.unknownEnum()
+}
+
 // PersonPopularListOkResults defines a model
 type PersonPopularListOkResults []PersonPopularListOkResultsItem
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v PersonPopularListOkResults) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x PersonPopularListOkResultsItem) bool { return x.unknownEnum() })
+}
 
 // PersonPopularListOkResultsItem defines a model
 type PersonPopularListOkResultsItem struct {
@@ -2580,6 +2774,13 @@ type PersonPopularListOkResultsItem struct {
 	Name               string                                 `json:"name,omitzero"`
 	Popularity         float64                                `json:"popularity,omitzero"`
 	ProfilePath        string                                 `json:"profile_path,omitzero"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *PersonPopularListOkResultsItem) unknownEnum() bool {
+	return v.Gender != 0 && !v.Gender.Valid() ||
+		v.KnownForDepartment != "" && !v.KnownForDepartment.Valid()
 }
 
 // PersonPopularListOkResultsItemKnownFor defines a model
@@ -2637,6 +2838,12 @@ type PersonTvCreditsOk struct {
 	ID   int                   `json:"id,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *PersonTvCreditsOk) unknownEnum() bool {
+	return v.Crew.unknownEnum()
+}
+
 // PersonTvCreditsOkCast defines a model
 type PersonTvCreditsOkCast []PersonTvCreditsOkCastMember
 
@@ -2664,6 +2871,12 @@ type PersonTvCreditsOkCastMember struct {
 // PersonTvCreditsOkCrew defines a model
 type PersonTvCreditsOkCrew []PersonTvCreditsOkCrewItem
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v PersonTvCreditsOkCrew) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x PersonTvCreditsOkCrewItem) bool { return x.unknownEnum() })
+}
+
 // PersonTvCreditsOkCrewItem defines a model
 type PersonTvCreditsOkCrewItem struct {
 	Adult            *bool      `json:"adult,omitzero"`
@@ -2684,6 +2897,13 @@ type PersonTvCreditsOkCrewItem struct {
 	Department       Department `json:"department,omitzero"`
 	EpisodeCount     int        `json:"episode_count,omitzero"`
 	Job              Job        `json:"job,omitzero"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *PersonTvCreditsOkCrewItem) unknownEnum() bool {
+	return v.Department != "" && !v.Department.Valid() ||
+		v.Job != "" && !v.Job.Valid()
 }
 
 // RatedEpisode defines a model
@@ -2809,8 +3029,20 @@ type SearchPersonOk struct {
 	TotalResults int                   `json:"total_results,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *SearchPersonOk) unknownEnum() bool {
+	return v.Results.unknownEnum()
+}
+
 // SearchPersonOkResults defines a model
 type SearchPersonOkResults []SearchPersonOkResultsItem
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v SearchPersonOkResults) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x SearchPersonOkResultsItem) bool { return x.unknownEnum() })
+}
 
 // SearchPersonOkResultsItem defines a model
 type SearchPersonOkResultsItem struct {
@@ -2823,6 +3055,13 @@ type SearchPersonOkResultsItem struct {
 	Popularity         float64            `json:"popularity,omitzero"`
 	ProfilePath        string             `json:"profile_path,omitzero"`
 	KnownFor           TrendingAllResults `json:"known_for,omitzero"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *SearchPersonOkResultsItem) unknownEnum() bool {
+	return v.Gender != 0 && !v.Gender.Valid() ||
+		v.KnownForDepartment != "" && !v.KnownForDepartment.Valid()
 }
 
 // Season defines a model
@@ -2881,6 +3120,12 @@ type SeasonDetails struct {
 	UnderscoreID string    `json:"_id"`
 	Episodes     Episodes  `json:"episodes"`
 	Networks     Companies `json:"networks"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *SeasonDetails) unknownEnum() bool {
+	return v.Episodes.unknownEnum()
 }
 
 // The ID of a season
@@ -2966,12 +3211,26 @@ type ShowDetails struct {
 	Type                string     `json:"type"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *ShowDetails) unknownEnum() bool {
+	return v.CreatedBy.unknownEnum() ||
+		v.LastEpisodeToAir.unknownEnum()
+}
+
 // ShowEpisodeDetails defines a model
 type ShowEpisodeDetails struct {
 	EpisodeBase
 	ShowIDWrapper
 	EpisodeTypeWrapper
 	EpisodeMetadata
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *ShowEpisodeDetails) unknownEnum() bool {
+	return v.EpisodeTypeWrapper.unknownEnum() ||
+		v.EpisodeMetadata.unknownEnum()
 }
 
 // The ID of a show (series, TV show).
@@ -3165,8 +3424,20 @@ type TrendingPeopleOk struct {
 	TotalResults int                     `json:"total_results,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *TrendingPeopleOk) unknownEnum() bool {
+	return v.Results.unknownEnum()
+}
+
 // TrendingPeopleOkResults defines a model
 type TrendingPeopleOkResults []TrendingPeopleOkResultsItem
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v TrendingPeopleOkResults) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x TrendingPeopleOkResultsItem) bool { return x.unknownEnum() })
+}
 
 // TrendingPeopleOkResultsItem defines a model
 type TrendingPeopleOkResultsItem struct {
@@ -3180,6 +3451,13 @@ type TrendingPeopleOkResultsItem struct {
 	KnownForDepartment Department         `json:"known_for_department,omitzero"`
 	ProfilePath        string             `json:"profile_path,omitzero"`
 	KnownFor           TrendingAllResults `json:"known_for,omitzero"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *TrendingPeopleOkResultsItem) unknownEnum() bool {
+	return v.Gender != 0 && !v.Gender.Valid() ||
+		v.KnownForDepartment != "" && !v.KnownForDepartment.Valid()
 }
 
 // TrendingTv defines a model
@@ -3218,6 +3496,14 @@ type TvEpisodeCreditsOk struct {
 	Crew       Crew   `json:"crew,omitzero"`
 	GuestStars Actors `json:"guest_stars,omitzero"`
 	ID         int    `json:"id,omitzero"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *TvEpisodeCreditsOk) unknownEnum() bool {
+	return v.Cast.unknownEnum() ||
+		v.Crew.unknownEnum() ||
+		v.GuestStars.unknownEnum()
 }
 
 // TvEpisodeExternalIdsOk defines a model
@@ -3301,6 +3587,12 @@ type TvSeasonAccountStatesOkResultsItem struct {
 // TvSeasonAggregateCreditsCast defines a model
 type TvSeasonAggregateCreditsCast []TvSeasonAggregateCreditsCastMember
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v TvSeasonAggregateCreditsCast) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x TvSeasonAggregateCreditsCastMember) bool { return x.unknownEnum() })
+}
+
 // TvSeasonAggregateCreditsCastMember defines a model
 type TvSeasonAggregateCreditsCastMember struct {
 	Adult              *bool                                   `json:"adult,omitzero"`
@@ -3316,6 +3608,13 @@ type TvSeasonAggregateCreditsCastMember struct {
 	Order              int                                     `json:"order,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *TvSeasonAggregateCreditsCastMember) unknownEnum() bool {
+	return v.Gender != 0 && !v.Gender.Valid() ||
+		v.KnownForDepartment != "" && !v.KnownForDepartment.Valid()
+}
+
 // TvSeasonAggregateCreditsCastMemberRoles defines a model
 type TvSeasonAggregateCreditsCastMemberRoles []TvSeasonAggregateCreditsCastMemberRolesItem
 
@@ -3329,11 +3628,23 @@ type TvSeasonAggregateCreditsCastMemberRolesItem struct {
 // TvSeasonAggregateCreditsCrewItemJobs defines a model
 type TvSeasonAggregateCreditsCrewItemJobs []TvSeasonAggregateCreditsCrewItemJobsItem
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v TvSeasonAggregateCreditsCrewItemJobs) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x TvSeasonAggregateCreditsCrewItemJobsItem) bool { return x.unknownEnum() })
+}
+
 // TvSeasonAggregateCreditsCrewItemJobsItem defines a model
 type TvSeasonAggregateCreditsCrewItemJobsItem struct {
 	CreditID     string `json:"credit_id,omitzero"`
 	Job          Job    `json:"job,omitzero"`
 	EpisodeCount int    `json:"episode_count,omitzero"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *TvSeasonAggregateCreditsCrewItemJobsItem) unknownEnum() bool {
+	return v.Job != "" && !v.Job.Valid()
 }
 
 // TvSeasonAggregateCreditsOk defines a model
@@ -3343,8 +3654,21 @@ type TvSeasonAggregateCreditsOk struct {
 	ID   int                            `json:"id,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *TvSeasonAggregateCreditsOk) unknownEnum() bool {
+	return v.Cast.unknownEnum() ||
+		v.Crew.unknownEnum()
+}
+
 // TvSeasonAggregateCreditsOkCrew defines a model
 type TvSeasonAggregateCreditsOkCrew []TvSeasonAggregateCreditsOkCrewItem
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v TvSeasonAggregateCreditsOkCrew) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x TvSeasonAggregateCreditsOkCrewItem) bool { return x.unknownEnum() })
+}
 
 // TvSeasonAggregateCreditsOkCrewItem defines a model
 type TvSeasonAggregateCreditsOkCrewItem struct {
@@ -3361,6 +3685,15 @@ type TvSeasonAggregateCreditsOkCrewItem struct {
 	TotalEpisodeCount  int                                  `json:"total_episode_count,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *TvSeasonAggregateCreditsOkCrewItem) unknownEnum() bool {
+	return v.Gender != 0 && !v.Gender.Valid() ||
+		v.KnownForDepartment != "" && !v.KnownForDepartment.Valid() ||
+		v.Jobs.unknownEnum() ||
+		v.Department != "" && !v.Department.Valid()
+}
+
 // TvSeasonCreditsOk defines a model
 type TvSeasonCreditsOk struct {
 	Cast Actors                `json:"cast,omitzero"`
@@ -3368,8 +3701,21 @@ type TvSeasonCreditsOk struct {
 	ID   int                   `json:"id,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *TvSeasonCreditsOk) unknownEnum() bool {
+	return v.Cast.unknownEnum() ||
+		v.Crew.unknownEnum()
+}
+
 // TvSeasonCreditsOkCrew defines a model
 type TvSeasonCreditsOkCrew []TvSeasonCreditsOkCrewItem
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v TvSeasonCreditsOkCrew) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x TvSeasonCreditsOkCrewItem) bool { return x.unknownEnum() })
+}
 
 // TvSeasonCreditsOkCrewItem defines a model
 type TvSeasonCreditsOkCrewItem struct {
@@ -3384,6 +3730,15 @@ type TvSeasonCreditsOkCrewItem struct {
 	CreditID           string     `json:"credit_id,omitzero"`
 	Department         Department `json:"department,omitzero"`
 	Job                Job        `json:"job,omitzero"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *TvSeasonCreditsOkCrewItem) unknownEnum() bool {
+	return v.Gender != 0 && !v.Gender.Valid() ||
+		v.KnownForDepartment != "" && !v.KnownForDepartment.Valid() ||
+		v.Department != "" && !v.Department.Valid() ||
+		v.Job != "" && !v.Job.Valid()
 }
 
 // TvSeasonExternalIdsOk defines a model
@@ -3541,8 +3896,21 @@ type TvSeriesAggregateCreditsOk struct {
 	ID   int                            `json:"id,omitzero"`
 }
 
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *TvSeriesAggregateCreditsOk) unknownEnum() bool {
+	return v.Cast.unknownEnum() ||
+		v.Crew.unknownEnum()
+}
+
 // TvSeriesAggregateCreditsOkCrew defines a model
 type TvSeriesAggregateCreditsOkCrew []TvSeriesAggregateCreditsOkCrewItem
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v TvSeriesAggregateCreditsOkCrew) unknownEnum() bool {
+	return slices.ContainsFunc(v, func(x TvSeriesAggregateCreditsOkCrewItem) bool { return x.unknownEnum() })
+}
 
 // TvSeriesAggregateCreditsOkCrewItem defines a model
 type TvSeriesAggregateCreditsOkCrewItem struct {
@@ -3557,6 +3925,15 @@ type TvSeriesAggregateCreditsOkCrewItem struct {
 	Jobs               TvSeasonAggregateCreditsCrewItemJobs `json:"jobs,omitzero"`
 	Department         Department                           `json:"department,omitzero"`
 	TotalEpisodeCount  int                                  `json:"total_episode_count,omitzero"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *TvSeriesAggregateCreditsOkCrewItem) unknownEnum() bool {
+	return v.Gender != 0 && !v.Gender.Valid() ||
+		v.KnownForDepartment != "" && !v.KnownForDepartment.Valid() ||
+		v.Jobs.unknownEnum() ||
+		v.Department != "" && !v.Department.Valid()
 }
 
 // TvSeriesChangesItemItemsItemValue defines a model
@@ -3591,6 +3968,13 @@ type TvSeriesCreditsOk struct {
 	Cast Actors `json:"cast,omitzero"`
 	Crew Crew   `json:"crew,omitzero"`
 	ID   int    `json:"id,omitzero"`
+}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v *TvSeriesCreditsOk) unknownEnum() bool {
+	return v.Cast.unknownEnum() ||
+		v.Crew.unknownEnum()
 }
 
 // TvSeriesEpisodeGroupsOk defines a model

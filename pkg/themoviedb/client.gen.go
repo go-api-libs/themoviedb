@@ -1910,6 +1910,13 @@ func (c *Client) ConfigurationJobs(ctx context.Context) (ConfigurationJobsOk, er
 				}
 			}
 
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
+				}
+			}
+
 			return out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
@@ -2097,6 +2104,13 @@ func (c *Client) CreditDetails(ctx context.Context, creditID string, params *Cre
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
 					return nil, err
+				}
+			}
+
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
 				}
 			}
 
@@ -3670,6 +3684,13 @@ func (c *Client) GetMovie(ctx context.Context, movieID MovieID, params *GetMovie
 				}
 			}
 
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
+				}
+			}
+
 			return &out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
@@ -3899,6 +3920,13 @@ func (c *Client) MovieCredits(ctx context.Context, movieID MovieID, params *Movi
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
 					return nil, err
+				}
+			}
+
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
 				}
 			}
 
@@ -4844,6 +4872,13 @@ func (c *Client) PersonPopularList(ctx context.Context, params *PersonPopularLis
 				}
 			}
 
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
+				}
+			}
+
 			return &out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
@@ -4900,6 +4935,13 @@ func (c *Client) PersonDetails(ctx context.Context, personID int32, params *Pers
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
 					return nil, err
+				}
+			}
+
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
 				}
 			}
 
@@ -5018,6 +5060,13 @@ func (c *Client) PersonCombinedCredits(ctx context.Context, personID string, par
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
 					return nil, err
+				}
+			}
+
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
 				}
 			}
 
@@ -5156,6 +5205,13 @@ func (c *Client) PersonLatestID(ctx context.Context) (*PersonLatestIDOk, error) 
 				}
 			}
 
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
+				}
+			}
+
 			return &out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
@@ -5211,6 +5267,13 @@ func (c *Client) PersonMovieCredits(ctx context.Context, personID int32, params 
 				}
 			}
 
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
+				}
+			}
+
 			return &out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
@@ -5263,6 +5326,13 @@ func (c *Client) PersonTvCredits(ctx context.Context, personID int32, params *Pe
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
 					return nil, err
+				}
+			}
+
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
 				}
 			}
 
@@ -5795,6 +5865,13 @@ func (c *Client) SearchPerson(ctx context.Context, params SearchPersonParams) (*
 				}
 			}
 
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
+				}
+			}
+
 			return &out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
@@ -6029,6 +6106,13 @@ func (c *Client) TrendingPeople(ctx context.Context, timeWindow TimeWindow, para
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
 					return nil, err
+				}
+			}
+
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
 				}
 			}
 
@@ -6390,6 +6474,13 @@ func (c *Client) GetShow(ctx context.Context, seriesID ShowID, params *GetShowPa
 				}
 			}
 
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
+				}
+			}
+
 			return &out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
@@ -6501,6 +6592,13 @@ func (c *Client) TvSeriesAggregateCredits(ctx context.Context, seriesID ShowID, 
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
 					return nil, err
+				}
+			}
+
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
 				}
 			}
 
@@ -6709,6 +6807,13 @@ func (c *Client) TvSeriesCredits(ctx context.Context, seriesID ShowID, params *T
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
 					return nil, err
+				}
+			}
+
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
 				}
 			}
 
@@ -7568,6 +7673,13 @@ func (c *Client) GetShowSeason(ctx context.Context, seriesID ShowID, seasonNumbe
 				}
 			}
 
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
+				}
+			}
+
 			return &out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
@@ -7697,6 +7809,13 @@ func (c *Client) TvSeasonAggregateCredits(ctx context.Context, seriesID ShowID, 
 				}
 			}
 
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
+				}
+			}
+
 			return &out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
@@ -7812,6 +7931,13 @@ func (c *Client) TvSeasonCredits(ctx context.Context, seriesID ShowID, seasonNum
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
 					return nil, err
+				}
+			}
+
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
 				}
 			}
 
@@ -8137,6 +8263,13 @@ func (c *Client) GetEpisodeDetails(ctx context.Context, seriesID ShowID, seasonN
 				}
 			}
 
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
+				}
+			}
+
 			return &out, nil
 		default:
 			return nil, c.failed(ia, api.NewErrUnknownContentType(rsp))
@@ -8293,6 +8426,13 @@ func (c *Client) TvEpisodeCredits(ctx context.Context, seriesID ShowID, seasonNu
 			if err := json.UnmarshalRead(rsp.Body, &out, jsonOpts); err != nil {
 				if err := api.DecodeLenient(rsp, err, ia, cmp.Or(c.debugFile, defaultDebugFile), &out, jsonOpts); err != nil {
 					return nil, err
+				}
+			}
+
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && out.unknownEnum() {
+				if err := c.keep(ia); err != nil {
+					return nil, fmt.Errorf("recording the call: %w", err)
 				}
 			}
 
