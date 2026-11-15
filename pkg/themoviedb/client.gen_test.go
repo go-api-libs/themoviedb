@@ -28041,6 +28041,10 @@ func TestClient_Interactions(t *testing.T) {
 		t.Fatalf("GetMovie: %v", err)
 	} else {
 		apitest.DecodedAsSent(t, "GetMovie", out, last.Body, jsonOpts)
+
+		if out != nil && out.unknownEnum() {
+			t.Errorf("GetMovie: holds a value of an enum the specification does not list")
+		}
 	}
 
 	if out, err := c.SearchShows(ctx, SearchShowsParams{
@@ -28055,18 +28059,30 @@ func TestClient_Interactions(t *testing.T) {
 		t.Fatalf("GetShowSeason: %v", err)
 	} else {
 		apitest.DecodedAsSent(t, "GetShowSeason", out, last.Body, jsonOpts)
+
+		if out != nil && out.unknownEnum() {
+			t.Errorf("GetShowSeason: holds a value of an enum the specification does not list")
+		}
 	}
 
 	if out, err := c.GetShow(ctx, 65494, &GetShowParams{}); err != nil {
 		t.Fatalf("GetShow: %v", err)
 	} else {
 		apitest.DecodedAsSent(t, "GetShow", out, last.Body, jsonOpts)
+
+		if out != nil && out.unknownEnum() {
+			t.Errorf("GetShow: holds a value of an enum the specification does not list")
+		}
 	}
 
 	if out, err := c.GetEpisodeDetails(ctx, 65494, 1, 1, &GetEpisodeDetailsParams{}); err != nil {
 		t.Fatalf("GetEpisodeDetails: %v", err)
 	} else {
 		apitest.DecodedAsSent(t, "GetEpisodeDetails", out, last.Body, jsonOpts)
+
+		if out != nil && out.unknownEnum() {
+			t.Errorf("GetEpisodeDetails: holds a value of an enum the specification does not list")
+		}
 	}
 
 	if _, err := c.GetShowSeason(ctx, 6138, 2, &GetShowSeasonParams{}); err == nil {

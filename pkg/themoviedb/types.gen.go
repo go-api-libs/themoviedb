@@ -2464,7 +2464,7 @@ type Person struct {
 // unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
 // records.
 func (v *Person) unknownEnum() bool {
-	return !v.Gender.Valid()
+	return v.Gender != 0 && !v.Gender.Valid()
 }
 
 // PersonCast defines a model
@@ -2601,13 +2601,6 @@ type PersonDetails struct {
 	Popularity         float64    `json:"popularity"`
 	CreditID           string     `json:"credit_id"`
 	Adult              bool       `json:"adult"`
-}
-
-// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
-// records.
-func (v *PersonDetails) unknownEnum() bool {
-	return v.Person.unknownEnum() ||
-		!v.KnownForDepartment.Valid()
 }
 
 // PersonDetailsOk defines a model
