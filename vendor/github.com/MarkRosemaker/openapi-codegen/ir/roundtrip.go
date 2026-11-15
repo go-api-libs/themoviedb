@@ -64,6 +64,20 @@ func (doc Document) UnionRoundTrips() []UnionRoundTrip {
 	return out
 }
 
+// NullUnions are the unions a generated test checks encode as null while they hold no alternative, and decode null as
+// holding none.
+func (doc Document) NullUnions() []string {
+	var out []string
+
+	for _, s := range doc.Schemas {
+		if s.Kind == SchemaKindUnion && s.Tagged == nil && s.Unimplemented == "" {
+			out = append(out, s.Name)
+		}
+	}
+
+	return out
+}
+
 // TaggedRoundTrip is a struct told apart by a tag a generated test sets each value of in turn, with the members that
 // value requires, encodes and decodes strictly: the tag must come back, and the struct encode the same.
 type TaggedRoundTrip struct {
