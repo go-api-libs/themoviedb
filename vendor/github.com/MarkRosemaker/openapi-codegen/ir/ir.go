@@ -127,6 +127,11 @@ type Operation struct {
 	// StreamSuccess is true when the operation's success response is not text (see Response.IsStream), so
 	// SuccessReturn is io.ReadCloser and the method leaves the response body open for the caller.
 	StreamSuccess bool `json:"streamSuccess,omitzero"`
+	// Pagination is how the operation's list is paged through by cursor, if it is: the client then has an iterator
+	// of its pages and one of their items.
+	Pagination *Pagination `json:"pagination,omitempty"`
+
+	pagination paginationExt // what the operation's x-pagination says
 }
 
 func (op Operation) ParamsInStruct() Params {

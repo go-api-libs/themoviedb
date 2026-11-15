@@ -234,6 +234,19 @@ How the specification maps onto Go:
   not JSON is returned as `[]byte`. The server copies a returned reader into
   the response, and the JavaScript client returns such a body as a `Blob`, or
   text as a string.
+- **Paging** — an operation whose list is paged through by cursor also gets
+  `XPages`, which yields each page, and `XAll`, which yields every item, each
+  fetching the next page as the one before is used up, and stopping when the
+  loop breaks and at the first error, which it yields. Such a list is found
+  by its members: a list of items (`results`, `data`, `items`), the cursor of
+  the next page (`next_cursor`, `next_page_token`, ...) and, if there is one,
+  whether there is a next page (`has_more`), where there is none once the
+  cursor is zero; and by a cursor of the same type the operation takes, as a
+  query parameter or a member of the body (`start_cursor`, `cursor`,
+  `page_token`, ...). An operation's `x-pagination` names those an API calls
+  otherwise, by their JSON names (`cursor`, `next`, `more`, `items`), and fails
+  the run where they do not fit; `"x-pagination": false` leaves an operation
+  without iterators. The caller's parameters and body are copied, not changed.
 - **Error responses** — an error body's type is returned wrapped in
   `api.Error`, so it needs an `Error() string` method. The generator does not
   write one, since a good message depends on the API: add it by hand beside the

@@ -423,6 +423,32 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 	{{ end -}}
 	}
 }
+{{- with .Pagination }}
+
+// {{ $op.Name }}Pages yields each page of what {{ $op.Name }} lists, fetching the next as the one before is used up.
+// It stops when the loop breaks, and at the first error, which it yields.
+func (c *Client) {{ $op.Name }}Pages(ctx context.Context{{ $op.ArgsDecl }}) iter.Seq2[{{ $op.SuccessReturn.Nilable }}, error] {
+	return paging.Pages(func(cursor {{ .CursorType }}) ({{ $op.SuccessReturn.Nilable }}, error) {
+		{{ .Prepare }}
+
+		return c.{{ $op.Name }}(ctx{{ .Args }})
+	}, func(l {{ $op.SuccessReturn.Nilable }}) ({{ .CursorType }}, bool) {
+		{{- if .MoreField }}
+		return l.{{ .NextField }}, l.{{ .MoreField }}
+		{{- else }}
+		return l.{{ .NextField }}, l.{{ .NextField }} != {{ .Zero }}
+		{{- end }}
+	})
+}
+
+// {{ $op.Name }}All yields every item of what {{ $op.Name }} lists, fetching a page at a time. It stops when the loop
+// breaks, and at the first error, which it yields.
+func (c *Client) {{ $op.Name }}All(ctx context.Context{{ $op.ArgsDecl }}) iter.Seq2[{{ .ItemType }}, error] {
+	return paging.Items(c.{{ $op.Name }}Pages(ctx{{ $op.CallArgs }}), func(l {{ $op.SuccessReturn.Nilable }}) []{{ .ItemType }} {
+		return l.{{ .ItemsField }}
+	})
+}
+{{- end }}
 {{end}}
 {{- if .EscapesQuery }}
 

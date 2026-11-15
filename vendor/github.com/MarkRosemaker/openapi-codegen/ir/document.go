@@ -77,6 +77,10 @@ func FromDocument(doc *openapi.Document, packageName, userAgent string, producti
 		return nil, fmt.Errorf("paths: %w", err)
 	}
 
+	if err := paginate(operations, schemas); err != nil {
+		return nil, fmt.Errorf("paths: %w", err)
+	}
+
 	hasURL, hasDuration, hasDate, hasDateTimeOrInt := needsSpecialImports(schemas, operations)
 
 	encodings, err := markEncodings(schemas)

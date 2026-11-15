@@ -105,6 +105,11 @@ func FromOperation(
 		return nil, fmt.Errorf("responses: %w", err)
 	}
 
+	pagination, err := readPaginationExt(op.Extensions)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Operation{
 		Name:            name,
 		Description:     op.Description,
@@ -125,6 +130,7 @@ func FromOperation(
 		RawBytesSuccess: rawBytesSuccess,
 		StreamSuccess:   streamSuccess,
 		EmptySuccess:    emptySuccess,
+		pagination:      pagination,
 	}, nil
 }
 
