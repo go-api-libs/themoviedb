@@ -476,6 +476,12 @@ func TestClient_Interactions(t *testing.T) {
 		t.Fatalf("{{.Op.Name}}: %v", err)
 	}{{ if $check }} else {
 		apitest.DecodedAsSent(t, "{{.Op.Name}}", out, last.Body, jsonOpts)
+		{{- $name := .Op.Name }}{{ if $.Debug }}{{ with $.UnknownEnum "out" .Op.SuccessReturn.Nilable }}
+
+		if {{ . }} {
+			t.Errorf("{{ $name }}: holds a value of an enum the specification does not list")
+		}
+		{{- end }}{{ end }}
 	}{{ end }}
 	{{- else}} err == nil {
 		t.Fatal("{{.Op.Name}}: expected error")

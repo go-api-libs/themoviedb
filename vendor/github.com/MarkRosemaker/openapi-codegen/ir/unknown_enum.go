@@ -9,7 +9,7 @@ import (
 // value the specification does not list: it decodes, since an enum is a plain string or number, but is news.
 type enums struct {
 	byName map[string]*Schema
-	zero   map[string]string // the zero value of each enum type, which an optional member holds while left out
+	zero   map[string]string // the zero value of each enum type, which a member holds while left out
 	holds  map[string]bool   // whether a named type holds an enum, as found so far
 }
 
@@ -40,13 +40,62 @@ func zeroOf(typ string) string {
 	return "0"
 }
 
-// markUnknownEnums gives each schema that holds an enum, if not through a type alias, its UnknownEnum.
-func markUnknownEnums(schemas []Schema) {
+// markUnknownEnums gives each schema a response of ops may hold that holds an enum, if not through a type alias, its
+// UnknownEnum. A request's is never checked, so a type only requests hold needs none.
+func markUnknownEnums(schemas []Schema, ops []Operation) {
 	e := newEnums(schemas)
 
+	decoded := map[string]bool{}
+	for _, op := range ops {
+		if op.SuccessReturn != nil && !op.RawBytesSuccess && !op.StreamSuccess {
+			e.reach(op.SuccessReturn.String(), decoded)
+		}
+
+		for _, r := range op.Responses {
+			if r.GoType != nil && !r.IsRawBytes && !r.IsStream {
+				e.reach(r.GoType.String(), decoded)
+			}
+		}
+	}
+
 	for i := range schemas {
-		if s := &schemas[i]; !s.IsTypeAlias && e.holdsEnum(s.Name) {
+		if s := &schemas[i]; decoded[s.Name] && !s.IsTypeAlias && e.holdsEnum(s.Name) {
 			s.UnknownEnum = e.method(s)
+		}
+	}
+}
+
+// reach adds to seen each named type a value of the Go type typ may hold, typ's own included.
+func (e *enums) reach(typ string, seen map[string]bool) {
+	typ = strings.TrimLeft(typ, "*[]")
+
+	if key, value, ok := mapTypes(typ); ok {
+		e.reach(key, seen)
+		e.reach(value, seen)
+
+		return
+	}
+
+	s := e.byName[typ]
+	if s == nil || seen[typ] {
+		return
+	}
+
+	seen[typ] = true
+
+	switch s.Kind {
+	case SchemaKindAlias:
+		e.reach(s.Type, seen)
+	case SchemaKindMap:
+		e.reach(s.MapKey, seen)
+		e.reach(s.MapValue, seen)
+	case SchemaKindUnion:
+		for _, v := range s.UnionVariants {
+			e.reach(v.Type, seen)
+		}
+	default:
+		for _, f := range s.Fields {
+			e.reach(f.Type, seen)
 		}
 	}
 }
@@ -132,7 +181,7 @@ func (e *enums) method(s *Schema) string {
 		}
 	case SchemaKindTuple:
 		for _, f := range s.Fields {
-			add("v."+f.Name, f.Type, false)
+			add("v."+f.Name, f.Type, true)
 		}
 	default:
 		for _, f := range s.Fields {
@@ -141,7 +190,8 @@ func (e *enums) method(s *Schema) string {
 				name = strings.TrimPrefix(f.Type, "*")
 			}
 
-			add("v."+name, f.Type, !f.Required)
+			// even a required member is at its zero value where what holds it was left out or null
+			add("v."+name, f.Type, true)
 		}
 	}
 
@@ -158,7 +208,7 @@ func convert(typ, expr string) string {
 }
 
 // check is an expression true if expr, of the Go type typ, holds a value of an enum the enum does not list, or ""
-// if typ holds no enum. Where optional, the zero value of an enum is one left out, and fine. depth names the
+// if typ holds no enum. Where optional, as for a member, the zero value of an enum is one left out, and fine. depth names the
 // variables of nested loops.
 func (e *enums) check(expr, typ string, optional bool, depth int) string {
 	if !e.holdsEnum(typ) {

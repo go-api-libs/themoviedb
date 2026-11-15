@@ -82,7 +82,7 @@ func FromDocument(doc *openapi.Document, packageName, userAgent string, producti
 	}
 
 	if debug {
-		markUnknownEnums(schemas)
+		markUnknownEnums(schemas, operations)
 	}
 
 	hasURL, hasDuration, hasDate, hasDateTimeOrInt := needsSpecialImports(schemas, operations)
