@@ -12,7 +12,9 @@ import (
 // Document is the top-level IR type passed to templates.
 type Document struct {
 	// If enabled, debug mode will record responses that failed to unmarshal.
-	Debug                   bool        `json:"debug,omitzero"`
+	Debug bool `json:"debug,omitzero"`
+	// enums tells what each type holds of an enum, see [Document.UnknownEnum].
+	enums                   *enums
 	Title                   string      `json:"title,omitzero"`
 	Production              bool        `json:"production,omitzero"`
 	PackageName             string      `json:"packageName,omitzero"`
@@ -253,6 +255,9 @@ type Schema struct {
 	// response leaves out.
 	ReadOnly  []string `json:"readOnly,omitempty"`
 	WriteOnly []string `json:"writeOnly,omitempty"`
+	// UnknownEnum is set in debug mode for a type that holds an enum: the body of its unknownEnum method, an
+	// expression of its receiver v, true if an enum it holds has a value the specification does not list.
+	UnknownEnum string `json:"unknownEnum,omitzero"`
 }
 
 // AllOfUnion is the union part of an allOf.

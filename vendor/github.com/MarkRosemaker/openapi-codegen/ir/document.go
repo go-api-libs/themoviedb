@@ -81,6 +81,10 @@ func FromDocument(doc *openapi.Document, packageName, userAgent string, producti
 		return nil, fmt.Errorf("paths: %w", err)
 	}
 
+	if debug {
+		markUnknownEnums(schemas)
+	}
+
 	hasURL, hasDuration, hasDate, hasDateTimeOrInt := needsSpecialImports(schemas, operations)
 
 	encodings, err := markEncodings(schemas)

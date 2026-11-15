@@ -382,6 +382,15 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 				{{- end }}
 			}
 
+			{{ if $.Debug }}{{ with $.UnknownEnum "out" (print $out) -}}
+			// a value of an enum the specification does not list decodes, but is news
+			if ia != nil && ({{ . }}) {
+				if err := c.keep(ia); err != nil {
+					return {{if $op.SuccessReturn}}nil, {{end}}fmt.Errorf("recording the call: %w", err)
+				}
+			}
+
+			{{ end }}{{ end -}}
 			{{ if and .IsSuccess $op.SuccessReturn -}}
 			return {{ if not $op.SuccessReturn.NilByItself }}&{{ end }}out, nil
 			{{ else if .IsSuccess -}}

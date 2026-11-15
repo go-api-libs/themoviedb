@@ -581,6 +581,14 @@ func (a {{$typeName}}) MarshalJSONTo(enc *jsontext.Encoder) error {
 {{ else }}
 // TODO: unimplemented schema kind {{ .Kind }}
 {{- end }}
+{{- if .UnknownEnum }}
+
+// unknownEnum reports whether v holds a value of an enum the specification does not list, a response debug mode
+// records.
+func (v {{ if not (or (eq .Kind 2) (eq .Kind 4)) }}*{{ end }}{{ .Name }}) unknownEnum() bool {
+	return {{ .UnknownEnum }}
+}
+{{- end }}
 {{end}}
 {{- if .NeedsJSONHelpers }}
 
