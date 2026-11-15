@@ -124,7 +124,16 @@ func pagination(op *Operation, byName map[string]*Schema) (*Pagination, error) {
 	}
 
 	items := fieldOf(list, ext.Items, itemsNames)
-	if items == nil || !strings.HasPrefix(items.Type, "[]") {
+	if items == nil {
+		return nil, fmt.Errorf("%s has no list of items", list.Name)
+	}
+
+	itemsType := items.Type
+	if s := byName[itemsType]; s != nil && s.Kind == SchemaKindAlias {
+		itemsType = s.Type // a named list, as type Templates []Template
+	}
+
+	if !strings.HasPrefix(itemsType, "[]") {
 		return nil, fmt.Errorf("%s has no list of items", list.Name)
 	}
 
@@ -139,7 +148,7 @@ func pagination(op *Operation, byName map[string]*Schema) (*Pagination, error) {
 	}
 
 	p := &Pagination{
-		CursorType: next.Type, NextField: next.Name, ItemsField: items.Name, ItemType: strings.TrimPrefix(items.Type, "[]"),
+		CursorType: next.Type, NextField: next.Name, ItemsField: items.Name, ItemType: strings.TrimPrefix(itemsType, "[]"),
 	}
 	if more != nil {
 		p.MoreField = more.Name
