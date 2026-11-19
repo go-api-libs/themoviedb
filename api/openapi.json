@@ -4913,7 +4913,9 @@
           "Writing",
           "Costume & Make-Up",
           "Editing",
-          "Camera"
+          "Camera",
+          "Sound",
+          "Visual Effects"
         ],
         "example": "Acting"
       },
@@ -5753,7 +5755,14 @@
           "Costume Design",
           "Editor",
           "Director of Photography",
-          "Set Decoration"
+          "Set Decoration",
+          "Co-Producer",
+          "Original Music Composer",
+          "Stunts",
+          "Additional Casting",
+          "Line Producer",
+          "Digital Compositor",
+          "Songs"
         ],
         "example": "Producer"
       },

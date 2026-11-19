@@ -10,7 +10,7 @@ import (
 
 // TestEnums_Valid checks that every member of an enum is valid, and that a value of its type none is, is not.
 func TestEnums_Valid(t *testing.T) {
-	for _, v := range []Department{DepartmentActing, DepartmentArt, DepartmentCrew, DepartmentDirecting, DepartmentProduction, DepartmentWriting, DepartmentCostumeMakeUp, DepartmentEditing, DepartmentCamera} {
+	for _, v := range []Department{DepartmentActing, DepartmentArt, DepartmentCrew, DepartmentDirecting, DepartmentProduction, DepartmentWriting, DepartmentCostumeMakeUp, DepartmentEditing, DepartmentCamera, DepartmentSound, DepartmentVisualEffects} {
 		if !v.Valid() {
 			t.Errorf("Department %v: not valid", v)
 		}
@@ -50,7 +50,7 @@ func TestEnums_Valid(t *testing.T) {
 		t.Errorf("Gender(%v): valid, though no member", 4)
 	}
 
-	for _, v := range []Job{JobActor, JobProducer, JobDirector, JobExecutiveProducer, JobProductionDesign, JobThanks, JobWriter, JobCostumeDesign, JobEditor, JobDirectorOfPhotography, JobSetDecoration} {
+	for _, v := range []Job{JobActor, JobProducer, JobDirector, JobExecutiveProducer, JobProductionDesign, JobThanks, JobWriter, JobCostumeDesign, JobEditor, JobDirectorOfPhotography, JobSetDecoration, JobCoProducer, JobOriginalMusicComposer, JobStunts, JobAdditionalCasting, JobLineProducer, JobDigitalCompositor, JobSongs} {
 		if !v.Valid() {
 			t.Errorf("Job %v: not valid", v)
 		}

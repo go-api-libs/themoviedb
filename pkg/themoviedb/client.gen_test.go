@@ -28090,4 +28090,14 @@ func TestClient_Interactions(t *testing.T) {
 	} else if _, ok := errors.AsType[*Error](err); !ok {
 		t.Fatalf("GetShowSeason: got: %T, want: *Error", err)
 	}
+
+	if out, err := c.GetShowSeason(ctx, 42009, 5, &GetShowSeasonParams{}); err != nil {
+		t.Fatalf("GetShowSeason: %v", err)
+	} else {
+		apitest.DecodedAsSent(t, "GetShowSeason", out, last.Body, jsonOpts)
+
+		if out != nil && out.unknownEnum() {
+			t.Errorf("GetShowSeason: holds a value of an enum the specification does not list")
+		}
+	}
 }

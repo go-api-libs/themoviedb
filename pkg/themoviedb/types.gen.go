@@ -1383,12 +1383,14 @@ const (
 	DepartmentCostumeMakeUp Department = "Costume & Make-Up"
 	DepartmentEditing       Department = "Editing"
 	DepartmentCamera        Department = "Camera"
+	DepartmentSound         Department = "Sound"
+	DepartmentVisualEffects Department = "Visual Effects"
 )
 
 // Valid indicates whether the value is a known member of the Department enum.
 func (e Department) Valid() bool {
 	switch e {
-	case DepartmentActing, DepartmentArt, DepartmentCrew, DepartmentDirecting, DepartmentProduction, DepartmentWriting, DepartmentCostumeMakeUp, DepartmentEditing, DepartmentCamera:
+	case DepartmentActing, DepartmentArt, DepartmentCrew, DepartmentDirecting, DepartmentProduction, DepartmentWriting, DepartmentCostumeMakeUp, DepartmentEditing, DepartmentCamera, DepartmentSound, DepartmentVisualEffects:
 		return true
 	default:
 		return false
@@ -1763,12 +1765,19 @@ const (
 	JobEditor                Job = "Editor"
 	JobDirectorOfPhotography Job = "Director of Photography"
 	JobSetDecoration         Job = "Set Decoration"
+	JobCoProducer            Job = "Co-Producer"
+	JobOriginalMusicComposer Job = "Original Music Composer"
+	JobStunts                Job = "Stunts"
+	JobAdditionalCasting     Job = "Additional Casting"
+	JobLineProducer          Job = "Line Producer"
+	JobDigitalCompositor     Job = "Digital Compositor"
+	JobSongs                 Job = "Songs"
 )
 
 // Valid indicates whether the value is a known member of the Job enum.
 func (e Job) Valid() bool {
 	switch e {
-	case JobActor, JobProducer, JobDirector, JobExecutiveProducer, JobProductionDesign, JobThanks, JobWriter, JobCostumeDesign, JobEditor, JobDirectorOfPhotography, JobSetDecoration:
+	case JobActor, JobProducer, JobDirector, JobExecutiveProducer, JobProductionDesign, JobThanks, JobWriter, JobCostumeDesign, JobEditor, JobDirectorOfPhotography, JobSetDecoration, JobCoProducer, JobOriginalMusicComposer, JobStunts, JobAdditionalCasting, JobLineProducer, JobDigitalCompositor, JobSongs:
 		return true
 	default:
 		return false
