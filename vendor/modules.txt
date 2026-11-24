@@ -1,7 +1,7 @@
 # cloud.google.com/go v0.123.0
 ## explicit; go 1.24.0
 cloud.google.com/go/civil
-# github.com/MarkRosemaker/cassette v0.0.0-20261124110309-32c9c69cd6ad
+# github.com/MarkRosemaker/cassette v0.0.0-20261124134158-2243379a46d0
 ## explicit; go 1.27
 github.com/MarkRosemaker/cassette
 # github.com/MarkRosemaker/errpath v0.0.0-20261118230255-99e20cb3445a
@@ -56,7 +56,7 @@ github.com/MarkRosemaker/yaml2json
 # github.com/ettle/strcase v0.2.0
 ## explicit; go 1.12
 github.com/ettle/strcase
-# github.com/go-api-libs/api v0.0.0-20261124110349-399c57411dab
+# github.com/go-api-libs/api v0.0.0-20261124152152-2e43d1b80b9c
 ## explicit; go 1.27
 github.com/go-api-libs/api
 github.com/go-api-libs/api/apitest
