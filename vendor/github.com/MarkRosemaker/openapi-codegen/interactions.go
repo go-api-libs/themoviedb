@@ -416,8 +416,9 @@ func literalSegments(template string) int {
 // value reports whether the match was segment-for-segment exact; callers should
 // prefer an exact match over a wildcard one.
 func matchPathTemplate(template, path string) (params map[string]string, matched, exact bool) {
-	tParts := strings.Split(template, "/")
-	pParts := strings.Split(path, "/")
+	// The client builds its URL with url.JoinPath, which drops a trailing slash, so neither side's counts.
+	tParts := strings.Split(strings.TrimSuffix(template, "/"), "/")
+	pParts := strings.Split(strings.TrimSuffix(path, "/"), "/")
 
 	if len(tParts) > len(pParts) {
 		return nil, false, false

@@ -1,6 +1,7 @@
 package enrich
 
 import (
+	"net/http"
 	"slices"
 
 	"github.com/MarkRosemaker/openapi"
@@ -90,4 +91,21 @@ func sameRequirements(a, b openapi.SecurityRequirements) bool {
 	return len(a) == len(b) && !slices.ContainsFunc(a, func(r openapi.SecurityRequirement) bool {
 		return !b.Contains(r)
 	})
+}
+
+// apiKeyScheme is the name of the document's apiKey scheme sent in as name, if it has one: the parameter it names
+// carries a credential, not a value of the operation.
+func apiKeyScheme(doc *openapi.Document, in openapi.SecuritySchemeIn, name string) (openapi.SecuritySchemeName, bool) {
+	for n, s := range doc.Components.SecuritySchemes.ByIndex() {
+		if s == nil || s.Value == nil || s.Value.Type != openapi.SecuritySchemeTypeAPIKey || s.Value.In != in {
+			continue
+		}
+
+		// a header's name is case-insensitive, a query parameter's or cookie's is not
+		if s.Value.Name == name || in == openapi.SecuritySchemeInHeader && http.CanonicalHeaderKey(s.Value.Name) == name {
+			return n, true
+		}
+	}
+
+	return "", false
 }
