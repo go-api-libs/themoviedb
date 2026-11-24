@@ -11,9 +11,9 @@ tool (
 
 require (
 	cloud.google.com/go v0.123.0
-	github.com/MarkRosemaker/cassette v0.0.0-20261124134158-2243379a46d0
+	github.com/MarkRosemaker/cassette v0.0.0-20261124170238-3b0b504cc01a
 	github.com/MarkRosemaker/jsonutil v0.0.0-20261118230255-4b04cfc02484
-	github.com/go-api-libs/api v0.0.0-20261124152152-2e43d1b80b9c
+	github.com/go-api-libs/api v0.0.0-20261124170331-05498a6b3337
 )
 
 require (
