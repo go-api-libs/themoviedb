@@ -12,8 +12,8 @@
 		"schema-inference",
 		"swagger"
 	],
-	"coverage": 82.2,
-	"devtoolVersion": "v0.0.0-20261118133811-97246f04510d",
+	"coverage": 82.7,
+	"devtoolVersion": "v0.0.0-20261124110702-861a2ba67e28",
 	"kind": "cli",
 	"tools": {
 		"golangci-lint": "v2.15.0",
