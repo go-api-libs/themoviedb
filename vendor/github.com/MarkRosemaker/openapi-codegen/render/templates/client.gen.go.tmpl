@@ -33,6 +33,10 @@ type Client struct {
 		{{ end -}}
 	{{ .VarName }} string
 	{{ end -}}
+	{{ with .Auth.APIKey.Name -}}
+	// The API key, sent in the {{ $.Auth.APIKey.In }} {{ . }}
+	apiKey string
+	{{ end -}}
 	{{ with .Client -}}
 		{{ with or .Description "The client parameter" -}}
 			{{ toGoComment . }}
@@ -104,6 +108,13 @@ func WithAPIKey({{ .VarName }} string) ClientOption {
 }
 {{ end }}
 
+{{ with .Auth.APIKey.Name }}
+// WithAPIKey returns a [ClientOption] that sets the API key, sent in the {{ $.Auth.APIKey.In }} {{ . }}.
+func WithAPIKey(apiKey string) ClientOption {
+	return func(c *Client) { c.apiKey = apiKey }
+}
+{{ end }}
+
 {{ with .Client }}
 // WithClient returns a [ClientOption] that sets a custom client parameter.
 func WithClient({{ .VarName }} string) ClientOption {
@@ -144,7 +155,7 @@ func (c *Client) serverURL(server *url.URL) *url.URL {
 }
 {{ end }}
 
-// NewClient creates a new Client{{ with .Auth.Bearer.Name }}, reading the bearer token from [os.Getenv]("{{ . }}"){{ end }}{{ with .Auth.Basic.UsernameEnvName }}, reading the basic auth username and password from [os.Getenv]("{{ . }}") and [os.Getenv]("{{ $.Auth.Basic.PasswordEnvName }}"){{ end }}.
+// NewClient creates a new Client{{ with .Auth.Bearer.Name }}, reading the bearer token from [os.Getenv]("{{ . }}"){{ end }}{{ with .Auth.Basic.UsernameEnvName }}, reading the basic auth username and password from [os.Getenv]("{{ . }}") and [os.Getenv]("{{ $.Auth.Basic.PasswordEnvName }}"){{ end }}{{ with .Auth.APIKey.EnvName }}, reading the API key from [os.Getenv]("{{ . }}"){{ end }}.
 func NewClient(opts ...ClientOption) (*Client, error) {
 	c := &Client{
 		cli:       http.DefaultClient,
@@ -166,6 +177,10 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 	{{ with .APIKey }}{{ if .EnvName }}
 	{{ .FormatExpr }} = os.Getenv("{{ .EnvName }}")
 	{{ end }}{{ end }}
+
+	{{ with .Auth.APIKey.EnvName }}
+	c.apiKey = os.Getenv("{{ . }}")
+	{{ end }}
 
 	for _, opt := range opts {
 		opt(c)
@@ -189,6 +204,12 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 	}
 	{{ end }}{{ end }}
 	{{ end }}
+
+	{{ if eq .Auth.Default "apiKey" }}{{ with .Auth.APIKey }}
+	if c.apiKey == "" {
+		return nil, errors.New("API key {{ or .EnvName .Name }} not provided")
+	}
+	{{ end }}{{ end }}
 
 	{{ with .APIKey }}
 	if {{ .FormatExpr }} == "" {
@@ -252,6 +273,11 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 	}
 {{ end }}
 {{- end }}
+{{- if and (eq .Auth "apiKey") (ne $.Auth.Default "apiKey") (not .AuthOptional) }}
+	if c.apiKey == "" {
+		return {{if .SuccessReturn}}nil, {{end}}errors.New("API key {{ or $.Auth.APIKey.EnvName $.Auth.APIKey.Name }} not provided")
+	}
+{{ end }}
 {{/* Always declared: the request below uses u whether or not the operation
      adds path segments. JoinPath returns a copy, so assigning c.baseURL
      directly would let a query string mutate the client's base URL. */}}
@@ -277,6 +303,15 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 	{{- else }}
 	u.RawQuery = {{ printf "%q" . }}
 	{{- end }}
+{{ end }}
+{{- if and (eq .Auth "apiKey") (eq $.Auth.APIKey.In "query") }}
+	if c.apiKey != "" {
+		if u.RawQuery != "" {
+			u.RawQuery += "&"
+		}
+
+		u.RawQuery += {{ printf "%q" (print $.Auth.APIKey.Name "=") }} + url.QueryEscape(c.apiKey)
+	}
 {{ end }}
 {{ if and .RequestBody .RequestBody.Required -}}
 	pr, pw := io.Pipe()
@@ -313,6 +348,17 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 		ContentLength: -1,
 		{{ end -}}
 	}).WithContext(ctx)
+{{- if eq .Auth "apiKey" }}{{ if eq $.Auth.APIKey.In "header" }}
+
+	if c.apiKey != "" {
+		req.Header.Set({{ printf "%q" $.Auth.APIKey.Name }}, c.apiKey)
+	}
+{{- else if eq $.Auth.APIKey.In "cookie" }}
+
+	if c.apiKey != "" {
+		req.AddCookie(&http.Cookie{Name: {{ printf "%q" $.Auth.APIKey.Name }}, Value: c.apiKey})
+	}
+{{- end }}{{ end }}
 
 {{ if .RequestBody }}{{ if .RequestBody.Required }}
 	go func() { pw.CloseWithError(json.MarshalWrite(pw, body, {{ if $.HasReadOnly }}jsonOptsRequest{{ else }}jsonOpts{{ end }})) }()
@@ -573,6 +619,11 @@ func (c *Client) do(req *http.Request) (*http.Response, *cassette.Interaction, e
 	}
 
 	ia := &cassette.Interaction{Request: recReq, Response: recRsp}
+	{{- with .Auth.APIKey.Name }}{{ if ne $.Auth.APIKey.In "cookie" }}
+
+	// masked now, as the key the specification names is no credential cassette knows, so nothing writes it
+	ia.Mask(cassette.Mask{{ if eq $.Auth.APIKey.In "header" }}Headers{{ else }}Keys{{ end }}({{ printf "%q" . }}))
+	{{- end }}{{ end }}
 	if c.record {
 		if err := c.keep(ia); err != nil {
 			rsp.Body.Close()

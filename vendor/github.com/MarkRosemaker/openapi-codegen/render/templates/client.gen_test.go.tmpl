@@ -18,6 +18,9 @@ func TestClient_Error(t *testing.T) {
 		{{- with $.APIKey }}
 		t.Setenv({{printf "%q" .EnvName }}, {{ or .Example `"**************************************************"` }})
 		{{end}}
+		{{- with $.Auth.APIKey.EnvName }}
+		t.Setenv({{printf "%q" . }}, "**************************************************")
+		{{end}}
 		t.Run("transport error", func(t *testing.T) {
 			c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
 				func(*http.Request) (*http.Response, error) { return nil, io.EOF },
@@ -407,6 +410,9 @@ func TestClient_Params(t *testing.T) {
 		{{- with $.APIKey }}
 		t.Setenv({{printf "%q" .EnvName }}, {{ or .Example `"**************************************************"` }})
 		{{end}}
+		{{- with $.Auth.APIKey.EnvName }}
+		t.Setenv({{printf "%q" . }}, "**************************************************")
+		{{end}}
 		var got *http.Request
 
 		c, err := NewClient(WithHTTPClient(&http.Client{Transport: apitest.RoundTripFunc(
@@ -456,6 +462,9 @@ func TestClient_Interactions(t *testing.T) {
 	{{end}}
 	{{- with $.APIKey }}
 	t.Setenv({{printf "%q" .EnvName }}, {{ or .Example `"**************************************************"` }})
+	{{end}}
+	{{- with $.Auth.APIKey.EnvName }}
+	t.Setenv({{printf "%q" . }}, "**************************************************")
 	{{end}}
 
 	last := &apitest.LastBody{Next: apitest.Replay(t, "../../api/interactions.json")}

@@ -94,6 +94,12 @@ func FromDocument(doc *openapi.Document, packageName, userAgent string, producti
 
 	globalParams := make(Params, 0, len(globalParamsMap))
 	for _, p := range globalParamsMap.ByIndex() {
+		// an API key a security scheme declares is the client's, sent where the scheme says, not a header parameter
+		// besides it, so a client never has two
+		if p.GlobalType == GlobalAPIKey && auth.APIKey.Name != "" {
+			continue
+		}
+
 		globalParams = append(globalParams, p)
 	}
 
@@ -218,6 +224,17 @@ func fromSecurity(schemes openapi.SecuritySchemes, apiTitle string) (Auth, map[o
 
 	for name, sec := range schemes {
 		v := sec.Value
+		if v.Type == openapi.SecuritySchemeTypeAPIKey {
+			byName[name] = AuthAPIKey
+			s.APIKey = APIKey{In: string(v.In), Name: v.Name}
+
+			if apiTitle != "" {
+				s.APIKey.EnvName = strcase.ToSNAKE(fmt.Sprintf("%s_KEY", apiTitle))
+			}
+
+			continue
+		}
+
 		switch v.Scheme {
 		case openapi.SecuritySchemeBearer:
 			byName[name] = AuthBearer
@@ -252,6 +269,8 @@ func defaultAuth(security openapi.SecurityRequirements, schemes map[openapi.Secu
 		return AuthBearer
 	case auth.Basic.UsernameEnvName != "":
 		return AuthBasic
+	case auth.APIKey.Name != "":
+		return AuthAPIKey
 	default:
 		return ""
 	}

@@ -686,16 +686,19 @@ type ReqBody struct {
 type Auth struct {
 	Bearer Bearer `json:"bearer,omitzero"`
 	Basic  Basic  `json:"basic,omitzero"`
+	APIKey APIKey `json:"apiKey,omitzero"`
 	// Default is the scheme operations use unless they name their own, so the client requires its credential.
 	Default AuthScheme `json:"default,omitzero"`
 }
 
-// AuthScheme names the credential an operation sends in its Authorization header.
+// AuthScheme names the credential an operation sends: in its Authorization header, or an API key where its scheme
+// says.
 type AuthScheme string
 
 const (
 	AuthBearer AuthScheme = "bearer"
 	AuthBasic  AuthScheme = "basic"
+	AuthAPIKey AuthScheme = "apiKey"
 )
 
 type Bearer struct {
@@ -705,6 +708,14 @@ type Bearer struct {
 type Basic struct {
 	UsernameEnvName string `json:"usernameEnvName,omitzero"`
 	PasswordEnvName string `json:"passwordEnvName,omitzero"`
+}
+
+// APIKey is an API key a security scheme of type apiKey declares: sent in the header, the query parameter or the
+// cookie In says, named Name, and read from the environment variable EnvName.
+type APIKey struct {
+	In      string `json:"in,omitzero"`
+	Name    string `json:"name,omitzero"`
+	EnvName string `json:"envName,omitzero"`
 }
 
 // BaseURLExpr returns the Go expression for the URL an operation builds its

@@ -221,6 +221,11 @@ How the specification maps onto Go:
   each operation fails before sending if its own is missing. An operation whose
   credentials are optional (`{}` beside a scheme) sends them all the same, and its
   replay test accepts a recording made without them.
+  An API key of an `apiKey` scheme is read from `{TITLE}_KEY`, as
+  `FINNHUB_API_KEY` for the title "Finnhub API", or given with `WithAPIKey`, and
+  sent in the header, query parameter or cookie the scheme names, only where an
+  operation takes it. Debug mode masks it the moment it records a call, so no
+  recording holds it. A scheme replaces an `X-Api-Key` header parameter.
 - **Success responses** — an operation returns its success body as `*T`, or as
   `T` where `T` is already nilable: a slice, a map, or a named type of either. An
   operation whose success body is an empty object returns just `error`, and the
