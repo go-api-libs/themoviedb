@@ -520,6 +520,10 @@ func goLiteralForType(p ir.Param, value string) string {
 			return fmt.Sprintf("time.Unix(%s, 0)", value)
 		}
 
+		if p.IsUnixMilli {
+			return fmt.Sprintf("time.UnixMilli(%s)", value)
+		}
+
 		if t, err := time.Parse(time.RFC3339Nano, value); err == nil {
 			return timeLiteral(t)
 		}
@@ -632,6 +636,10 @@ func bodyLiteral(doc *ir.Document, goType string, v any) string {
 					val, ok := obj[f.JSONName]
 					if !ok {
 						continue // absent optional field: leave it at its zero value
+					}
+
+					if f.IsUnixMilli {
+						val = milliAsTime(val)
 					}
 
 					fields = append(fields, fmt.Sprintf("%s: %s", f.Name, bodyLiteral(doc, f.Type, val)))
@@ -827,4 +835,22 @@ func fallbackJSON(v any) string {
 	}
 
 	return fmt.Sprintf("%q", string(data))
+}
+
+// milliAsTime is v, an integer of unix milliseconds or an array of them, as the time it holds in RFC 3339, which
+// scalarLiteral takes as it is, where it would take an integer as unix seconds; see ir.Field.IsUnixMilli.
+func milliAsTime(v any) any {
+	switch v := v.(type) {
+	case float64:
+		return time.UnixMilli(int64(v)).UTC().Format(time.RFC3339Nano)
+	case []any:
+		out := make([]any, len(v))
+		for i, e := range v {
+			out[i] = milliAsTime(e)
+		}
+
+		return out
+	default:
+		return v
+	}
 }

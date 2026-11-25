@@ -40,6 +40,9 @@ type Document struct {
 	// HasBasicDateFields and BasicDateMembers are the same for dates in ISO 8601's basic form, such as "20260320".
 	HasBasicDateFields bool     `json:"hasBasicDateFields,omitzero"`
 	BasicDateMembers   []string `json:"basicDateMembers,omitempty"`
+	// HasUnixMilliTimeFields and UnixMilliTimeMembers are the same for date-times that are integers of unix milliseconds.
+	HasUnixMilliTimeFields bool     `json:"hasUnixMilliTimeFields,omitzero"`
+	UnixMilliTimeMembers   []string `json:"unixMilliTimeMembers,omitempty"`
 	// HasStringDateFields and HasStringTimeFields are set when a JSON body holds a civil.Date, or a time.Time, as the
 	// type writes it, so that an empty string, which an API may send for one it leaves out, reads as the zero value. A zero
 	// date is written as null, since civil.Date would write it as "0000-00-00", which is no date.
@@ -406,6 +409,10 @@ type Field struct {
 	// IsDateBasic is true when Type is civil.Date but the property's schema is a string of format date-basic, such as
 	// "20260320", see [Document.HasBasicDateFields] and [Document.BasicDateMembers].
 	IsDateBasic bool `json:"isDateBasic,omitzero"`
+
+	// IsUnixMilli is true when Type is time.Time but the property's schema is an integer of format date-time-ms: it is
+	// written and read as unix milliseconds, see [Document.HasUnixMilliTimeFields] and [Document.UnixMilliTimeMembers].
+	IsUnixMilli bool `json:"isUnixMilli,omitzero"`
 }
 
 // EnumValue is one member of an enum type.
@@ -469,6 +476,9 @@ type Param struct {
 	// IsDateBasic is true when Type is "civil.Date" but the schema is a string of format date-basic, such as
 	// "20260320", which FormatExpr writes and ParseExpr reads.
 	IsDateBasic bool `json:"isDateBasic,omitzero"`
+	// IsUnixMilli is true when Type is "time.Time" but the schema is an integer of format date-time-ms, which FormatExpr
+	// writes and ParseExpr reads as unix milliseconds.
+	IsUnixMilli bool `json:"isUnixMilli,omitzero"`
 	// AllowSlashes is set for a path parameter marked x-allow-slashes, a path of its own, as pkg.go.dev's
 	// /package/{path} takes golang.org/x/time/rate: its slashes stay slashes, where any other path parameter's are
 	// escaped, as OpenAPI requires.
@@ -654,6 +664,20 @@ type Response struct {
 	// BodyDescription is what the specification says beside the reference to the body's schema, of this response
 	// alone, as a merged schema's description that differed from another's.
 	BodyDescription string `json:"bodyDescription,omitzero"`
+}
+
+// Accept is the Accept header the operation sends: the media types its responses declare, in their order, or "" where
+// none has a body.
+func (op Operation) Accept() string {
+	var types []string
+
+	for _, r := range op.Responses {
+		if r.ContentType != "" && !slices.Contains(types, r.ContentType) {
+			types = append(types, r.ContentType)
+		}
+	}
+
+	return strings.Join(types, ", ")
 }
 
 // SuccessDescription is what the specification says beside the reference to the schema of the body the operation

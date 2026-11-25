@@ -8,10 +8,11 @@ import (
 )
 
 // encodings are how a time.Time or civil.Date may be written other than as its type does it: as an integer of unix
-// time, or, for a date, in ISO 8601's basic form, such as "20260320".
+// time, for a time as one of unix milliseconds, or, for a date, in ISO 8601's basic form, such as "20260320".
 const (
 	encodingUnix  = "integer"
 	encodingBasic = "basic-form"
+	encodingMilli = "integer-ms"
 )
 
 // encodingMode is how a document's values of one Go type in one encoding are written and read.
@@ -25,6 +26,8 @@ type encodingMode struct {
 // fieldEncoding is the encoding of f's time.Time or civil.Date, or "" for the type's own.
 func fieldEncoding(f Field) string {
 	switch {
+	case f.IsUnixMilli:
+		return encodingMilli
 	case f.IsUnix:
 		return encodingUnix
 	case f.IsDateBasic:
@@ -77,7 +80,7 @@ func markEncodings(schemas []Schema) (map[string]map[string]encodingMode, error)
 
 		var encs []string
 
-		for _, enc := range []string{encodingUnix, encodingBasic} {
+		for _, enc := range []string{encodingUnix, encodingMilli, encodingBasic} {
 			if len(names[enc]) > 0 || position[enc] != "" {
 				encs = append(encs, enc)
 			}

@@ -254,7 +254,7 @@ func integerGoType(f openapi.Format) *GoType {
 		return &GoType{Name: "uint64"}
 	case openapi.FormatDuration:
 		return &GoType{Name: "time.Duration"}
-	case openapi.FormatDateTime:
+	case openapi.FormatDateTime, openapi.FormatDateTimeMs:
 		return &GoType{Name: "time.Time"}
 	case openapi.FormatDate:
 		return &GoType{Name: "civil.Date"}
@@ -567,7 +567,7 @@ func getField(jsonName string, propRef *openapi.Schema, requiredSet map[string]b
 	}
 
 	fieldName := fieldGoName(jsonName)
-	if override := goNameOverride(v); override != "" {
+	if override := cmp.Or(goNameOverride(propRef), goNameOverride(v)); override != "" {
 		fieldName = override
 	}
 
@@ -593,6 +593,7 @@ func getField(jsonName string, propRef *openapi.Schema, requiredSet map[string]b
 		IsDateTimeOrInt:  isDateTimeOrIntegerOneOf(v),
 		IsStringOrNumber: isStringOrNumberOneOf(v),
 		IsUnix:           isUnix(goType.Name, v),
+		IsUnixMilli:      isUnixMilli(goType.Name, v),
 		IsDateBasic:      isDateBasic(goType.Name, v),
 		Fixed:            fixedJSON(v),
 	}, nil
@@ -628,7 +629,18 @@ func isUnix(goType string, s *openapi.Schema) bool {
 		s = deref(s.Items)
 	}
 
-	return (goType == "time.Time" || goType == "civil.Date") && s != nil && s.Type == openapi.TypeInteger
+	return (goType == "time.Time" || goType == "civil.Date") && s != nil && s.Type == openapi.TypeInteger &&
+		s.Format != openapi.FormatDateTimeMs
+}
+
+// isUnixMilli reports whether a value of the Go type named, from schema s, is an integer of unix milliseconds: a
+// date-time-ms, or an array of them.
+func isUnixMilli(goType string, s *openapi.Schema) bool {
+	for s != nil && s.Type == openapi.TypeArray { // the items of an array
+		s = deref(s.Items)
+	}
+
+	return goType == "time.Time" && s != nil && s.Type == openapi.TypeInteger && s.Format == openapi.FormatDateTimeMs
 }
 
 // isDateBasic reports whether a value of the Go type named, from schema s, is a date in ISO 8601's basic form, such as
@@ -806,7 +818,7 @@ func fromTupleSchema(name string, s *openapi.Schema) (*Schema, error) {
 		}
 
 		fieldName := fmt.Sprintf("Item%0*d", width, i)
-		if override := goNameOverride(deref(p)); override != "" {
+		if override := cmp.Or(goNameOverride(p), goNameOverride(deref(p))); override != "" {
 			fieldName = override
 		}
 
@@ -815,6 +827,7 @@ func fromTupleSchema(name string, s *openapi.Schema) (*Schema, error) {
 			Type:        tp.String(),
 			Description: cmp.Or(p.Description, deref(p).Description),
 			IsUnix:      isUnix(tp.Name, deref(p)),
+			IsUnixMilli: isUnixMilli(tp.Name, deref(p)),
 			IsDateBasic: isDateBasic(tp.Name, deref(p)),
 		}
 	}
