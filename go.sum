@@ -10,8 +10,8 @@ github.com/MarkRosemaker/jsonutil v0.0.0-20261126020829-395163231ad4 h1:Fx/XXb7w
 github.com/MarkRosemaker/jsonutil v0.0.0-20261126020829-395163231ad4/go.mod h1:SzjJlgYFlzpbFGvUUoQgfEsWlbai63bvhDPK8J0MNYM=
 github.com/MarkRosemaker/openapi v0.0.0-20261126020940-b4a1ac5f1801 h1:rvtTP0VYlUHKRxax1pRxXF5K8HGwFy2M9KqhmppJeBQ=
 github.com/MarkRosemaker/openapi v0.0.0-20261126020940-b4a1ac5f1801/go.mod h1:1AzJFjNHlPMMNOHgt2bYN1SsNOLZr6akYH+WqJEAonk=
-github.com/MarkRosemaker/openapi-codegen v0.0.0-20261126021642-942b205edc69 h1:p+ipAfRuME+rzdoImvG/92Y3malE7b3kRMEA/2E1VqU=
-github.com/MarkRosemaker/openapi-codegen v0.0.0-20261126021642-942b205edc69/go.mod h1:Ee1Z3ze4YtA07hqDK1Ixg5fPLdUX97rGu/G5GMS+03k=
+github.com/MarkRosemaker/openapi-codegen v0.0.0-20261126034520-000a72ffecb6 h1:Iv7AcwXt5I6RL1znxZRpVfH2dgMw1AVId5Fdvr3fPnQ=
+github.com/MarkRosemaker/openapi-codegen v0.0.0-20261126034520-000a72ffecb6/go.mod h1:k/z0y+xTth1OKtkLzyw3SIb3mE9A918Xz6KDMblNEvY=
 github.com/MarkRosemaker/openapi-compare v0.0.0-20261126021107-7bb69de0fff9 h1:Rs+S759gFGQCuNb85+E+nH56hCTRtUre3O24Vtk7jZs=
 github.com/MarkRosemaker/openapi-compare v0.0.0-20261126021107-7bb69de0fff9/go.mod h1:uoFMBQPqdrIY+X6/jnqAPuFB1OuWgFcMv/4F60kLeWw=
 github.com/MarkRosemaker/openapi-compress v0.0.0-20261126021444-b9b31c694973 h1:iFA9izcg08yzWqBarPythxTPZ4UK58GRBL/PoZK+p4U=
@@ -20,8 +20,8 @@ github.com/MarkRosemaker/openapi-edit v0.0.0-20261126021107-af2eb25df397 h1:ubJ+
 github.com/MarkRosemaker/openapi-edit v0.0.0-20261126021107-af2eb25df397/go.mod h1:Ll8I/87SBa69SUo6L92uDGfNoRDTz9SEm1lVpM8mJ40=
 github.com/MarkRosemaker/openapi-enrich v0.0.0-20261126021330-41673fe93b39 h1:4/2FDtwYGKQWxuXmvo7dKKs/HgkLGlFQwDeYU4zhQ0o=
 github.com/MarkRosemaker/openapi-enrich v0.0.0-20261126021330-41673fe93b39/go.mod h1:lsXw9cdLOwoqKbztvJWQkFM0zIrrYbukGYZnX9za8hs=
-github.com/MarkRosemaker/openapi-flatten v0.0.0-20261126021108-0798cd5fa968 h1:EcEyuvFtjxzS6EAfAfxtvx80n3ejxQ9lVQTKwsawzns=
-github.com/MarkRosemaker/openapi-flatten v0.0.0-20261126021108-0798cd5fa968/go.mod h1:P0XjkMH+/5nYg/gVdnlotmMsJCxIdYjaiih4WqV+SGw=
+github.com/MarkRosemaker/openapi-flatten v0.0.0-20261126034255-0c495ba4f188 h1:XdAmgNmIhf04XAQiw+5MsCkE0rlMwpRBuxHhZQEXt1M=
+github.com/MarkRosemaker/openapi-flatten v0.0.0-20261126034255-0c495ba4f188/go.mod h1:P0XjkMH+/5nYg/gVdnlotmMsJCxIdYjaiih4WqV+SGw=
 github.com/MarkRosemaker/openapi-merge v0.0.0-20261126021108-70713f3342dc h1:ewRzjH2qNJG93AxmiaMrZ44S1c0dL8G1L8iZEIEYPfw=
 github.com/MarkRosemaker/openapi-merge v0.0.0-20261126021108-70713f3342dc/go.mod h1:1yZj03dYD5cH0sEzwzIyUdEmjEtC9B09KswKNPqIrz8=
 github.com/MarkRosemaker/ordmap v0.0.0-20261124050216-f3096eb875be h1:yz+tf9ONFOoo2hDWkRSjP9NZSvWyS986bs/WAy+jNus=
