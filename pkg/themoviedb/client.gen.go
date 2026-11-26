@@ -126,7 +126,6 @@ func (c *Client) ValidateKey(ctx context.Context) (*ValidKey, error) {
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -197,7 +196,6 @@ func (c *Client) AccountDetails(ctx context.Context, accountID int32, params *Ac
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -253,7 +251,6 @@ func (c *Client) AccountAddFavorite(ctx context.Context, accountID int32, params
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -319,7 +316,6 @@ func (c *Client) AccountAddToWatchlist(ctx context.Context, accountID int32, par
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -397,7 +393,6 @@ func (c *Client) AccountGetFavorites(ctx context.Context, accountID int32, param
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -465,7 +460,6 @@ func (c *Client) AccountFavoriteTv(ctx context.Context, accountID int32, params 
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -525,7 +519,6 @@ func (c *Client) AccountLists(ctx context.Context, accountID int32, params *Acco
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -593,7 +586,6 @@ func (c *Client) AccountRatedMovies(ctx context.Context, accountID int32, params
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -661,7 +653,6 @@ func (c *Client) AccountRatedTv(ctx context.Context, accountID int32, params *Ac
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -729,7 +720,6 @@ func (c *Client) GetRatedTvEpisodes(ctx context.Context, accountID int32, params
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -797,7 +787,6 @@ func (c *Client) AccountWatchlistMovies(ctx context.Context, accountID int32, pa
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -865,7 +854,6 @@ func (c *Client) AccountWatchlistTv(ctx context.Context, accountID int32, params
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -911,7 +899,6 @@ func (c *Client) AuthenticationCreateGuestSession(ctx context.Context) (*Authent
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -957,7 +944,6 @@ func (c *Client) AuthenticationCreateRequestToken(ctx context.Context) (*Authent
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1003,7 +989,6 @@ func (c *Client) AuthenticationCreateSession(ctx context.Context, body *ListCrea
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1059,7 +1044,6 @@ func (c *Client) AuthenticationCreateSessionFromV4Token(ctx context.Context, bod
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1115,7 +1099,6 @@ func (c *Client) AuthenticationCreateSessionFromLogin(ctx context.Context, body 
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1171,7 +1154,6 @@ func (c *Client) AuthenticationDeleteSession(ctx context.Context, body *ListCrea
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1227,7 +1209,6 @@ func (c *Client) CertificationMovieList(ctx context.Context) (*CertificationMovi
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1273,7 +1254,6 @@ func (c *Client) CertificationsTvList(ctx context.Context) (*CertificationsByReg
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1337,7 +1317,6 @@ func (c *Client) ChangesMovieList(ctx context.Context, params *ChangesMovieListP
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1401,7 +1380,6 @@ func (c *Client) ChangesPeopleList(ctx context.Context, params *ChangesPeopleLis
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1465,7 +1443,6 @@ func (c *Client) ChangesTvList(ctx context.Context, params *ChangesTvListParams)
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1521,7 +1498,6 @@ func (c *Client) CollectionDetails(ctx context.Context, collectionID int32, para
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1581,7 +1557,6 @@ func (c *Client) CollectionImages(ctx context.Context, collectionID int32, param
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1627,7 +1602,6 @@ func (c *Client) CollectionTranslations(ctx context.Context, collectionID int32)
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1673,7 +1647,6 @@ func (c *Client) CompanyDetails(ctx context.Context, companyID int32) (*CompanyD
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1719,7 +1692,6 @@ func (c *Client) CompanyAlternativeNames(ctx context.Context, companyID int32) (
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1765,7 +1737,6 @@ func (c *Client) CompanyImages(ctx context.Context, companyID int32) (*CompanyIm
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1811,7 +1782,6 @@ func (c *Client) ConfigurationDetails(ctx context.Context) (*ConfigurationDetail
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1867,7 +1837,6 @@ func (c *Client) ConfigurationCountries(ctx context.Context, params *Configurati
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1913,7 +1882,6 @@ func (c *Client) ConfigurationJobs(ctx context.Context) (ConfigurationJobsOk, er
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -1966,7 +1934,6 @@ func (c *Client) ConfigurationLanguages(ctx context.Context) (Languages, error) 
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -2012,7 +1979,6 @@ func (c *Client) ConfigurationPrimaryTranslations(ctx context.Context) ([]string
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -2058,7 +2024,6 @@ func (c *Client) ConfigurationTimezones(ctx context.Context) (ConfigurationTimez
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -2114,7 +2079,6 @@ func (c *Client) CreditDetails(ctx context.Context, creditID string, params *Cre
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -2325,7 +2289,6 @@ func (c *Client) DiscoverMovie(ctx context.Context, params *DiscoverMovieParams)
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -2509,7 +2472,6 @@ func (c *Client) DiscoverTv(ctx context.Context, params *DiscoverTvParams) (*Dis
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -2566,7 +2528,6 @@ func (c *Client) FindByID(ctx context.Context, externalID string, params FindByI
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -2622,7 +2583,6 @@ func (c *Client) GenreMovieList(ctx context.Context, params *GenreMovieListParam
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -2678,7 +2638,6 @@ func (c *Client) GenreTvList(ctx context.Context, params *GenreTvListParams) (*G
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -2742,7 +2701,6 @@ func (c *Client) GuestSessionRatedMovies(ctx context.Context, guestSessionID str
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -2806,7 +2764,6 @@ func (c *Client) GuestSessionRatedTv(ctx context.Context, guestSessionID string,
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -2870,7 +2827,6 @@ func (c *Client) GuestSessionRatedTvEpisodes(ctx context.Context, guestSessionID
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -2916,7 +2872,6 @@ func (c *Client) KeywordDetails(ctx context.Context, keywordID int32) (*Keyword,
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -2980,7 +2935,6 @@ func (c *Client) KeywordMovies(ctx context.Context, keywordID string, params *Ke
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3033,7 +2987,6 @@ func (c *Client) ListAddMovie(ctx context.Context, listID int32, params ListAddM
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3103,7 +3056,6 @@ func (c *Client) ListCheckItemStatus(ctx context.Context, listID int32, params *
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3158,7 +3110,6 @@ func (c *Client) ListClear(ctx context.Context, listID int32, params ListClearPa
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3211,7 +3162,6 @@ func (c *Client) ListCreate(ctx context.Context, params ListCreateParams, body *
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3281,7 +3231,6 @@ func (c *Client) ListDetails(ctx context.Context, listID int32, params *ListDeta
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3334,7 +3283,6 @@ func (c *Client) ListDelete(ctx context.Context, listID int32, params ListDelete
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3387,7 +3335,6 @@ func (c *Client) ListRemoveMovie(ctx context.Context, listID int32, params ListR
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3461,7 +3408,6 @@ func (c *Client) GetNowPlaying(ctx context.Context, params *GetNowPlayingParams)
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3525,7 +3471,6 @@ func (c *Client) GetPopular(ctx context.Context, params *GetPopularParams) (*Mov
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3589,7 +3534,6 @@ func (c *Client) GetTopRated(ctx context.Context, params *GetTopRatedParams) (*M
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3653,7 +3597,6 @@ func (c *Client) GetUpcoming(ctx context.Context, params *GetUpcomingParams) (*M
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3713,7 +3656,6 @@ func (c *Client) GetMovie(ctx context.Context, movieID MovieID, params *GetMovie
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3780,7 +3722,6 @@ func (c *Client) MovieAccountStates(ctx context.Context, movieID MovieID, params
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3836,7 +3777,6 @@ func (c *Client) GetAlternativeTitles(ctx context.Context, movieID MovieID, para
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3900,7 +3840,6 @@ func (c *Client) MovieChanges(ctx context.Context, movieID MovieID, params *Movi
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -3956,7 +3895,6 @@ func (c *Client) MovieCredits(ctx context.Context, movieID MovieID, params *Movi
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4009,7 +3947,6 @@ func (c *Client) MovieExternalIds(ctx context.Context, movieID MovieID) (*MovieE
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4069,7 +4006,6 @@ func (c *Client) GetMovieImages(ctx context.Context, movieID MovieID, params *Ge
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4115,7 +4051,6 @@ func (c *Client) MovieKeywords(ctx context.Context, movieID MovieID) (*MovieKeyw
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4161,7 +4096,6 @@ func (c *Client) MovieLatestID(ctx context.Context) (*MovieLatestIDOk, error) {
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4221,7 +4155,6 @@ func (c *Client) MovieLists(ctx context.Context, movieID MovieID, params *MovieL
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4281,7 +4214,6 @@ func (c *Client) MovieRecommendations(ctx context.Context, movieID MovieID, para
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4327,7 +4259,6 @@ func (c *Client) MovieReleaseDates(ctx context.Context, movieID MovieID) (*Movie
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4387,7 +4318,6 @@ func (c *Client) MovieReviews(ctx context.Context, movieID MovieID, params *Movi
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4447,7 +4377,6 @@ func (c *Client) MovieSimilar(ctx context.Context, movieID MovieID, params *Movi
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4493,7 +4422,6 @@ func (c *Client) MovieTranslations(ctx context.Context, movieID MovieID) (*Movie
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4549,7 +4477,6 @@ func (c *Client) MovieVideos(ctx context.Context, movieID MovieID, params *Movie
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4595,7 +4522,6 @@ func (c *Client) MovieWatchProviders(ctx context.Context, movieID MovieID) (*Mov
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4655,7 +4581,6 @@ func (c *Client) MovieAddRating(ctx context.Context, movieID MovieID, params *Mo
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4725,7 +4650,6 @@ func (c *Client) MovieDeleteRating(ctx context.Context, movieID MovieID, params 
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4771,7 +4695,6 @@ func (c *Client) NetworkDetails(ctx context.Context, networkID int32) (*NetworkD
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4817,7 +4740,6 @@ func (c *Client) DetailsCopy(ctx context.Context, networkID int32) (*DetailsCopy
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4863,7 +4785,6 @@ func (c *Client) AlternativeNamesCopy(ctx context.Context, networkID int32) (*Co
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4923,7 +4844,6 @@ func (c *Client) PersonPopularList(ctx context.Context, params *PersonPopularLis
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -4990,7 +4910,6 @@ func (c *Client) PersonDetails(ctx context.Context, personID int32, params *Pers
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5061,7 +4980,6 @@ func (c *Client) PersonChanges(ctx context.Context, personID int32, params *Pers
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5117,7 +5035,6 @@ func (c *Client) PersonCombinedCredits(ctx context.Context, personID string, par
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5170,7 +5087,6 @@ func (c *Client) PersonExternalIds(ctx context.Context, personID int32) (*Person
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5216,7 +5132,6 @@ func (c *Client) PersonImages(ctx context.Context, personID int32) (*PersonImage
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5262,7 +5177,6 @@ func (c *Client) PersonLatestID(ctx context.Context) (*PersonLatestIDOk, error) 
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5325,7 +5239,6 @@ func (c *Client) PersonMovieCredits(ctx context.Context, personID int32, params 
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5388,7 +5301,6 @@ func (c *Client) PersonTvCredits(ctx context.Context, personID int32, params *Pe
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5451,7 +5363,6 @@ func (c *Client) PersonTaggedImages(ctx context.Context, personID int32, params 
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5497,7 +5408,6 @@ func (c *Client) Translations(ctx context.Context, personID int32) (*Translation
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5543,7 +5453,6 @@ func (c *Client) ReviewDetails(ctx context.Context, reviewID string) (*ReviewDet
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5612,7 +5521,6 @@ func (c *Client) SearchCollection(ctx context.Context, params SearchCollectionPa
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5669,7 +5577,6 @@ func (c *Client) SearchCompany(ctx context.Context, params SearchCompanyParams) 
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5726,7 +5633,6 @@ func (c *Client) SearchKeyword(ctx context.Context, params SearchKeywordParams) 
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5803,7 +5709,6 @@ func (c *Client) SearchMovies(ctx context.Context, params SearchMoviesParams) (*
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5868,7 +5773,6 @@ func (c *Client) SearchMulti(ctx context.Context, params SearchMultiParams) (*Se
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -5933,7 +5837,6 @@ func (c *Client) SearchPerson(ctx context.Context, params SearchPersonParams) (*
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6013,7 +5916,6 @@ func (c *Client) SearchShows(ctx context.Context, params SearchShowsParams) (*Sh
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6069,7 +5971,6 @@ func (c *Client) TrendingAll(ctx context.Context, timeWindow TimeWindow, params 
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6125,7 +6026,6 @@ func (c *Client) TrendingMovies(ctx context.Context, timeWindow TimeWindow, para
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6181,7 +6081,6 @@ func (c *Client) TrendingPeople(ctx context.Context, timeWindow TimeWindow, para
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6244,7 +6143,6 @@ func (c *Client) TrendingTv(ctx context.Context, timeWindow TimeWindow, params *
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6308,7 +6206,6 @@ func (c *Client) TvSeriesAiringTodayList(ctx context.Context, params *TvSeriesAi
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6372,7 +6269,6 @@ func (c *Client) TvSeriesOnTheAirList(ctx context.Context, params *TvSeriesOnThe
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6432,7 +6328,6 @@ func (c *Client) TvSeriesPopularList(ctx context.Context, params *TvSeriesPopula
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6492,7 +6387,6 @@ func (c *Client) TvSeriesTopRatedList(ctx context.Context, params *TvSeriesTopRa
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6552,7 +6446,6 @@ func (c *Client) GetShow(ctx context.Context, seriesID ShowID, params *GetShowPa
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6619,7 +6512,6 @@ func (c *Client) TvSeriesAccountStates(ctx context.Context, seriesID ShowID, par
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6675,7 +6567,6 @@ func (c *Client) TvSeriesAggregateCredits(ctx context.Context, seriesID ShowID, 
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6728,7 +6619,6 @@ func (c *Client) TvSeriesAlternativeTitles(ctx context.Context, seriesID ShowID)
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6792,7 +6682,6 @@ func (c *Client) GetShowChanges(ctx context.Context, seriesID ShowID, params *Ge
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6838,7 +6727,6 @@ func (c *Client) TvSeriesContentRatings(ctx context.Context, seriesID ShowID) (*
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6894,7 +6782,6 @@ func (c *Client) TvSeriesCredits(ctx context.Context, seriesID ShowID, params *T
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6947,7 +6834,6 @@ func (c *Client) TvSeriesEpisodeGroups(ctx context.Context, seriesID ShowID) (*T
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -6993,7 +6879,6 @@ func (c *Client) TvSeriesExternalIds(ctx context.Context, seriesID ShowID) (*TvS
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7053,7 +6938,6 @@ func (c *Client) TvSeriesImages(ctx context.Context, seriesID ShowID, params *Tv
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7099,7 +6983,6 @@ func (c *Client) TvSeriesKeywords(ctx context.Context, seriesID ShowID) (*TvSeri
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7145,7 +7028,6 @@ func (c *Client) TvSeriesLatestID(ctx context.Context) (*TvSeriesLatestIDOk, err
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7205,7 +7087,6 @@ func (c *Client) ListsCopy(ctx context.Context, seriesID ShowID, params *ListsCo
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7265,7 +7146,6 @@ func (c *Client) TvSeriesRecommendations(ctx context.Context, seriesID ShowID, p
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7325,7 +7205,6 @@ func (c *Client) TvSeriesReviews(ctx context.Context, seriesID ShowID, params *T
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7371,7 +7250,6 @@ func (c *Client) TvSeriesScreenedTheatrically(ctx context.Context, seriesID Show
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7431,7 +7309,6 @@ func (c *Client) TvSeriesSimilar(ctx context.Context, seriesID ShowID, params *T
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7477,7 +7354,6 @@ func (c *Client) TvSeriesTranslations(ctx context.Context, seriesID ShowID) (*Tv
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7537,7 +7413,6 @@ func (c *Client) TvSeriesVideos(ctx context.Context, seriesID ShowID, params *Tv
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7583,7 +7458,6 @@ func (c *Client) TvSeriesWatchProviders(ctx context.Context, seriesID ShowID) (*
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7643,7 +7517,6 @@ func (c *Client) TvSeriesAddRating(ctx context.Context, seriesID ShowID, params 
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7713,7 +7586,6 @@ func (c *Client) TvSeriesDeleteRating(ctx context.Context, seriesID ShowID, para
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7773,7 +7645,6 @@ func (c *Client) GetShowSeason(ctx context.Context, seriesID ShowID, seasonNumbe
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7855,7 +7726,6 @@ func (c *Client) TvSeasonAccountStates(ctx context.Context, seriesID ShowID, sea
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7911,7 +7781,6 @@ func (c *Client) TvSeasonAggregateCredits(ctx context.Context, seriesID ShowID, 
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -7982,7 +7851,6 @@ func (c *Client) GetSeasonChanges(ctx context.Context, seasonID SeasonID, params
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8038,7 +7906,6 @@ func (c *Client) TvSeasonCredits(ctx context.Context, seriesID ShowID, seasonNum
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8091,7 +7958,6 @@ func (c *Client) TvSeasonExternalIds(ctx context.Context, seriesID ShowID, seaso
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8151,7 +8017,6 @@ func (c *Client) TvSeasonImages(ctx context.Context, seriesID ShowID, seasonNumb
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8197,7 +8062,6 @@ func (c *Client) TvSeasonTranslations(ctx context.Context, seriesID ShowID, seas
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8257,7 +8121,6 @@ func (c *Client) TvSeasonVideos(ctx context.Context, seriesID ShowID, seasonNumb
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8313,7 +8176,6 @@ func (c *Client) TvSeasonWatchProviders(ctx context.Context, seriesID ShowID, se
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8373,7 +8235,6 @@ func (c *Client) GetEpisodeDetails(ctx context.Context, seriesID ShowID, seasonN
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8440,7 +8301,6 @@ func (c *Client) TvEpisodeAccountStates(ctx context.Context, seriesID ShowID, se
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8486,7 +8346,6 @@ func (c *Client) GetEpisodeChanges(ctx context.Context, episodeID EpisodeID) (*E
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8542,7 +8401,6 @@ func (c *Client) TvEpisodeCredits(ctx context.Context, seriesID ShowID, seasonNu
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8595,7 +8453,6 @@ func (c *Client) TvEpisodeExternalIds(ctx context.Context, seriesID ShowID, seas
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8655,7 +8512,6 @@ func (c *Client) TvEpisodeImages(ctx context.Context, seriesID ShowID, seasonNum
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8701,7 +8557,6 @@ func (c *Client) TvEpisodeTranslations(ctx context.Context, seriesID ShowID, sea
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8761,7 +8616,6 @@ func (c *Client) TvEpisodeVideos(ctx context.Context, seriesID ShowID, seasonNum
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8821,7 +8675,6 @@ func (c *Client) TvEpisodeAddRating(ctx context.Context, seriesID ShowID, season
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8891,7 +8744,6 @@ func (c *Client) TvEpisodeDeleteRating(ctx context.Context, seriesID ShowID, sea
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8937,7 +8789,6 @@ func (c *Client) TvEpisodeGroupDetails(ctx context.Context, tvEpisodeGroupID str
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -8993,7 +8844,6 @@ func (c *Client) WatchProvidersAvailableRegions(ctx context.Context, params *Wat
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -9053,7 +8903,6 @@ func (c *Client) WatchProvidersMovieList(ctx context.Context, params *WatchProvi
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
@@ -9113,7 +8962,6 @@ func (c *Client) WatchProviderTvList(ctx context.Context, params *WatchProviderT
 	req := (&http.Request{
 		Header: http.Header{
 			"Authorization": []string{c.bearer},
-			"Accept":        []string{"application/json"},
 			"User-Agent":    []string{c.userAgent},
 		},
 		Host:       u.Host,
