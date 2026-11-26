@@ -86,6 +86,9 @@ Inline schemas are moved to `components/schemas` when they contain meaningful st
 - an **object** with properties
 - a **string** or **array of strings** with `enum` values
 - an **array of objects**
+- an **array of a component**, named the component's plural: a list of `Order` becomes
+  `Orders`, or refers to an `Orders` that already lists `Order` and nothing else, the
+  list's description then staying beside the reference
 
 The entries of an `allOf` and the alternatives of a `oneOf` or `anyOf` are moved by
 the same rules, so each shaped one gets a name of its own, and so are the schema of

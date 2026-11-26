@@ -1,7 +1,10 @@
 package flatten
 
 import (
+	"bytes"
+	"encoding/json/v2"
 	"fmt"
+	"strings"
 
 	"github.com/MarkRosemaker/errpath"
 	"github.com/MarkRosemaker/openapi"
@@ -29,7 +32,12 @@ func inlineSchema(d *openapi.Document, s *openapi.Schema, name string, alwaysMov
 			// a tuple has a defined shape, positional but no less real than
 			// an object's properties: give it a name of its own the same way.
 			s = moveSchemaToComponents(d, name, s)
-		} else if items := s.Items; items != nil { // no items when only ever seen empty
+		} else if items := s.Items; items != nil && items.Ref != nil {
+			// a list of a component is named after it, so the component's list reads the same wherever it is
+			if item, ok := strings.CutPrefix(items.Ref.Identifier, "#/components/schemas/"); ok {
+				s = moveListToComponents(d, s, item)
+			}
+		} else if items != nil { // no items when only ever seen empty
 			switch items.Type {
 			case openapi.TypeInteger: // do nothing, just []int
 			case openapi.TypeNumber: // do nothing, just []float32 or []float64
@@ -155,6 +163,57 @@ func moveSchemaToComponents(d *openapi.Document, name string, s *openapi.Schema)
 	s.Replace(&openapi.Schema{Ref: &openapi.SchemaRef{Identifier: newRef("schemas", name).Identifier, Value: &moved}})
 
 	return &moved
+}
+
+// moveListToComponents makes s, a list of the component schema item, a reference to the component listing it, which is
+// named the plural of item: an existing one, if it lists item and nothing else, or else a new one. It returns the
+// component.
+func moveListToComponents(d *openapi.Document, s *openapi.Schema, item string) *openapi.Schema {
+	name := plural(item)
+
+	if existing, ok := d.Components.Schemas[name]; ok && isListOf(existing, newRef("schemas", item).Identifier) {
+		s.Replace(&openapi.Schema{
+			Ref:         &openapi.SchemaRef{Identifier: newRef("schemas", name).Identifier, Value: existing},
+			Description: s.Description,
+		})
+
+		return existing
+	}
+
+	return moveSchemaToComponents(d, name, s)
+}
+
+// isListOf reports whether s is a list of the component schema at ref and nothing else, but for what it says of itself:
+// its title, description, examples and extensions.
+func isListOf(s *openapi.Schema, ref string) bool {
+	if s.Type != openapi.TypeArray || s.Items == nil || s.Items.Ref == nil || s.Items.Ref.Identifier != ref {
+		return false
+	}
+
+	rest := *s
+	rest.Title, rest.Description, rest.Example, rest.Examples, rest.Extensions = "", "", nil, nil, nil
+
+	got, err := json.Marshal(&rest)
+	if err != nil {
+		return false
+	}
+
+	want, err := json.Marshal(&openapi.Schema{Type: s.Type, Items: s.Items})
+
+	return err == nil && bytes.Equal(got, want)
+}
+
+// plural is the English plural of a name, such as Orders of Order, Entries of Entry and Statuses of Status.
+func plural(name string) string {
+	switch {
+	case strings.HasSuffix(name, "s"), strings.HasSuffix(name, "x"), strings.HasSuffix(name, "z"),
+		strings.HasSuffix(name, "ch"), strings.HasSuffix(name, "sh"):
+		return name + "es"
+	case strings.HasSuffix(name, "y") && len(name) > 1 && !strings.ContainsRune("aeiouAEIOU", rune(name[len(name)-2])):
+		return name[:len(name)-1] + "ies"
+	default:
+		return name + "s"
+	}
 }
 
 // inlineBranches flattens the alternatives of a oneOf or anyOf, naming each by its title, or else by prefix and position.
