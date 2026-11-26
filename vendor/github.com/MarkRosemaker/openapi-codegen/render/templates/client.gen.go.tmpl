@@ -332,9 +332,6 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 			{{ range .FixedHeaders -}}
 			"{{ .JSONName }}": []string{ {{- .Value -}} },
 			{{ end -}}
-			{{ with .Accept -}}
-			"Accept": []string{ {{- printf "%q" . -}} },
-			{{ end -}}
 			"User-Agent":     []string{c.userAgent},
 			{{ if and .RequestBody .RequestBody.Required -}}
 			"Content-Type": []string{ {{printf "%q" .RequestBody.ContentType}} },

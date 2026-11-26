@@ -666,20 +666,6 @@ type Response struct {
 	BodyDescription string `json:"bodyDescription,omitzero"`
 }
 
-// Accept is the Accept header the operation sends: the media types its responses declare, in their order, or "" where
-// none has a body.
-func (op Operation) Accept() string {
-	var types []string
-
-	for _, r := range op.Responses {
-		if r.ContentType != "" && !slices.Contains(types, r.ContentType) {
-			types = append(types, r.ContentType)
-		}
-	}
-
-	return strings.Join(types, ", ")
-}
-
 // SuccessDescription is what the specification says beside the reference to the schema of the body the operation
 // returns, if anything.
 func (op Operation) SuccessDescription() string {
