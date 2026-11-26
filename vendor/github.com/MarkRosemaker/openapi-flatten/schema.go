@@ -36,7 +36,7 @@ func inlineSchema(d *openapi.Document, s *openapi.Schema, name string, alwaysMov
 		} else if items := s.Items; items != nil && items.Ref != nil {
 			// a list of a component is named after it, so the component's list reads the same wherever it is
 			if item, ok := strings.CutPrefix(items.Ref.Identifier, "#/components/schemas/"); ok {
-				s = moveListToComponents(d, s, item)
+				s = moveListToComponents(d, s, item, name)
 			}
 		} else if items != nil { // no items when only ever seen empty
 			switch items.Type {
@@ -166,22 +166,30 @@ func moveSchemaToComponents(d *openapi.Document, name string, s *openapi.Schema)
 	return &moved
 }
 
-// moveListToComponents makes s, a list of the component schema item, a reference to the component listing it, named
-// after item by [listName]: an existing one, if it is s but for what each says of itself, or else a new one. It returns
-// the component.
-func moveListToComponents(d *openapi.Document, s *openapi.Schema, item string) *openapi.Schema {
-	name := listName(d, item)
+// moveListToComponents makes s, a list of the component schema item, a reference to the component listing it. It is
+// named after item by [listName], else by name, where it would hold it: the first of the two that is free or is s but
+// for what each says of itself, which it then refers to. A list whose names are both taken by others gets the first
+// with a number. It returns the component.
+func moveListToComponents(d *openapi.Document, s *openapi.Schema, item, name string) *openapi.Schema {
+	names := []string{listName(d, item), name}
 
-	if existing, ok := d.Components.Schemas[name]; ok && sameButDocs(existing, s) {
-		s.Replace(&openapi.Schema{
-			Ref:         &openapi.SchemaRef{Identifier: newRef("schemas", name).Identifier, Value: existing},
-			Description: s.Description,
-		})
+	for _, n := range names {
+		existing, ok := d.Components.Schemas[n]
+		if !ok {
+			return moveSchemaToComponents(d, n, s)
+		}
 
-		return existing
+		if sameButDocs(existing, s) {
+			s.Replace(&openapi.Schema{
+				Ref:         &openapi.SchemaRef{Identifier: newRef("schemas", n).Identifier, Value: existing},
+				Description: s.Description,
+			})
+
+			return existing
+		}
 	}
 
-	return moveSchemaToComponents(d, name, s)
+	return moveSchemaToComponents(d, names[0], s)
 }
 
 // sameButDocs reports whether a and b are the same schema but for what each says of itself: its title, description,
