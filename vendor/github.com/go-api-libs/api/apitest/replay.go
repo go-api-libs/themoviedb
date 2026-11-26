@@ -21,9 +21,9 @@ func OptionalAuth(ctx context.Context) context.Context {
 }
 
 // Replay is a transport that answers calls with the interactions recorded in the file at path. Every call must be the
-// next recording, with its headers as recorded but the User-Agent, which names whatever tool made the recording, and an
-// Accept its recording lacks, as one made before clients sent it; a call marked with [OptionalAuth] may have credentials
-// its recording lacks. A request body may hold a tag its recording leaves out, which a client fills in (see
+// next recording, with its headers as recorded but the User-Agent, which names whatever tool made the recording, and
+// Accept, which clients do not send though a recording may hold it; a call marked with [OptionalAuth] may have
+// credentials its recording lacks. A request body may hold a tag its recording leaves out, which a client fills in (see
 // jsonSameButTags). The test fails if a recording was never called.
 func Replay(t testing.TB, path string) http.RoundTripper {
 	t.Helper()
@@ -34,8 +34,7 @@ func Replay(t testing.TB, path string) http.RoundTripper {
 	}
 
 	match := cassette.MatchRequest(
-		cassette.CompareHeaders("User-Agent"),
-		cassette.OptionalHeaders("Accept"),
+		cassette.CompareHeaders("User-Agent", "Accept"),
 		cassette.OptionalAuthorization(func(req *http.Request) bool { return req.Context().Value(optionalAuthKey{}) != nil }),
 	)
 
