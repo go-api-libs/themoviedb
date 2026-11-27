@@ -38,6 +38,7 @@ var importPaths = map[string]string{
 	"time":     "time",
 	"url":      "net/url",
 	"uuid":     "uuid",
+	"xml":      "encoding/xml",
 
 	"api":      "github.com/go-api-libs/api",
 	"apitest":  "github.com/go-api-libs/api/apitest",

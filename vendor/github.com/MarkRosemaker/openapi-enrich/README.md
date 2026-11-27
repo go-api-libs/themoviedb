@@ -61,8 +61,13 @@ What it infers:
   as optional (`{}` beside the scheme). A security list every operation shares
   is stated once at the document level.
 - **Request bodies** — JSON bodies produce inline object schemas.
-- **Responses** — JSON, text/plain, and text/html responses are modeled;
+- **Responses** — JSON, XML, text/plain, and text/html responses are modeled;
   repeated observations are merged.
+- **XML responses** — a text/xml, application/xml or +xml body is an object
+  named after its root element (`xml.name`): its attributes are properties
+  marked `xml.attribute`, its child elements properties, and a child element
+  that repeats a list. Every value is a string, as XML has no numbers: a code
+  such as `0123` keeps its leading zero.
 - **Arrays of objects** — the elements of a recorded array of objects meet the
   specification one by one, so in a list of mixed variants, such as Notion's
   blocks, each reaches the variant of a union it matches rather than all of them

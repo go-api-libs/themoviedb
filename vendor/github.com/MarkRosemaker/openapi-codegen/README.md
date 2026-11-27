@@ -245,6 +245,13 @@ How the specification maps onto Go:
   not JSON is returned as `[]byte`. The server copies a returned reader into
   the response, and the JavaScript client returns such a body as a `Blob`, or
   text as a string.
+- **XML responses** — a `text/xml`, `application/xml` or `+xml` body with a
+  schema, where no JSON is declared, is decoded with `encoding/xml` into the
+  type its schema says, and returned as a JSON body would be. The fields of
+  every type it holds get an `xml` tag beside their `json` one, as the schema's
+  `xml` objects say: `,attr` for an attribute, `wrapper>item` for a wrapped
+  list, and `omitempty` where the member is optional. The server writes such a
+  body with `encoding/xml`.
 - **Paging** — an operation whose list is paged through by cursor also gets
   `XPages`, which yields each page, and `XAll`, which yields every item, each
   fetching the next page as the one before is used up, and stopping when the

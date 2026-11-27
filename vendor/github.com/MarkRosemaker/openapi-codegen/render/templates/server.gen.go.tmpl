@@ -93,6 +93,12 @@ func RegisterService(svc Service, mux *http.ServeMux, pathPrefix string) {
 			l.ErrorContext(ctx, "write error", slog.String("error", err.Error()))
 			return
 		}
+{{- else if .XMLSuccess }}
+		if err := xml.NewEncoder(w).Encode(res); err != nil {
+			l.ErrorContext(ctx, "marshal error", slog.String("error", err.Error()))
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
 {{- else if .SuccessReturn }}
 		if err := json.MarshalWrite(w, res, {{ if $.HasWriteOnly }}jsonOptsResponse{{ else }}jsonOpts{{ end }}); err != nil {
 			l.ErrorContext(ctx, "marshal error", slog.String("error", err.Error()))

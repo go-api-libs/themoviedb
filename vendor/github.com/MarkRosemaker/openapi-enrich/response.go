@@ -46,6 +46,15 @@ func buildResponse(resp *cassette.Response) (*openapi.Response, error) {
 			Schema: schema,
 		})
 
+	case isXMLMediaType(mediaType):
+		schema, err := newSchemaFromXML(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("creating schema from XML: %w", err)
+		}
+
+		r.Content = openapi.Content{}
+		r.Content.Set(openapi.MediaRange(mediaType), &openapi.MediaType{Schema: schema})
+
 	case mediaType == "text/plain":
 		bodyStr := strings.TrimSpace(string(resp.Body))
 		if !strings.EqualFold(bodyStr, description) {

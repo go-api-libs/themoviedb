@@ -132,6 +132,8 @@ type Operation struct {
 	// StreamSuccess is true when the operation's success response is not text (see Response.IsStream), so
 	// SuccessReturn is io.ReadCloser and the method leaves the response body open for the caller.
 	StreamSuccess bool `json:"streamSuccess,omitzero"`
+	// XMLSuccess is true when the operation's success response is XML (see Response.IsXML).
+	XMLSuccess bool `json:"xmlSuccess,omitzero"`
 	// Pagination is how the operation's list is paged through by cursor, if it is: the client then has an iterator
 	// of its pages and one of their items.
 	Pagination *Pagination `json:"pagination,omitempty"`
@@ -661,6 +663,8 @@ type Response struct {
 	// IsStream is true for a success response whose media type is not text, such as a zip, a PDF or an image: GoType
 	// is io.ReadCloser, the response body itself, which the caller reads and closes.
 	IsStream bool `json:"isStream,omitzero"`
+	// IsXML is true when ContentType is XML and no JSON is declared: GoType is decoded with encoding/xml.
+	IsXML bool `json:"isXML,omitzero"`
 	// BodyDescription is what the specification says beside the reference to the body's schema, of this response
 	// alone, as a merged schema's description that differed from another's.
 	BodyDescription string `json:"bodyDescription,omitzero"`
@@ -680,7 +684,7 @@ func (op Operation) SuccessDescription() string {
 
 // IsJSON reports whether the response's media type is a JSON one, whose body the client decodes.
 func (r Response) IsJSON() bool {
-	return r.ContentType != "" && !r.IsRawBytes && !r.IsStream
+	return r.ContentType != "" && !r.IsRawBytes && !r.IsStream && !r.IsXML
 }
 
 // ReqBody is the IR representation of an operation request body.

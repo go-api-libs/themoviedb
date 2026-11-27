@@ -444,6 +444,20 @@ func (c *Client) {{.Name}}(ctx context.Context{{range .PathParams}}, {{.GoName}}
 			{{ else -}}
 			return {{if $op.SuccessReturn}}nil, {{end}}api.NewErrCustom(rsp, &out)
 			{{ end -}}
+			{{- else if .IsXML }}
+			{{- $out := .GoType }}{{ if and .IsSuccess $op.SuccessReturn }}{{ $out = $op.SuccessReturn }}{{ end }}
+			var out {{ $out }}
+			if err := xml.NewDecoder(rsp.Body).Decode(&out); err != nil {
+				return {{if $op.SuccessReturn}}nil, {{end}}{{ if $.Debug }}c.failed(ia, api.WrapDecodingError(rsp, err)){{ else }}api.WrapDecodingError(rsp, err){{ end }}
+			}
+
+			{{ if and .IsSuccess $op.SuccessReturn -}}
+			return {{ if not $op.SuccessReturn.NilByItself }}&{{ end }}out, nil
+			{{ else if .IsSuccess -}}
+			return nil
+			{{ else -}}
+			return {{if $op.SuccessReturn}}nil, {{end}}api.NewErrCustom(rsp, &out)
+			{{ end -}}
 			{{- else if .IsStream }}
 			streaming = true
 

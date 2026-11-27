@@ -77,6 +77,8 @@ func FromDocument(doc *openapi.Document, packageName, userAgent string, producti
 		return nil, fmt.Errorf("paths: %w", err)
 	}
 
+	markXMLTags(doc, schemas)
+
 	if err := paginate(operations, schemas); err != nil {
 		return nil, fmt.Errorf("paths: %w", err)
 	}

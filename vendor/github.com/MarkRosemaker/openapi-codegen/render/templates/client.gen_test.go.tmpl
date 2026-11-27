@@ -122,6 +122,23 @@ func TestClient_Error(t *testing.T) {
 				t.Fatalf("got: %T, want: *jsontext.SyntacticError", decErr.Err)
 			}
 		})
+		{{- else if (index .Responses 0).IsXML }}
+		t.Run("decoding error", func(t *testing.T) {
+			c, err := NewClient(WithBaseURL(apitest.BodyServer(t, {{ (index .Responses 0).GoConstant }}, {{ printf "%q" (index .Responses 0).ContentType }}, []byte("<unclosed>"))))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := c.{{.Name}}(t.Context(){{range .PathParams}}, {{ .ZeroVal }}{{end}}
+			{{- with .NilParamsExpr}}, {{ . }}{{ end -}}
+			{{if .RequestBody}}, {{if .RequestBody.Required}}{{$.MinimalLiteral .RequestBody.TypeName}}{{else}}nil{{end}}{{end}}); err == nil {
+				t.Fatal("expected error")
+			} else if decErr, ok := errors.AsType[*api.DecodingError](err); !ok {
+				t.Fatalf("got: %T, want: *api.DecodingError", err)
+			} else if _, ok := errors.AsType[*xml.SyntaxError](decErr.Err); !ok {
+				t.Fatalf("got: %T, want: *xml.SyntaxError", decErr.Err)
+			}
+		})
 		{{- end }}{{ end }}
 		{{- $op := . }}
 		{{- if and .RequestBody (not .RequestBody.Required) }}
@@ -475,7 +492,7 @@ func TestClient_Interactions(t *testing.T) {
 	}
 	{{range .InteractionCalls}}
 	{{- if .Op.SuccessReturn}}
-	{{- $check := and .IsSuccess (not .Op.RawBytesSuccess) (not .Op.StreamSuccess) }}
+	{{- $check := and .IsSuccess (not .Op.RawBytesSuccess) (not .Op.StreamSuccess) (not .Op.XMLSuccess) }}
 	if {{ if $check }}out{{ else }}_{{ end }}, err := c.{{.Op.Name}}({{ if and .Op.Auth .Op.AuthOptional }}apitest.OptionalAuth(ctx){{ else }}ctx{{ end }}{{range .PathArgs}}, {{.}}{{end}}{{if .Op.ParamsInStruct}}, {{ if not .Op.ParamsInStruct.Required }}&{{ end }}{{.Op.ParamStructName}}{
 		{{range .QueryArgs}}{{.FieldName}}: {{.Literal}},
 		{{ end -}}

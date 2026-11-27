@@ -102,7 +102,7 @@ func FromOperation(
 		}
 	}
 
-	responses, successReturn, rawBytesSuccess, streamSuccess, emptySuccess, err := fromResponses(op.Responses)
+	responses, successReturn, rawBytesSuccess, streamSuccess, xmlSuccess, emptySuccess, err := fromResponses(op.Responses)
 	if err != nil {
 		return nil, fmt.Errorf("responses: %w", err)
 	}
@@ -131,6 +131,7 @@ func FromOperation(
 		Deprecated:      op.Deprecated,
 		RawBytesSuccess: rawBytesSuccess,
 		StreamSuccess:   streamSuccess,
+		XMLSuccess:      xmlSuccess,
 		EmptySuccess:    emptySuccess,
 		pagination:      pagination,
 	}, nil
@@ -739,12 +740,13 @@ func fromRequestBody(rb *openapi.RequestBody) (*ReqBody, error) {
 	return nil, nil
 }
 
-func fromResponses(responses openapi.OperationResponses) (Responses, *GoType, bool, bool, bool, error) {
+func fromResponses(responses openapi.OperationResponses) (Responses, *GoType, bool, bool, bool, bool, error) {
 	var (
 		result          Responses
 		successReturn   *GoType
 		rawBytesSuccess bool
 		streamSuccess   bool
+		xmlSuccess      bool
 		emptySuccess    bool
 	)
 
@@ -760,11 +762,17 @@ func fromResponses(responses openapi.OperationResponses) (Responses, *GoType, bo
 		var (
 			jsonContentType  string
 			jsonSchema       *openapi.Schema
+			xmlContentType   string
+			xmlSchema        *openapi.Schema
 			firstContentType string
 		)
 		for mr, mt := range r.Content.ByIndex() {
 			if firstContentType == "" {
 				firstContentType = string(mr)
+			}
+
+			if xmlContentType == "" && isXMLMediaType(string(mr)) && mt.Schema != nil {
+				xmlContentType, xmlSchema = string(mr), mt.Schema
 			}
 
 			if strings.Contains(string(mr), "json") {
@@ -779,6 +787,7 @@ func fromResponses(responses openapi.OperationResponses) (Responses, *GoType, bo
 			contentType string
 			isRawBytes  bool
 			isStream    bool
+			isXML       bool
 		)
 
 		switch {
@@ -790,9 +799,20 @@ func fromResponses(responses openapi.OperationResponses) (Responses, *GoType, bo
 
 				goType, err = SchemaGoType(jsonSchema)
 				if err != nil {
-					return nil, nil, false, false, false, fmt.Errorf("response %s: %w", code, err)
+					return nil, nil, false, false, false, false, fmt.Errorf("response %s: %w", code, err)
 				}
 			}
+		case xmlContentType != "":
+			// a body decoded with encoding/xml into the type its schema says
+			var err error
+
+			goType, err = SchemaGoType(xmlSchema)
+			if err != nil {
+				return nil, nil, false, false, false, false, fmt.Errorf("response %s: %w", code, err)
+			}
+
+			contentType, isXML = xmlContentType, true
+			jsonSchema = xmlSchema // the body's schema, whatever its encoding
 		case firstContentType != "" && isSuccess && !cassette.IsText(firstContentType):
 			// a zip, a PDF, an image or the like: the body itself, read as it arrives rather than all at once
 			contentType = firstContentType
@@ -818,6 +838,7 @@ func fromResponses(responses openapi.OperationResponses) (Responses, *GoType, bo
 			IsSuccess:   isSuccess,
 			IsRawBytes:  isRawBytes,
 			IsStream:    isStream,
+			IsXML:       isXML,
 
 			BodyDescription: refDescription(jsonSchema),
 		})
@@ -830,11 +851,12 @@ func fromResponses(responses openapi.OperationResponses) (Responses, *GoType, bo
 				successReturn = goType
 				rawBytesSuccess = isRawBytes
 				streamSuccess = isStream
+				xmlSuccess = isXML
 			}
 		}
 	}
 
-	return result, successReturn, rawBytesSuccess, streamSuccess, emptySuccess, nil
+	return result, successReturn, rawBytesSuccess, streamSuccess, xmlSuccess, emptySuccess, nil
 }
 
 func isRange(code openapi.StatusCode) bool {
@@ -928,4 +950,9 @@ func refDescription(s *openapi.Schema) string {
 	}
 
 	return s.Description
+}
+
+// isXMLMediaType reports whether mediaType is XML: text/xml, application/xml or one ending in +xml.
+func isXMLMediaType(mediaType string) bool {
+	return mediaType == "text/xml" || mediaType == "application/xml" || strings.HasSuffix(mediaType, "+xml")
 }
