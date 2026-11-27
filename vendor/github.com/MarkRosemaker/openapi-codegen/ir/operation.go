@@ -283,14 +283,17 @@ func fromParam(p *openapi.Parameter, apiTitle string) (Param, error) {
 		return param, fmt.Errorf("schema is required")
 	}
 
-	param.GoName = strcase.ToGoCamel(p.Name)
+	// an x-go-name, as on schemas, names the parameter in Go while the request keeps its name
+	name := cmp.Or(extGoName(p.Extensions), p.Name)
+
+	param.GoName = strcase.ToGoCamel(name)
 	if p.In == openapi.ParameterLocationPath {
-		param.GoName = pathParamName(p.Name)
+		param.GoName = pathParamName(name)
 	}
 
 	param.AllowSlashes = p.In == openapi.ParameterLocationPath && allowsSlashes(p)
 
-	param.FieldName = goPascal(p.Name)
+	param.FieldName = goPascal(name)
 
 	schema := paramSchema(p.Schema)
 	switch d := deref(schema); {

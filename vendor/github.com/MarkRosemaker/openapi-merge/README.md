@@ -116,6 +116,9 @@ particular ways that sample-derived schemas disagree:
 - **Scalar-or-array parameters** — a parameter that appeared as a bare value in one
   sample and as an array in another merges the value into the array's item schema.
 - **Enums** — an example value not yet present in an enum is added to it.
+- **Extensions** — a parameter, response or media type keeps its own extensions,
+  such as an `x-go-name` added by hand, and gains those only the other side has.
+  An extension both sides have must have the same value on both.
 
 ## Usage
 

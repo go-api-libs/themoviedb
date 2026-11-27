@@ -59,5 +59,5 @@ func Parameter(a, b *openapi.Parameter) error {
 		a.Example = b.Example
 	}
 
-	return extensions(a.Extensions, b.Extensions)
+	return extensions(&a.Extensions, b.Extensions)
 }

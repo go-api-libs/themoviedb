@@ -13,5 +13,5 @@ func Response(a, b *openapi.Response) error {
 		return &errpath.ErrField{Field: "content", Err: err}
 	}
 
-	return extensions(a.Extensions, b.Extensions)
+	return extensions(&a.Extensions, b.Extensions)
 }

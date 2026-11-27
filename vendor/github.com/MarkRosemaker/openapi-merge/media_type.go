@@ -21,5 +21,5 @@ func MediaType(a, b *openapi.MediaType) error {
 		a.Example = b.Example
 	}
 
-	return extensions(a.Extensions, b.Extensions)
+	return extensions(&a.Extensions, b.Extensions)
 }

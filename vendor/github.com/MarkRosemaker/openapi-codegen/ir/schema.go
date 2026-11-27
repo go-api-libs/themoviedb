@@ -514,19 +514,22 @@ func getDescription(s *openapi.Schema, name string) string {
 
 // goNameOverride returns the schema's x-go-name extension, or "" if unset.
 // See https://github.com/oapi-codegen/oapi-codegen/blob/main/docs/extensions.md#x-go-name.
-func goNameOverride(s *openapi.Schema) string {
-	if len(s.Extensions) == 0 {
+func goNameOverride(s *openapi.Schema) string { return extGoName(s.Extensions) }
+
+// extGoName returns the x-go-name in the extensions ext, or "" if unset.
+func extGoName(ext openapi.Extensions) string {
+	if len(ext) == 0 {
 		return ""
 	}
 
-	var ext struct {
+	var v struct {
 		GoName string `json:"x-go-name"`
 	}
-	if err := json.Unmarshal(s.Extensions, &ext); err != nil {
+	if err := json.Unmarshal(ext, &v); err != nil {
 		return ""
 	}
 
-	return ext.GoName
+	return v.GoName
 }
 
 // enumNameOverrides returns the schema's x-enum-varnames or x-enumNames

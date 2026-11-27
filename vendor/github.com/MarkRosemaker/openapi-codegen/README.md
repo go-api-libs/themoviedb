@@ -278,6 +278,9 @@ How the specification maps onto Go:
   `x-go-name` to choose a better one. A component that is only a `$ref`, only
   `null` or the empty schema declares no type; references to it use what it
   stands for.
+  A parameter's `x-go-name` names it in Go, as its field, argument or variable,
+  while requests keep its name: `q` with `"x-go-name": "QueryID"` is the field
+  `QueryID`, still sent as `?q=`.
 
 ## Usage
 
