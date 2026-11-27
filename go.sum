@@ -10,12 +10,12 @@ github.com/MarkRosemaker/jsonutil v0.0.0-20261127001933-b07dbcceebd6 h1:gLKnOUYT
 github.com/MarkRosemaker/jsonutil v0.0.0-20261127001933-b07dbcceebd6/go.mod h1:SzjJlgYFlzpbFGvUUoQgfEsWlbai63bvhDPK8J0MNYM=
 github.com/MarkRosemaker/openapi v0.0.0-20261127002030-cbffd96bf394 h1:8xQmeig75IYQq7xSgnY9tSQt64Zo97vRnDmO+6aNx4U=
 github.com/MarkRosemaker/openapi v0.0.0-20261127002030-cbffd96bf394/go.mod h1:yrht5AwFPmZzg7PxpNesNN5EqdPEZ/aUw7DC6zIO75o=
-github.com/MarkRosemaker/openapi-codegen v0.0.0-20261127002631-b9a7fb4a084b h1:Gp8Q8Ocr0wgPBwaWmk1gfnPxCE1efBiNZ42ceYcKWIg=
-github.com/MarkRosemaker/openapi-codegen v0.0.0-20261127002631-b9a7fb4a084b/go.mod h1:MtXMSS9R6VXk/XBoYgbG55QYdVF8IyprjSqPLnSwjf4=
+github.com/MarkRosemaker/openapi-codegen v0.0.0-20261127050646-dffe38f1671b h1:RlOa8TqGqNpSE/0qO6qTVIfJ0y9XqLk19Z1XzSvovcE=
+github.com/MarkRosemaker/openapi-codegen v0.0.0-20261127050646-dffe38f1671b/go.mod h1:/LU34+DlZjFL20myWPND0p3MDou6EB9m1/SdSUWJodw=
 github.com/MarkRosemaker/openapi-compare v0.0.0-20261127002121-d284f72800b7 h1:1EOen5YicLT0hb73OFD9BYfV4pkrFA/BKxOQNOVhaqo=
 github.com/MarkRosemaker/openapi-compare v0.0.0-20261127002121-d284f72800b7/go.mod h1:YKLfAnLhQ1OJ6/Qw9ECIx1ksyIwJ1hFEhcmfahGy/9E=
-github.com/MarkRosemaker/openapi-compress v0.0.0-20261127002356-99e7ed97b936 h1:Qo9i1GMico6xTpBYsJDMvt2CzpLp8QgyiSsPVc1cg/k=
-github.com/MarkRosemaker/openapi-compress v0.0.0-20261127002356-99e7ed97b936/go.mod h1:uGN3nvkUZqvh3cUVcVBxznGJMa5kHGx7AS1uzkQapj8=
+github.com/MarkRosemaker/openapi-compress v0.0.0-20261127050502-a5e936024b23 h1:FDKq/Kcpgaghk25mWCx99D4r+jBzm+KcyTh2OXO3lAI=
+github.com/MarkRosemaker/openapi-compress v0.0.0-20261127050502-a5e936024b23/go.mod h1:D9bPfVdGDC+JbjkJm2wxYZP2uyFhSxiq3q8CgCf24cs=
 github.com/MarkRosemaker/openapi-edit v0.0.0-20261127002121-4ed97994dce4 h1:fRrkCFQpd7v0Ewlntg+wDTVn42uoxVdv5jrxkK6knU8=
 github.com/MarkRosemaker/openapi-edit v0.0.0-20261127002121-4ed97994dce4/go.mod h1:bLiMu+sL/nAXYYThHFqcGrR/L6oETgYbMvisefjc0Oc=
 github.com/MarkRosemaker/openapi-enrich v0.0.0-20261127002247-de0235d018f2 h1:ZgJnMp+8yuOpD1DCksDtyLSI2XBRcd6Kl5cyJXt5P9Q=
