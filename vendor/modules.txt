@@ -4,53 +4,53 @@ cloud.google.com/go/civil
 # github.com/MarkRosemaker/cassette v0.0.0-20261127001959-2e9c977b04a7
 ## explicit; go 1.27
 github.com/MarkRosemaker/cassette
-# github.com/MarkRosemaker/errpath v0.0.0-20261118230255-99e20cb3445a
+# github.com/MarkRosemaker/errpath v0.0.0-20261127001931-41afc0b86075
 ## explicit; go 1.23.2
 github.com/MarkRosemaker/errpath
-# github.com/MarkRosemaker/json2yaml v0.0.0-20261118230255-853c75cf2bf9
+# github.com/MarkRosemaker/json2yaml v0.0.0-20261127001931-55b661ab603c
 ## explicit; go 1.27
 github.com/MarkRosemaker/json2yaml
 # github.com/MarkRosemaker/jsonutil v0.0.0-20261127001933-b07dbcceebd6
 ## explicit; go 1.27
 github.com/MarkRosemaker/jsonutil
-# github.com/MarkRosemaker/openapi v0.0.0-20261126020940-b4a1ac5f1801
+# github.com/MarkRosemaker/openapi v0.0.0-20261127002030-cbffd96bf394
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi
-# github.com/MarkRosemaker/openapi-codegen v0.0.0-20261126193125-3661a88fb2ef
+# github.com/MarkRosemaker/openapi-codegen v0.0.0-20261127002631-b9a7fb4a084b
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-codegen
 github.com/MarkRosemaker/openapi-codegen/cmd/openapi-codegen
 github.com/MarkRosemaker/openapi-codegen/config
 github.com/MarkRosemaker/openapi-codegen/ir
 github.com/MarkRosemaker/openapi-codegen/render
-# github.com/MarkRosemaker/openapi-compare v0.0.0-20261126021107-7bb69de0fff9
+# github.com/MarkRosemaker/openapi-compare v0.0.0-20261127002121-d284f72800b7
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-compare/schema
-# github.com/MarkRosemaker/openapi-compress v0.0.0-20261126021444-b9b31c694973
+# github.com/MarkRosemaker/openapi-compress v0.0.0-20261127002356-99e7ed97b936
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-compress
 github.com/MarkRosemaker/openapi-compress/cmd/openapi-compress
-# github.com/MarkRosemaker/openapi-edit v0.0.0-20261126021107-af2eb25df397
+# github.com/MarkRosemaker/openapi-edit v0.0.0-20261127002121-4ed97994dce4
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-edit
-# github.com/MarkRosemaker/openapi-enrich v0.0.0-20261126230310-accb96c57280
+# github.com/MarkRosemaker/openapi-enrich v0.0.0-20261127002247-de0235d018f2
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-enrich
 github.com/MarkRosemaker/openapi-enrich/cmd/openapi-enrich
-# github.com/MarkRosemaker/openapi-flatten v0.0.0-20261126230236-930e862e696c
+# github.com/MarkRosemaker/openapi-flatten v0.0.0-20261127002122-68a4af5d679f
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-flatten
 github.com/MarkRosemaker/openapi-flatten/cmd/openapi-flatten
-# github.com/MarkRosemaker/openapi-merge v0.0.0-20261126021108-70713f3342dc
+# github.com/MarkRosemaker/openapi-merge v0.0.0-20261127002121-c54b5b9829ad
 ## explicit; go 1.27
 github.com/MarkRosemaker/openapi-merge
-# github.com/MarkRosemaker/ordmap v0.0.0-20261124050216-f3096eb875be
+# github.com/MarkRosemaker/ordmap v0.0.0-20261127001949-5d682e0c3100
 ## explicit; go 1.27
 github.com/MarkRosemaker/ordmap
-# github.com/MarkRosemaker/yaml v0.0.0-20261118230544-f88f96ca5149
+# github.com/MarkRosemaker/yaml v0.0.0-20261127001955-6df1e561eef1
 ## explicit; go 1.27
 github.com/MarkRosemaker/yaml
-# github.com/MarkRosemaker/yaml2json v0.0.0-20261118230255-06c4fe76a5b8
+# github.com/MarkRosemaker/yaml2json v0.0.0-20261127001931-8d8f24890a05
 ## explicit; go 1.27
 github.com/MarkRosemaker/yaml2json
 # github.com/ettle/strcase v0.2.0
@@ -60,7 +60,7 @@ github.com/ettle/strcase
 ## explicit; go 1.27
 github.com/go-api-libs/api
 github.com/go-api-libs/api/apitest
-# github.com/go-api-libs/types v0.0.0-20261118230255-0e16a3d7de5d
+# github.com/go-api-libs/types v0.0.0-20261127001931-55d1cb77be3b
 ## explicit; go 1.27
 github.com/go-api-libs/types
 # github.com/spf13/afero v1.15.0
